@@ -1,0 +1,40 @@
+{
+  "name": "claude-plugins-marketplace",
+  "owner": {
+    "name": "Yohei Nakanishi"
+  },
+  "metadata": {
+    "description": "Claude Code plugins collection by Yohei Nakanishi"
+  },
+  "plugins": [
+    {
+      "name": "devteam",
+      "source": "./devteam",
+      "description": "Multi-agent development team orchestration with file-based message queues",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "multi-agent",
+        "orchestration",
+        "message-queue",
+        "devteam"
+      ]
+    },
+    {
+      "name": "obsidian-archive",
+      "source": "./obsidian-archive",
+      "description": "Automatically archive Claude Code session summaries to Obsidian",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "obsidian",
+        "archive",
+        "session",
+        "summary",
+        "notes"
+      ]
+    }
+  ]
+}
