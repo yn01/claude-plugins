@@ -1,0 +1,45 @@
+orchestrator:
+  model: claude-opus-4-6
+  role: Orchestrator
+  directs: [doc-manager, release-manager, explorer, team-alpha-lead, team-beta-lead]
+
+agents:
+  doc-manager:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Documentation Manager
+  release-manager:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Release Manager
+  explorer:
+    model: claude-haiku-4-5-20251001
+    type: explore
+    role: Explorer
+  team-alpha-lead:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Team Alpha Lead
+    directs: [implementer-a, reviewer-a]
+  implementer-a:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Implementer A
+  reviewer-a:
+    type: bash
+    role: Reviewer A (Codex CLI)
+  team-beta-lead:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Team Beta Lead
+    directs: [implementer-b, reviewer-b]
+  implementer-b:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Implementer B
+  reviewer-b:
+    type: bash
+    role: Reviewer B (Codex CLI)
+
+message_queue:
+  base_path: .claude/messages/inbox

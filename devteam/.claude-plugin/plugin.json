@@ -1,0 +1,9 @@
+{
+  "name": "devteam",
+  "version": "1.0.0",
+  "description": "Multi-agent development team orchestration with file-based message queues",
+  "author": {
+    "name": "Yohei Nakanishi"
+  },
+  "commands": "./commands"
+}

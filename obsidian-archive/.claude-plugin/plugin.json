@@ -1,0 +1,7 @@
+{
+  "name": "obsidian-archive",
+  "version": "1.0.0",
+  "description": "Automatically archive Claude Code session summaries to Obsidian",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}

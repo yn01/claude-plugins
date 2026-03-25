@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "count=$(find .claude/messages/inbox -name '*.md' 2>/dev/null | grep -c . || echo 0); if [ \"${count:-0}\" -gt 0 ]; then echo \"📬 未読メッセージが${count}件あります。/devteam:status で確認してください\"; fi"
+          }
+        ],
+        "description": "Check for unread messages in agent inboxes on session start"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "devteam-marketplace",
+  "owner": {
+    "name": "Yohei Nakanishi"
+  },
+  "metadata": {
+    "description": "Multi-agent development team orchestration"
+  },
+  "plugins": [
+    {
+      "name": "devteam",
+      "source": "./",
+      "description": "Multi-agent development team orchestration with file-based message queues",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "multi-agent",
+        "orchestration",
+        "message-queue",
+        "devteam"
+      ]
+    }
+  ]
+}

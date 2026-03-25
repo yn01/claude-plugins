@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "SessionStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'CONFIG=$(cat \"$(dirname \"$(dirname \"$0\")\")/obsidian-archive.json\" 2>/dev/null || echo \"{}\"); VAULT=$(echo \"$CONFIG\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get(\\\"vault_path\\\", \\\"~/Documents/Obsidian/Claude-Dev\\\"))\" 2>/dev/null || echo \"~/Documents/Obsidian/Claude-Dev\"); FOLDER=$(echo \"$CONFIG\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get(\\\"folder\\\", \\\"Sessions\\\"))\" 2>/dev/null || echo \"Sessions\"); VAULT_EXPANDED=$(eval echo \"$VAULT\"); mkdir -p \"$VAULT_EXPANDED/$FOLDER\"; claude --print \"Use the obsidian-archive:summarizer agent to generate a session summary and save it to $VAULT_EXPANDED/$FOLDER\" 2>/dev/null || true'"
+          }
+        ],
+        "description": "Claude Code終了時にセッションサマリーを生成してObsidianに保存する"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": ".*"
+        },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'PLUGIN_DIR=\"$(dirname \"$(dirname \"$0\")\")\" 2>/dev/null; CONFIG_FILE=\"$PLUGIN_DIR/obsidian-archive.json\"; if [ ! -f \"$CONFIG_FILE\" ]; then exit 0; fi; CONFIG=$(cat \"$CONFIG_FILE\"); INTERVAL=$(echo \"$CONFIG\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get(\\\"auto_save_interval_minutes\\\", 30))\" 2>/dev/null || echo \"30\"); VAULT=$(echo \"$CONFIG\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get(\\\"vault_path\\\", \\\"~/Documents/Obsidian/Claude-Dev\\\"))\" 2>/dev/null || echo \"~/Documents/Obsidian/Claude-Dev\"); FOLDER=$(echo \"$CONFIG\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get(\\\"folder\\\", \\\"Sessions\\\"))\" 2>/dev/null || echo \"Sessions\"); VAULT_EXPANDED=$(eval echo \"$VAULT\"); INTERMEDIATE_DIR=\"$VAULT_EXPANDED/$FOLDER/intermediate\"; mkdir -p \"$INTERMEDIATE_DIR\"; LAST_SAVE_FILE=\"/tmp/obsidian-archive-last-save\"; NOW=$(date +%s); if [ -f \"$LAST_SAVE_FILE\" ]; then LAST=$(cat \"$LAST_SAVE_FILE\"); DIFF=$((NOW - LAST)); THRESHOLD=$((INTERVAL * 60)); if [ \"$DIFF\" -lt \"$THRESHOLD\" ]; then exit 0; fi; fi; echo \"$NOW\" > \"$LAST_SAVE_FILE\"; PROJECT=$(basename \"$PWD\"); TIMESTAMP=$(date +\"%Y-%m-%d_%H-%M\"); FILENAME=\"${TIMESTAMP}_${PROJECT}_autosave.md\"; FILEPATH=\"$INTERMEDIATE_DIR/$FILENAME\"; claude --print \"Use the obsidian-archive:summarizer agent to generate an intermediate session summary (autosave). Save the result to: $FILEPATH\" 2>/dev/null || true'"
+          }
+        ],
+        "description": "設定されたインターバルごとに中間保存を実行する"
+      }
+    ]
+  }
+}

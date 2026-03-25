@@ -1,0 +1,8 @@
+{
+  "vault_path": "~/Documents/Obsidian/Claude-Dev",
+  "folder": "Sessions",
+  "filename_format": "YYYY-MM-DD_HH-mm_{project}",
+  "auto_save_interval_minutes": 30,
+  "include_git_diff": true,
+  "tags": ["claude-code", "session"]
+}
