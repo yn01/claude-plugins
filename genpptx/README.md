@@ -18,7 +18,7 @@ Claude Code プラグイン — コンテンツ（議事録・メモ）からPow
 
 ```
 /plugin marketplace add yn01/claude-plugins
-/plugin install genpptx
+/plugin install genpptx@yn01-claude-plugins-marketplace
 ```
 
 ## コマンド一覧
