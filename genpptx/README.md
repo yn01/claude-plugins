@@ -1,49 +1,49 @@
 # genpptx
 
-Claude Code プラグイン — コンテンツ（議事録・メモ）からPowerPointプレゼンテーションを自動生成します。
+A Claude Code plugin that generates PowerPoint presentations from content files (meeting notes, memos).
 
-## 概要
+## Overview
 
-`genpptx` は `../pptx` のPPTX生成システムをClaude Codeから手軽に使えるようにしたプラグインです。
-コンテンツファイルを渡すだけで、AIがストーリー型のスライド構成を設計し、`spec.yaml` の生成から `.pptx` / `.html` の出力まで一気通貫で実行します。
+`genpptx` wraps the PPTX generation system so you can use it seamlessly from Claude Code.
+Just provide a content file and the plugin automatically designs a story-driven slide structure, generates a `spec.yaml`, and produces `.pptx` + `.html` output — end to end.
 
-## 前提条件
+## Requirements
 
-- **Node.js 18 以上**
-- **PPTX生成システム** がプロジェクト内に存在すること
-  - `src/generate.mjs`、`src/catalog.mjs`、`src/read.mjs` が利用可能な状態
-  - `npm install` 済み
+- **Node.js 18+**
+- **PPTX generation system** must exist in your project
+  - `src/generate.mjs`, `src/catalog.mjs`, `src/read.mjs` must be available
+  - `npm install` must be completed
 
-## インストール
+## Installation
 
 ```
 /plugin marketplace add yn01/claude-plugins
 /plugin install genpptx
 ```
 
-## コマンド一覧
+## Commands
 
-### `/genpptx:create` — コンテンツからPPTXを生成（メイン）
+### `/genpptx:create` — Generate PPTX from content (main)
 
-最も重要なコマンドです。コンテンツファイルを渡すだけで、スライド設計から生成まで自動で実行します。
+The primary command. Provide a content file and it handles everything from slide design to generation.
 
 ```
 /genpptx:create output/my-project/content.md
 /genpptx:create output/my-project/content.md --theme corporate-yellow
 ```
 
-**処理の流れ:**
-1. コンテンツファイルを読み込む
-2. `slide-designer` エージェントがストーリー型のスライド構成を設計
-3. `output/<project-name>/spec.yaml` を生成
-4. `node src/generate.mjs` を実行してPPTX・HTMLを生成
-5. 生成ファイルのパスを報告
+**What happens:**
+1. Reads the content file
+2. `slide-designer` agent designs a story-driven slide structure
+3. Generates `output/<project-name>/spec.yaml`
+4. Runs `node src/generate.mjs` to produce PPTX and HTML
+5. Reports the output file paths
 
 ---
 
-### `/genpptx:generate` — spec.yaml からPPTXを生成
+### `/genpptx:generate` — Generate PPTX from spec.yaml
 
-既存の `spec.yaml` を手動で作成・編集した後に使います。
+Use this after manually creating or editing a `spec.yaml`.
 
 ```
 /genpptx:generate output/my-project/spec.yaml
@@ -53,22 +53,22 @@ Claude Code プラグイン — コンテンツ（議事録・メモ）からPow
 
 ---
 
-### `/genpptx:catalog` — レイアウトカタログを生成
+### `/genpptx:catalog` — Generate layout catalog
 
-全10レイアウトのサンプルをPPTX+HTMLで確認できます。テーマ確認や新テーマ追加時に使います。
+Generates PPTX+HTML samples of all 10 layouts. Useful for previewing themes or verifying a new theme.
 
 ```
 /genpptx:catalog
 /genpptx:catalog --theme corporate-yellow
 ```
 
-出力先: `output/catalog/catalog-<theme-name>.pptx` / `.html`
+Output: `output/catalog/catalog-<theme-name>.pptx` / `.html`
 
 ---
 
-### `/genpptx:read` — 既存PPTXを読み取る
+### `/genpptx:read` — Read an existing PPTX
 
-既存のPPTXファイルの内容をテキストで確認します。ブラッシュアップ・修正時に使います。
+Reads and displays the content of an existing PPTX file. Useful for review and revision.
 
 ```
 /genpptx:read output/my-project/presentation.pptx
@@ -77,62 +77,66 @@ Claude Code プラグイン — コンテンツ（議事録・メモ）からPow
 
 ---
 
-### `/genpptx:theme` — PPTXからテーマを抽出する
+### `/genpptx:theme` — Extract theme from PPTX
 
-参考PPTXのデザイントークン（色・フォント）を抽出してテーマファイルの雛形を生成します。
+Extracts design tokens (colors, fonts) from an existing PPTX and generates a theme file skeleton.
 
 ```
 /genpptx:theme refs/sample.pptx my-theme
 /genpptx:theme refs/corporate.pptx corporate-blue
 ```
 
-生成先: `src/themes/<theme-name>.mjs`（生成後に `src/themes/index.mjs` への登録が必要）
+Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/themes/index.mjs`)
 
 ---
 
-## 対応レイアウト一覧
+## Available Layouts
 
-| レイアウト | 用途 |
-|-----------|------|
-| `cover` | 表紙（1枚固定） |
-| `section` | セクション区切り |
-| `content` | 主張＋箇条書き（基本形） |
-| `two-column` | Before/After・A vs B 比較 |
-| `table` | 数値・仕様の比較（最大6列×8行） |
-| `chart` | 時系列・構成比データ（bar/line/pie/doughnut） |
-| `image-text` | 画像＋説明文 |
-| `image-full` | 全面画像 |
-| `summary` | セクションまとめ |
-| `closing` | 最終スライド（1枚固定） |
+| Layout | Use case |
+|--------|----------|
+| `cover` | Title slide (one per presentation) |
+| `section` | Section divider |
+| `content` | Key message + bullet points (default) |
+| `two-column` | Before/After or A vs B comparison |
+| `table` | Numeric or spec comparison (up to 6 cols × 8 rows) |
+| `chart` | Time-series or ratio data (bar/line/pie/doughnut) |
+| `image-text` | Image with description |
+| `image-full` | Full-bleed image |
+| `summary` | Section summary / key takeaways |
+| `closing` | Final slide (one per presentation) |
 
-## ワークフロー例
+## Workflow Examples
 
-### content.md からPPTX生成（推奨フロー）
+### From content.md to PPTX (recommended)
 
 ```
-1. output/my-project/content.md を作成（議事録・メモをそのまま書く）
+1. Create output/my-project/content.md (paste in meeting notes or memos as-is)
 
 2. /genpptx:create output/my-project/content.md
-   → slide-designer が構成を設計
-   → output/my-project/spec.yaml が生成される
-   → output/my-project/presentation.pptx + .html が生成される
+   → slide-designer designs the structure
+   → output/my-project/spec.yaml is generated
+   → output/my-project/presentation.pptx + .html are generated
 
-3. ブラウザで output/my-project/presentation.html を開いて確認
+3. Open output/my-project/presentation.html in a browser to review
 
-4. 修正が必要なら output/my-project/spec.yaml を編集して:
+4. If edits are needed, update output/my-project/spec.yaml and run:
    /genpptx:generate output/my-project/spec.yaml
 ```
 
-### 新しいテーマを追加するフロー
+### Adding a new theme
 
 ```
 1. /genpptx:theme refs/sample.pptx my-theme
-   → src/themes/my-theme.mjs が生成される
+   → src/themes/my-theme.mjs is generated
 
-2. src/themes/my-theme.mjs の色・フォントを調整
+2. Review and adjust colors/fonts in src/themes/my-theme.mjs
 
-3. src/themes/index.mjs に登録
+3. Register the theme in src/themes/index.mjs
 
 4. /genpptx:catalog --theme my-theme
-   → output/catalog/catalog-my-theme.pptx でデザインを確認
+   → Preview the design in output/catalog/catalog-my-theme.pptx
 ```
+
+## License
+
+MIT © Yohei Nakanishi
