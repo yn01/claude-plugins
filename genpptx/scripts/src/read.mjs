@@ -40,12 +40,14 @@ program
         console.log(`  Font sizes:   ${s.topFontSizes.join(", ")} pt`);
         console.log("────────────────────────────────────────────────\n");
 
-        // Write theme file
-        const outPath = path.resolve(`src/themes/${themeName}.mjs`);
+        // Write theme file to project-local themes/ directory
+        const themesDir = path.resolve("themes");
+        fs.mkdirSync(themesDir, { recursive: true });
+        const outPath = path.join(themesDir, `${themeName}.mjs`);
         fs.writeFileSync(outPath, result.source, "utf-8");
         console.log(`Theme skeleton written: ${outPath}`);
         console.log(
-          `\nNext steps:\n  1. Review and adjust values in ${outPath}\n  2. Register in src/themes/index.mjs\n  3. Run: node src/catalog.mjs --theme ${themeName}`
+          `\nNext steps:\n  1. Review and adjust values in ${outPath}\n  2. Run: node src/catalog.mjs --theme ${themeName}\n  (Theme is loaded automatically from themes/ — no registration needed)`
         );
         return;
       }

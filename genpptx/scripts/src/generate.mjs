@@ -3,7 +3,7 @@ import path from "path";
 import yaml from "js-yaml";
 import PptxGenJS from "pptxgenjs";
 import { program } from "commander";
-import { getTheme } from "./themes/index.mjs";
+import { getTheme, loadProjectThemes } from "./themes/index.mjs";
 import { getLayoutBuilder } from "./layouts/index.mjs";
 import { processImages } from "./image-gen.mjs";
 import { exportToHtml } from "./html-export.mjs";
@@ -18,7 +18,8 @@ async function generate(specPath, options) {
   const specContent = fs.readFileSync(specPath, "utf-8");
   const spec = yaml.load(specContent);
 
-  // Resolve theme
+  // Resolve theme (load project-local themes first)
+  await loadProjectThemes();
   const themeName = options.theme || spec.theme || "base";
   const theme = getTheme(themeName);
   console.log(`Theme: ${theme.name}`);

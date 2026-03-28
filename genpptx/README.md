@@ -146,6 +146,11 @@ Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/them
 
 ## Changelog
 
+### v1.4.0 — 2026-03-28
+- Custom themes are now saved to `themes/` in the user's project instead of the plugin cache — survives plugin updates, can be committed to git
+- `generate.mjs` and `catalog.mjs` auto-load any `.mjs` files in `themes/` at runtime (no manual registration needed)
+- `/genpptx:theme` output path updated to `themes/<name>.mjs` (both PPTX and PDF modes)
+
 ### v1.3.0 — 2026-03-28
 - Bundle generation scripts (`src/`, `package.json`) into the plugin — no project-side setup required
 - Commands auto-detect plugin cache path and run scripts directly from there

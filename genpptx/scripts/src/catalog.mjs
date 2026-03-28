@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { program } from "commander";
 import PptxGenJS from "pptxgenjs";
-import { getTheme, listThemes } from "./themes/index.mjs";
+import { getTheme, listThemes, loadProjectThemes } from "./themes/index.mjs";
 import { listLayouts, getLayoutBuilder } from "./layouts/index.mjs";
 import { exportToHtml } from "./html-export.mjs";
 
@@ -127,6 +127,7 @@ const LAYOUT_META = {
 };
 
 async function buildCatalog(options) {
+  await loadProjectThemes();
   const themeName = options.theme || "base";
   const theme = getTheme(themeName);
 

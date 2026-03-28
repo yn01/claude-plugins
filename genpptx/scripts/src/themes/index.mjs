@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import base from "./base.mjs";
 import corporateYellow from "./corporate-yellow.mjs";
 
@@ -33,4 +35,25 @@ export function listThemes() {
  */
 export function registerTheme(theme) {
   themes.set(theme.name, theme);
+}
+
+/**
+ * Load custom themes from a project-local directory.
+ * Call this before getTheme() to make project themes available.
+ * @param {string} [dir] - Path to themes directory (default: <cwd>/themes)
+ */
+export async function loadProjectThemes(dir) {
+  const themesDir = dir || path.join(process.cwd(), "themes");
+  if (!fs.existsSync(themesDir)) return;
+  const files = fs.readdirSync(themesDir).filter((f) => f.endsWith(".mjs"));
+  for (const file of files) {
+    try {
+      const mod = await import(path.resolve(themesDir, file));
+      if (mod.default?.name) {
+        registerTheme(mod.default);
+      }
+    } catch {
+      // skip malformed theme files silently
+    }
+  }
 }
