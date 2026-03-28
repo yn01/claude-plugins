@@ -11,6 +11,10 @@ allowed-tools: Read, Write, Bash, Glob, Agent
 
 - `<content-file>` — 元になるコンテンツファイルのパス（必須）
 - `--theme <theme-name>` — 使用するテーマ名（省略時: base）
+- `--story-type <A|B|C>` — ストーリー型を強制指定（省略時: エージェントが自動選択）
+  - `A` : 課題解決型（Pain→Solution→Evidence）— 提案・商談・プロダクト紹介
+  - `B` : 比較優位型（現状→選択肢→なぜ自社か）— コンペ・切り替え提案
+  - `C` : 成果逆算型（理想の姿→ギャップ→ロードマップ）— 中長期提案・経営層向け
 
 ## 手順
 
@@ -27,6 +31,7 @@ allowed-tools: Read, Write, Bash, Glob, Agent
      - コンテンツファイルの内容
      - 出力先: `output/<project-name>/spec.yaml`
      - テーマ名（`--theme` で指定された場合はその値、省略時は `base`）
+     - ストーリー型（`--story-type` で指定された場合は「ストーリー型を X に固定してください」と明示して渡す）
    - エージェントが `output/<project-name>/spec.yaml` を生成するまで待機する
 
 3. **PPTX・HTML の生成**
@@ -48,4 +53,6 @@ allowed-tools: Read, Write, Bash, Glob, Agent
 ```
 /genpptx:create output/my-project/content.md
 /genpptx:create output/my-project/content.md --theme corporate-yellow
+/genpptx:create output/my-project/content.md --story-type A
+/genpptx:create output/my-project/content.md --theme corporate-yellow --story-type B
 ```
