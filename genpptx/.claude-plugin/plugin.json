@@ -1,6 +1,6 @@
 {
   "name": "genpptx",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Generate PowerPoint presentations from content using Claude Code",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"

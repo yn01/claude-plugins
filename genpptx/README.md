@@ -147,6 +147,11 @@ Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/them
 
 ## Changelog
 
+### v1.2.0 — 2026-03-28
+- Rewrite `slide-designer` agent to match source project guidelines: correct story type definitions (A=課題解決型/B=比較優位型/C=成果逆算型), add Rules 2–8 (section design, mountain/valley density, layout selection matrix, full spec.yaml schema, prohibited patterns, 2-turn output formats)
+- Add `--story-type A/B/C` option to `/genpptx:create` for forcing story type selection
+- Add `--output <dir>` and `--quiet` options to `/genpptx:catalog`
+
 ### v1.1.0 — 2026-03-28
 - Add PDF support to `/genpptx:read` — reads PDF files via Claude's native Read tool, displays content page by page
 - Add PDF support to `/genpptx:theme` — visually analyzes PDF to estimate colors and fonts, generates theme file directly
