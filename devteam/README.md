@@ -2,165 +2,179 @@
 
 Multi-agent development team orchestration with file-based message queues.
 
-AIエージェントで開発チームを編成し、マルチエージェントorchestrationとファイルベースメッセージキューを提供するClaude Codeプラグインです。
+A Claude Code plugin that assembles an AI-powered development team with multi-agent orchestration and file-based message queues.
 
-## インストール
+## Why devteam?
+
+- **Parallelize your development**: Multiple specialized agents work concurrently — implementers, reviewers, doc writers, and release managers all operate in parallel, reducing the bottleneck of a single-agent workflow.
+- **Role-based specialization**: Each agent has a clearly defined responsibility. The Orchestrator decomposes tasks and delegates; implementers write code; reviewers check it. No one agent tries to do everything.
+- **Scales with your project**: Customize the team structure, model selection, and agent hierarchy via a simple `devteam.yaml`. Add a security auditor, swap in Opus for critical roles, or restructure teams to match your workflow.
+- **Persistent, inspectable communication**: Agent messages are plain Markdown files on disk — easy to read, debug, archive, and audit. No black-box message passing.
+- **Works today, future-proof tomorrow**: Built on file-based queues because Claude Code currently has no native cross-session communication between agents. The message queue layer is intentionally decoupled from agent logic, so it can be swapped out cleanly if Claude Code adds native inter-session messaging in a future update.
+
+## Installation
 
 ```
 /plugin marketplace add yn01/devteam
 ```
 
-マーケットプレイス追加後、プラグインをインストールします:
+After adding the marketplace, install the plugin:
 
 ```
 /plugin install devteam
 ```
 
-## コマンド
+## Commands
 
 ### /devteam:start
 
-開発チームの全エージェントを起動します。
+Starts all agents in the development team.
 
 ```
 /devteam:start
 ```
 
-- プロジェクトルートに `devteam.yaml` があればそれを、なければデフォルトテンプレートを使用
-- 各エージェントのinboxディレクトリを作成
-- tmuxセッションとしてエージェントを起動
+- Uses `devteam.yaml` from the project root if present, otherwise falls back to the default template
+- Creates inbox directories for each agent
+- Launches each agent as a tmux session
 
 ### /devteam:send
 
-指定したエージェントにメッセージを送信します。
+Sends a message to a specified agent.
 
 ```
 /devteam:send <agent-name> <message>
 ```
 
-例:
+Examples:
 ```
-/devteam:send orchestrator 新しいAPI機能を実装してください
-/devteam:send team-alpha-lead ユーザー認証モジュールの実装を優先してください
+/devteam:send orchestrator Implement a new API feature
+/devteam:send team-alpha-lead Prioritize the user authentication module
 ```
 
 ### /devteam:status
 
-全エージェントのステータスとメッセージキューの状態を表示します。
+Displays the status of all agents and the state of their message queues.
 
 ```
 /devteam:status
 ```
 
-- 各エージェントの稼働状態（tmuxセッション）
-- 未読メッセージ数
-- 最新メッセージのプレビュー（先頭3行）
+- Running state of each agent (tmux session)
+- Unread message count
+- Preview of the latest message (first 3 lines)
 
 ### /devteam:stop
 
-全エージェントを停止し、未処理メッセージをアーカイブします。
+Stops all agents and archives unprocessed messages.
 
 ```
 /devteam:stop
 ```
 
-- 全tmuxセッションを終了
-- 未処理メッセージを `.claude/messages/archive/<timestamp>/` に移動
+- Terminates all tmux sessions
+- Moves unprocessed messages to `.claude/messages/archive/<timestamp>/`
 
-## devteam.yaml のカスタマイズ
+## Customizing devteam.yaml
 
-プロジェクトルートに `devteam.yaml` を作成することで、チーム構成をカスタマイズできます。
+Create a `devteam.yaml` in your project root to customize the team structure.
 
-### エージェントの追加
+### Adding agents
 
 ```yaml
 agents:
-  # 既存エージェントに加えて...
+  # In addition to existing agents...
   security-auditor:
     model: claude-sonnet-4-6
     type: general-purpose
     role: Security Auditor
 ```
 
-### モデルの変更
+### Changing models
 
 ```yaml
 agents:
   implementer-a:
-    model: claude-opus-4-6  # より高性能なモデルに変更
+    model: claude-opus-4-6  # Upgrade to a more capable model
     type: general-purpose
     role: Implementer A
 ```
 
-### チーム構成の変更
+### Restructuring the team
 
 ```yaml
 orchestrator:
   model: claude-opus-4-6
   role: Orchestrator
-  directs: [doc-manager, team-alpha-lead]  # 直属を減らす
+  directs: [doc-manager, team-alpha-lead]  # Fewer direct reports
 
 agents:
   team-alpha-lead:
     model: claude-sonnet-4-6
     type: general-purpose
     role: Team Alpha Lead
-    directs: [implementer-a, implementer-c, reviewer-a]  # メンバー追加
+    directs: [implementer-a, implementer-c, reviewer-a]  # Add a member
 ```
 
-### 利用可能なエージェントタイプ
+### Available agent types
 
-| type | 説明 | 起動方法 |
-|------|------|----------|
-| `general-purpose` | 汎用エージェント | `claude --model <model>` |
-| `explore` | コードベース探索特化 | `claude --model <model>` |
-| `bash` | CLI tool (Codex等) | `codex` |
+| type | Description | Launch method |
+|------|-------------|---------------|
+| `general-purpose` | General-purpose agent | `claude --model <model>` |
+| `explore` | Codebase exploration specialist | `claude --model <model>` |
+| `bash` | CLI tool (Codex, etc.) | `codex` |
 
-## ディレクトリ構造
+## Why file-based message queues?
+
+Claude Code currently provides no native communication channel between independent agent sessions (e.g., worktrees or separate tmux-launched `claude` processes). To enable agents to coordinate, devteam uses the filesystem as a message bus: each agent has an inbox directory, and messages are written as timestamped Markdown files.
+
+This approach is intentionally decoupled from the agent logic itself. The message queue is a thin transport layer — agents only know to read from and write to a directory path. If Claude Code introduces native inter-session messaging in the future, the queue layer can be replaced without touching agent definitions or command logic.
+
+## Directory structure
 
 ```
 devteam/
 ├── .claude-plugin/
-│   └── plugin.json          # プラグインメタデータ
+│   └── plugin.json          # Plugin metadata
 ├── commands/
-│   ├── start.md             # チーム起動コマンド
-│   ├── send.md              # メッセージ送信コマンド
-│   ├── status.md            # ステータス確認コマンド
-│   └── stop.md              # チーム停止コマンド
+│   ├── start.md             # Team start command
+│   ├── send.md              # Message send command
+│   ├── status.md            # Status check command
+│   └── stop.md              # Team stop command
 ├── agents/
-│   ├── orchestrator.md      # Orchestratorエージェント定義
-│   └── queue-monitor.md     # Queue Monitorエージェント定義
+│   ├── orchestrator.md      # Orchestrator agent definition
+│   └── queue-monitor.md     # Queue Monitor agent definition
 ├── hooks/
-│   └── hooks.json           # セッション開始時の未読通知フック
+│   └── hooks.json           # Unread notification hook on session start
 ├── templates/
-│   └── devteam.yaml         # デフォルトチーム構成テンプレート
-├── LICENSE                  # MITライセンス
-└── README.md                # このファイル
+│   └── devteam.yaml         # Default team configuration template
+├── LICENSE                  # MIT License
+└── README.md                # This file
 ```
 
-### メッセージキュー構造（実行時に生成）
+### Message queue structure (generated at runtime)
 
 ```
 .claude/messages/
 ├── inbox/
-│   ├── orchestrator/        # Orchestratorの受信箱
-│   ├── doc-manager/         # Doc Managerの受信箱
-│   ├── release-manager/     # Release Managerの受信箱
-│   ├── explorer/            # Explorerの受信箱
-│   ├── team-alpha-lead/     # Team Alpha Leadの受信箱
-│   ├── implementer-a/       # Implementer Aの受信箱
-│   ├── reviewer-a/          # Reviewer Aの受信箱
-│   ├── team-beta-lead/      # Team Beta Leadの受信箱
-│   ├── implementer-b/       # Implementer Bの受信箱
-│   └── reviewer-b/          # Reviewer Bの受信箱
+│   ├── orchestrator/        # Orchestrator inbox
+│   ├── doc-manager/         # Doc Manager inbox
+│   ├── release-manager/     # Release Manager inbox
+│   ├── explorer/            # Explorer inbox
+│   ├── team-alpha-lead/     # Team Alpha Lead inbox
+│   ├── implementer-a/       # Implementer A inbox
+│   ├── reviewer-a/          # Reviewer A inbox
+│   ├── team-beta-lead/      # Team Beta Lead inbox
+│   ├── implementer-b/       # Implementer B inbox
+│   └── reviewer-b/          # Reviewer B inbox
 └── archive/
-    └── <timestamp>/         # アーカイブされたメッセージ
+    └── <timestamp>/         # Archived messages
 ```
 
-### メッセージファイル命名規則
+### Message file naming convention
 
 ```
 <ISO timestamp>_from-<sender>.md
 ```
 
-例: `2026-03-17T08-30-00_from-user.md`
+Example: `2026-03-17T08-30-00_from-user.md`
