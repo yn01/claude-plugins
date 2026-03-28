@@ -20,7 +20,7 @@ agents:
     model: claude-sonnet-4-6
     type: general-purpose
     role: Team Alpha Lead
-    directs: [implementer-a, reviewer-a]
+    directs: [implementer-a, reviewer-a, evaluator-a]
   implementer-a:
     model: claude-sonnet-4-6
     type: general-purpose
@@ -28,11 +28,15 @@ agents:
   reviewer-a:
     type: bash
     role: Reviewer A (Codex CLI)
+  evaluator-a:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Evaluator A
   team-beta-lead:
     model: claude-sonnet-4-6
     type: general-purpose
     role: Team Beta Lead
-    directs: [implementer-b, reviewer-b]
+    directs: [implementer-b, reviewer-b, evaluator-b]
   implementer-b:
     model: claude-sonnet-4-6
     type: general-purpose
@@ -40,6 +44,13 @@ agents:
   reviewer-b:
     type: bash
     role: Reviewer B (Codex CLI)
+  evaluator-b:
+    model: claude-sonnet-4-6
+    type: general-purpose
+    role: Evaluator B
 
 message_queue:
   base_path: .claude/messages/inbox
+
+sprint_contracts:
+  base_path: .claude/messages/contracts
