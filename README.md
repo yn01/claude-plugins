@@ -55,34 +55,3 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
-## Changelog
-
-### devteam
-
-#### v1.1.0 — 2026-03-28
-- Add sprint contracts (`/devteam:contract create/list/complete/report`) — pre-agreed definitions of done between Orchestrator and Team Lead
-- Add Evaluator agents (`evaluator-a`, `evaluator-b`) implementing the Generator/Evaluator pattern
-- Add `agents/communication-rules.md` defining allowed/prohibited message paths for all agents
-- Enforce chain of command: Orchestrator → Team Lead → team members only; no skip-level messages
-- Update `devteam.yaml` with `sprint_contracts` config and evaluator agent entries
-
-#### v1.0.0 — 2026-03-17
-- Initial release
-
----
-
-### obsidian-archive
-
-#### v1.0.0 — 2026-03-17
-- Initial release
-
----
-
-### genpptx
-
-#### v1.1.0 — 2026-03-28
-- Add PDF support to `/genpptx:read` — reads PDF files via Claude's native Read tool, displays content page by page
-- Add PDF support to `/genpptx:theme` — visually analyzes PDF to estimate colors and fonts, generates theme file directly
-
-#### v1.0.0 — 2026-03-17
-- Initial release

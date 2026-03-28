@@ -145,6 +145,15 @@ Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/them
    → Preview the design in output/catalog/catalog-my-theme.pptx
 ```
 
+## Changelog
+
+### v1.1.0 — 2026-03-28
+- Add PDF support to `/genpptx:read` — reads PDF files via Claude's native Read tool, displays content page by page
+- Add PDF support to `/genpptx:theme` — visually analyzes PDF to estimate colors and fonts, generates theme file directly
+
+### v1.0.0 — 2026-03-17
+- Initial release
+
 ## License
 
 MIT © Yohei Nakanishi

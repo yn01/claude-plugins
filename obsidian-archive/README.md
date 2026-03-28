@@ -180,6 +180,11 @@ After each tool use, checks the time elapsed since the last save. If it exceeds 
 2. Only runs when the interval has elapsed — not after every tool use
 3. Saves to `{vault_path}/{folder}/intermediate/{filename}_autosave.md`
 
+## Changelog
+
+### v1.0.0 — 2026-03-17
+- Initial release
+
 ## License
 
 MIT

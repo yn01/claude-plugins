@@ -305,3 +305,15 @@ CONTRACT-<YYYYMMDD>-<HHMMSS>.md
 ```
 
 Example: `CONTRACT-20260328-103045.md`
+
+## Changelog
+
+### v1.1.0 — 2026-03-28
+- Add sprint contracts (`/devteam:contract create/list/complete/report`) — pre-agreed definitions of done between Orchestrator and Team Lead
+- Add Evaluator agents (`evaluator-a`, `evaluator-b`) implementing the Generator/Evaluator pattern
+- Add `agents/communication-rules.md` defining allowed/prohibited message paths for all agents
+- Enforce chain of command: Orchestrator → Team Lead → team members only; no skip-level messages
+- Update `devteam.yaml` with `sprint_contracts` config and evaluator agent entries
+
+### v1.0.0 — 2026-03-17
+- Initial release
