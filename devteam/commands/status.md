@@ -36,22 +36,24 @@ explorer             🟢 稼働中   0件
 team-alpha-lead      🟢 稼働中   3件
 implementer-a        🟢 稼働中   1件
 reviewer-a           🟢 稼働中   0件
+evaluator-a          🟢 稼働中   0件
 team-beta-lead       🟢 稼働中   0件
 implementer-b        🟢 稼働中   0件
 reviewer-b           🔴 停止     0件
+evaluator-b          🟢 稼働中   0件
 
 📬 未読メッセージプレビュー:
 
 [orchestrator] 2件の未読 - 最新:
-  > タスクAの進捗を報告します。
-  > 実装は完了し、テストも通過しました。
-  > レビュー待ちの状態です。
+  > CONTRACT-20260328-103045 完了報告
+  > 全acceptance criteriaが検証済みです。
+  > team-alpha-leadより
 
 [release-manager] 1件の未読 - 最新:
   > v1.2.0のリリース準備を開始してください。
 
 [team-alpha-lead] 3件の未読 - 最新:
-  > implementer-aからの報告: API実装完了。
-  > エンドポイント: /api/v1/users
-  > テストカバレッジ: 85%
+  > evaluator-aからの報告: CONTRACT-20260328-103045 PASS
+  > エンドポイント: /api/v1/users - 全criteria合格
+  > /devteam:contract complete CONTRACT-20260328-103045 を実行してください
 ```
