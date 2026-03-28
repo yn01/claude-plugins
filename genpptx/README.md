@@ -35,7 +35,7 @@ The primary command. Provide a content file and it handles everything from slide
 1. Reads the content file
 2. `slide-designer` agent designs a story-driven slide structure
 3. Generates `output/<project-name>/spec.yaml`
-4. Runs `node src/generate.mjs` to produce PPTX and HTML
+4. Runs the bundled `generate.mjs` to produce PPTX and HTML
 5. Reports the output file paths
 
 ---
@@ -91,7 +91,7 @@ For PPTX, tokens are extracted programmatically from the file's XML. For PDF, Cl
 /genpptx:theme refs/proposal.pdf proposal-theme
 ```
 
-Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/themes/index.mjs`)
+Output: `themes/<theme-name>.mjs` in your project (auto-loaded at runtime — no registration needed)
 
 ---
 
@@ -133,16 +133,17 @@ Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/them
 ```
 1. /genpptx:theme refs/sample.pptx my-theme     # from PPTX (programmatic extraction)
    /genpptx:theme refs/brand-guide.pdf my-theme  # from PDF (visual estimation)
-   → src/themes/my-theme.mjs is generated
+   → themes/my-theme.mjs is generated in your project
 
-2. Review and adjust colors/fonts in src/themes/my-theme.mjs
+2. Review and adjust colors/fonts in themes/my-theme.mjs
    (especially important when extracted from PDF — values are approximate)
 
-3. Register the theme in src/themes/index.mjs
-
-4. /genpptx:catalog --theme my-theme
+3. /genpptx:catalog --theme my-theme
    → Preview the design in output/catalog/catalog-my-theme.pptx
 ```
+
+Theme files in `themes/` are loaded automatically at runtime. No registration needed.
+They persist in your project and survive plugin updates.
 
 ## Changelog
 
