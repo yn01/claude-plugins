@@ -66,24 +66,30 @@ Output: `output/catalog/catalog-<theme-name>.pptx` / `.html`
 
 ---
 
-### `/genpptx:read` — Read an existing PPTX
+### `/genpptx:read` — Read an existing PPTX or PDF
 
-Reads and displays the content of an existing PPTX file. Useful for review and revision.
+Reads and displays the content of an existing PPTX or PDF file. Useful for review and revision.
 
 ```
 /genpptx:read output/my-project/presentation.pptx
 /genpptx:read refs/sample.pptx
+/genpptx:read refs/proposal.pdf
+/genpptx:read refs/report.pdf
 ```
 
 ---
 
-### `/genpptx:theme` — Extract theme from PPTX
+### `/genpptx:theme` — Extract theme from PPTX or PDF
 
-Extracts design tokens (colors, fonts) from an existing PPTX and generates a theme file skeleton.
+Extracts design tokens (colors, fonts) from an existing PPTX or PDF and generates a theme file skeleton.
+
+For PPTX, tokens are extracted programmatically from the file's XML. For PDF, Claude visually analyzes the document and estimates colors and fonts — results are approximate and should be reviewed before use.
 
 ```
 /genpptx:theme refs/sample.pptx my-theme
 /genpptx:theme refs/corporate.pptx corporate-blue
+/genpptx:theme refs/brand-guide.pdf brand-colors
+/genpptx:theme refs/proposal.pdf proposal-theme
 ```
 
 Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/themes/index.mjs`)
@@ -123,13 +129,15 @@ Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/them
    /genpptx:generate output/my-project/spec.yaml
 ```
 
-### Adding a new theme
+### Adding a new theme (from PPTX or PDF)
 
 ```
-1. /genpptx:theme refs/sample.pptx my-theme
+1. /genpptx:theme refs/sample.pptx my-theme     # from PPTX (programmatic extraction)
+   /genpptx:theme refs/brand-guide.pdf my-theme  # from PDF (visual estimation)
    → src/themes/my-theme.mjs is generated
 
 2. Review and adjust colors/fonts in src/themes/my-theme.mjs
+   (especially important when extracted from PDF — values are approximate)
 
 3. Register the theme in src/themes/index.mjs
 
