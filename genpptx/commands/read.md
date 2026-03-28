@@ -22,9 +22,10 @@ allowed-tools: Read, Bash
 2. **ファイルの読み取り**
 
    **PPTXの場合:**
-   - 以下のコマンドを実行する:
+   - プラグインのスクリプトディレクトリを特定し、コマンドを実行する:
      ```bash
-     node src/read.mjs <file-path>
+     PLUGIN_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+     bash "$PLUGIN_DIR/scripts/run.sh" read.mjs <file-path>
      ```
 
    **PDFの場合:**

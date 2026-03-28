@@ -10,9 +10,8 @@ Just provide a content file and the plugin automatically designs a story-driven 
 ## Requirements
 
 - **Node.js 18+**
-- **PPTX generation system** must exist in your project
-  - `src/generate.mjs`, `src/catalog.mjs`, `src/read.mjs` must be available
-  - `npm install` must be completed
+
+The generation scripts and dependencies are bundled with the plugin. No project-side setup is needed — `npm install` runs automatically on first use.
 
 ## Installation
 
@@ -146,6 +145,11 @@ Output: `src/themes/<theme-name>.mjs` (requires manual registration in `src/them
 ```
 
 ## Changelog
+
+### v1.3.0 — 2026-03-28
+- Bundle generation scripts (`src/`, `package.json`) into the plugin — no project-side setup required
+- Commands auto-detect plugin cache path and run scripts directly from there
+- `npm install` runs automatically on first use
 
 ### v1.2.0 — 2026-03-28
 - Rewrite `slide-designer` agent to match source project guidelines: correct story type definitions (A=problem-solving, B=competitive advantage, C=outcome-driven), add Rules 2–8 (section design, mountain/valley density, layout selection matrix, full spec.yaml schema, prohibited patterns, 2-turn output formats)

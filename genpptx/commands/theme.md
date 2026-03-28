@@ -23,9 +23,10 @@ allowed-tools: Read, Write, Bash
 2. **デザイントークンの抽出**
 
    **PPTXの場合:**
-   - 以下のコマンドを実行する:
+   - プラグインのスクリプトディレクトリを特定し、コマンドを実行する:
      ```bash
-     node src/read.mjs <file-path> --extract-theme <theme-name>
+     PLUGIN_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+     bash "$PLUGIN_DIR/scripts/run.sh" read.mjs <file-path> --extract-theme <theme-name>
      ```
    - 抽出されたデザイントークン（Primary色・テキスト色・背景色・フォント名など）を表示する
 
@@ -38,16 +39,21 @@ allowed-tools: Read, Write, Bash
      - **アクセント色** — グラフ・アイコン・ボーダー等に使われている色
      - **フォント** — タイトル・本文それぞれの書体（特定できる場合）
    - 抽出結果は目視分析に基づく推定値であることを明示する
-   - 抽出したデザイントークンをもとに `src/themes/<theme-name>.mjs` を直接生成する（PPTXと同様のフォーマット）
+   - 抽出したデザイントークンをもとに、プラグインキャッシュ内のテーマファイルを直接生成する（PPTXと同様のフォーマット）:
+     ```bash
+     PLUGIN_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+     ```
+     - `$PLUGIN_DIR/scripts/src/themes/<theme-name>.mjs` にテーマファイルを生成する（`Write` ツールを使う）
+     - `$PLUGIN_DIR/scripts/src/themes/index.mjs` にテーマを登録する（importとthemes.setへの追加）
 
 3. **完了報告と次のステップの案内**
    - 生成されたテーマファイルのパスを報告する:
-     - `src/themes/<theme-name>.mjs`
+     - `$PLUGIN_DIR/scripts/src/themes/<theme-name>.mjs`
    - PDFの場合は推定値が含まれる旨を案内し、確認・調整を促す
    - 以下の次のステップを案内する:
-     1. `src/themes/<theme-name>.mjs` の内容を確認・調整する
-     2. `src/themes/index.mjs` にテーマを登録する（importとgetTheme関数への追加）
-     3. `node src/catalog.mjs --theme <theme-name>` でカタログを確認する
+     1. `$PLUGIN_DIR/scripts/src/themes/<theme-name>.mjs` の内容を確認・調整する
+     2. `bash "$PLUGIN_DIR/scripts/run.sh" catalog.mjs --theme <theme-name>` でカタログを確認する
+   - **注意**: プラグインを再インストール・アップデートするとカスタムテーマは消えます。テーマファイルのコピーをプロジェクト内に保存しておくことを推奨する
 
 ## 使用例
 

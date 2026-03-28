@@ -16,16 +16,20 @@ allowed-tools: Bash
 ## 手順
 
 1. **カタログ生成コマンドの実行**
+   - まず、プラグインのスクリプトディレクトリを特定する:
+     ```bash
+     PLUGIN_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+     ```
    - 引数に応じて以下のようにオプションを組み合わせて実行する:
      ```bash
-     node src/catalog.mjs [--theme <theme-name>] [--output <dir>] [--quiet]
+     bash "$PLUGIN_DIR/scripts/run.sh" catalog.mjs [--theme <theme-name>] [--output <dir>] [--quiet]
      ```
    - 例:
      ```bash
-     node src/catalog.mjs
-     node src/catalog.mjs --theme corporate-yellow
-     node src/catalog.mjs --theme corporate-yellow --output output/my-catalog
-     node src/catalog.mjs --quiet
+     bash "$PLUGIN_DIR/scripts/run.sh" catalog.mjs
+     bash "$PLUGIN_DIR/scripts/run.sh" catalog.mjs --theme corporate-yellow
+     bash "$PLUGIN_DIR/scripts/run.sh" catalog.mjs --theme corporate-yellow --output output/my-catalog
+     bash "$PLUGIN_DIR/scripts/run.sh" catalog.mjs --quiet
      ```
 
 2. **完了報告**

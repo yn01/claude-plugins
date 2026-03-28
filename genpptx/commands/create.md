@@ -36,9 +36,10 @@ allowed-tools: Read, Write, Bash, Glob, Agent
 
 3. **PPTX・HTML の生成**
    - spec.yaml が生成されたことを確認する
-   - 以下のコマンドを実行する:
+   - プラグインのスクリプトディレクトリを特定し、生成コマンドを実行する:
      ```bash
-     node src/generate.mjs output/<project-name>/spec.yaml
+     PLUGIN_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+     bash "$PLUGIN_DIR/scripts/run.sh" generate.mjs output/<project-name>/spec.yaml
      ```
    - エラーが発生した場合はエラー内容を報告して終了する
 

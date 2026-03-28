@@ -1,0 +1,22 @@
+{
+  "name": "pptx-generator",
+  "version": "1.0.0",
+  "description": "PPTX presentation generator with theme system and AI image generation",
+  "type": "module",
+  "scripts": {
+    "plan": "node src/plan.mjs",
+    "generate": "node src/generate.mjs",
+    "catalog": "node src/catalog.mjs",
+    "read": "node src/read.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "js-yaml": "^4.1.0",
+    "jszip": "^3.10.1",
+    "openai": "^4.85.0",
+    "pptxgenjs": "^3.12.0",
+    "xml2js": "^0.6.2"
+  }
+}

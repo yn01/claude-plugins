@@ -20,17 +20,21 @@ allowed-tools: Read, Bash
    - ファイルが存在しない場合はエラーを報告して終了する
 
 2. **生成コマンドの実行**
+   - まず、プラグインのスクリプトディレクトリを特定する:
+     ```bash
+     PLUGIN_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+     ```
    - 以下のコマンドを実行する（オプションに応じて引数を追加）:
      ```bash
-     node src/generate.mjs <spec-yaml-path>
+     bash "$PLUGIN_DIR/scripts/run.sh" generate.mjs <spec-yaml-path>
      ```
    - `--skip-html` が指定された場合:
      ```bash
-     node src/generate.mjs <spec-yaml-path> --skip-html
+     bash "$PLUGIN_DIR/scripts/run.sh" generate.mjs <spec-yaml-path> --skip-html
      ```
    - `--skip-images` が指定された場合:
      ```bash
-     node src/generate.mjs <spec-yaml-path> --skip-images
+     bash "$PLUGIN_DIR/scripts/run.sh" generate.mjs <spec-yaml-path> --skip-images
      ```
    - 両方指定された場合は両オプションを付けて実行する
 
