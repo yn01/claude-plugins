@@ -147,6 +147,10 @@ They persist in your project and survive plugin updates.
 
 ## Changelog
 
+### v1.4.3 — 2026-03-30
+- `/genpptx:create` and `/genpptx:generate` now list available themes and prompt for selection when `--theme` is not specified (default `base` is used if the user continues without input)
+- `/genpptx:generate` also checks for a `theme:` field in `spec.yaml` — if found, uses it automatically without prompting
+
 ### v1.4.2 — 2026-03-30
 - Fix: `/genpptx:theme` (PDF mode) command instructions now provide a complete standalone template — prevents Claude from adding `import base` or omitting required fields (`presentation`, `spacing`, `layouts`, `components`)
 

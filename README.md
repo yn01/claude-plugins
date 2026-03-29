@@ -24,7 +24,7 @@ Captures what you built, decided, and carried over — at session end or on a co
 /plugin install obsidian-archive
 ```
 
-### [genpptx](./genpptx) `v1.4.2`
+### [genpptx](./genpptx) `v1.4.3`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
 
