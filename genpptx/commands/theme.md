@@ -41,14 +41,114 @@ allowed-tools: Read, Write, Bash
    - 抽出結果は目視分析に基づく推定値であることを明示する
    - 抽出したデザイントークンをもとに、プロジェクト内の `themes/<theme-name>.mjs` を直接生成する:
      - `themes/` ディレクトリが存在しない場合は `Bash` で `mkdir -p themes` して作成する
-     - `themes/<theme-name>.mjs` に以下のフォーマットでテーマファイルを生成する（`Write` ツールを使う）:
+     - `themes/<theme-name>.mjs` を `Write` ツールで生成する
+     - **必ず以下の完全なスタンドアロン形式を使う（`import` 文は一切書かない）**:
        ```javascript
-       const <camelCaseName> = {
+       // Extracted from: <file-path>
+       // Review and adjust values before use.
+
+       const theme = {
          name: "<theme-name>",
-         // ... extracted tokens
+         meta: {
+           description: "Extracted from <filename>",
+           source: "<file-path>",
+         },
+
+         presentation: {
+           layout: "LAYOUT_WIDE",
+           author: "",
+         },
+
+         colors: {
+           primary:       "<extracted or #2563EB>",
+           primaryLight:  "<lightened primary>",
+           primaryBorder: "<darkened primary>",
+           text:          "<extracted or #000000>",
+           textSub:       "<extracted or #4B5563>",
+           bg:            "<extracted or #FFFFFF>",
+           surface:       "<extracted or #F9FAFB>",
+           border:        "<extracted or #D1D5DB>",
+           white:         "#FFFFFF",
+         },
+
+         typography: {
+           coverTitle:   { fontSize: 36, fontFace: "<heading font>", bold: true,  color: null },
+           pageTitle:    { fontSize: 24, fontFace: "<heading font>", bold: true,  color: null },
+           sectionTitle: { fontSize: 20, fontFace: "<heading font>", bold: true,  color: null },
+           heading:      { fontSize: 16, fontFace: "<heading font>", bold: true,  color: null },
+           body:         { fontSize: 12, fontFace: "<body font>",    bold: false, color: null },
+           caption:      { fontSize: 10, fontFace: "<body font>",    bold: false, color: null },
+           footnote:     { fontSize: 8,  fontFace: "<body font>",    bold: false, color: null },
+         },
+
+         spacing: {
+           slideMargin: { top: 0.5, left: 0.6, right: 0.6, bottom: 0.4 },
+           titleGap: 0.2,
+           contentPadding: 0.3,
+           sidebarWidth: 1.5,
+         },
+
+         layouts: [
+           "cover", "content", "section", "two-column",
+           "image-full", "image-text", "table", "chart",
+           "summary", "closing",
+         ],
+
+         components: {
+           table: {
+             headerBg:    "<textSub color>",
+             headerColor: "#FFFFFF",
+             zebraEven:   "<surface color>",
+             zebraOdd:    "#FFFFFF",
+             borderColor: "#D1D5DB",
+             borderWidth: 0.5,
+           },
+           badge: {
+             bg:            "<primary color>",
+             color:         "#FFFFFF",
+             paddingTop:    0.03,
+             paddingBottom: 0.03,
+             paddingLeft:   0.1,
+             paddingRight:  0.1,
+             borderRadius:  0,
+           },
+           card: {
+             bg:          "#FFFFFF",
+             borderColor: "#D1D5DB",
+             borderWidth: 0.5,
+             padding:     0.2,
+           },
+           highlightBox: {
+             bg:          "<primaryLight color>",
+             borderColor: "<primaryBorder color>",
+             borderWidth: 1,
+             padding:     0.2,
+           },
+           footer: {
+             fontSize:     8,
+             color:        "#9CA3AF",
+             marginBottom: 0.15,
+             marginRight:  0.3,
+           },
+         },
+
+         imageStyle: "clean, minimal, professional illustration style, flat design, white background, no text in image",
+
+         prohibited: [
+           "No gradients",
+           "No heavy shadows",
+           "No emoji",
+           "No hardcoded colors (use theme tokens)",
+           "No excessive border-radius",
+           "No decorative icons (data and logos only)",
+           "No text-only slides",
+           "No AI-generated text in images",
+         ],
        };
-       export default <camelCaseName>;
+
+       export default theme;
        ```
+     - `<...>` のプレースホルダーを抽出した実際の値で置き換える
 
 3. **完了報告と次のステップの案内**
    - 生成されたテーマファイルのパスを報告する:

@@ -147,6 +147,9 @@ They persist in your project and survive plugin updates.
 
 ## Changelog
 
+### v1.4.2 — 2026-03-30
+- Fix: `/genpptx:theme` (PDF mode) command instructions now provide a complete standalone template — prevents Claude from adding `import base` or omitting required fields (`presentation`, `spacing`, `layouts`, `components`)
+
 ### v1.4.1 — 2026-03-30
 - Fix: `/genpptx:theme` (PPTX extraction) generated a theme file with `import base from "./base.mjs"` which failed silently because `base.mjs` does not exist in the project's `themes/` directory — generated theme is now fully standalone
 
