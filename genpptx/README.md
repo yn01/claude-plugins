@@ -147,6 +147,9 @@ They persist in your project and survive plugin updates.
 
 ## Changelog
 
+### v1.4.1 — 2026-03-30
+- Fix: `/genpptx:theme` (PPTX extraction) generated a theme file with `import base from "./base.mjs"` which failed silently because `base.mjs` does not exist in the project's `themes/` directory — generated theme is now fully standalone
+
 ### v1.4.0 — 2026-03-28
 - Custom themes are now saved to `themes/` in the user's project instead of the plugin cache — survives plugin updates, can be committed to git
 - `generate.mjs` and `catalog.mjs` auto-load any `.mjs` files in `themes/` at runtime (no manual registration needed)

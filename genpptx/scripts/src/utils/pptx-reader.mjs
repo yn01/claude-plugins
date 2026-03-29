@@ -230,18 +230,20 @@ export async function extractTheme(filePath, themeName = "extracted") {
 
   const source = `// Auto-extracted from: ${basename}
 // Review and adjust values before use.
-import base from "./base.mjs";
 
 const theme = {
-  ...base,
   name: "${themeName}",
   meta: {
     description: "Extracted from ${basename}",
     source: "refs/${basename}",
   },
 
+  presentation: {
+    layout: "LAYOUT_WIDE",
+    author: "",
+  },
+
   colors: {
-    ...base.colors,
     primary:       "${primary}",
     primaryLight:  "${primaryLight}",
     primaryBorder: "${primaryBorder}",
@@ -263,26 +265,69 @@ const theme = {
     footnote:     { fontSize: 8,      fontFace: "${bodyFont}",    bold: false, color: null },
   },
 
-  // Adjust component colors to match extracted palette
+  spacing: {
+    slideMargin: { top: 0.5, left: 0.6, right: 0.6, bottom: 0.4 },
+    titleGap: 0.2,
+    contentPadding: 0.3,
+    sidebarWidth: 1.5,
+  },
+
+  layouts: [
+    "cover", "content", "section", "two-column",
+    "image-full", "image-text", "table", "chart",
+    "summary", "closing",
+  ],
+
   components: {
-    ...base.components,
     table: {
-      ...base.components.table,
       headerBg:    "${textSub}",
       headerColor: "#FFFFFF",
       zebraEven:   "${surface}",
+      zebraOdd:    "#FFFFFF",
+      borderColor: "#D1D5DB",
+      borderWidth: 0.5,
     },
     badge: {
-      ...base.components.badge,
-      bg:    "${primary}",
-      color: "#FFFFFF",
+      bg:            "${primary}",
+      color:         "#FFFFFF",
+      paddingTop:    0.03,
+      paddingBottom: 0.03,
+      paddingLeft:   0.1,
+      paddingRight:  0.1,
+      borderRadius:  0,
+    },
+    card: {
+      bg:          "#FFFFFF",
+      borderColor: "#D1D5DB",
+      borderWidth: 0.5,
+      padding:     0.2,
     },
     highlightBox: {
-      ...base.components.highlightBox,
       bg:          "${primaryLight}",
       borderColor: "${primaryBorder}",
+      borderWidth: 1,
+      padding:     0.2,
+    },
+    footer: {
+      fontSize:     8,
+      color:        "#9CA3AF",
+      marginBottom: 0.15,
+      marginRight:  0.3,
     },
   },
+
+  imageStyle: "clean, minimal, professional illustration style, flat design, white background, no text in image",
+
+  prohibited: [
+    "No gradients",
+    "No heavy shadows",
+    "No emoji",
+    "No hardcoded colors (use theme tokens)",
+    "No excessive border-radius",
+    "No decorative icons (data and logos only)",
+    "No text-only slides",
+    "No AI-generated text in images",
+  ],
 };
 
 export default theme;
