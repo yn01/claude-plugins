@@ -20,7 +20,7 @@ async function generate(specPath, options) {
 
   // Resolve theme (load project-local themes first)
   await loadProjectThemes();
-  const themeName = options.theme || spec.theme || "base";
+  const themeName = options.theme || String(spec.theme ?? "base");
   const theme = getTheme(themeName);
   console.log(`Theme: ${theme.name}`);
 

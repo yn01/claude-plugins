@@ -95,6 +95,15 @@ Output: `themes/<theme-name>.mjs` in your project (auto-loaded at runtime — no
 
 ---
 
+## Built-in Themes
+
+| Theme | Description |
+|-------|-------------|
+| `base` | Default theme (white background, blue accent) |
+| `corporate-yellow` | Corporate style (white background, yellow accent) |
+
+Custom themes placed in `themes/<name>.mjs` in your project are loaded automatically at runtime.
+
 ## Available Layouts
 
 | Layout | Use case |
@@ -146,6 +155,10 @@ Theme files in `themes/` are loaded automatically at runtime. No registration ne
 They persist in your project and survive plugin updates.
 
 ## Changelog
+
+### v1.4.4 — 2026-03-30
+- Fix: numeric-looking theme names (e.g. `20260328`) were parsed as numbers by YAML — `generate.mjs` now coerces `spec.theme` to string; `slide-designer` now always quotes the theme value in spec.yaml output
+- Add "Built-in Themes" section to README listing `base` and `corporate-yellow`
 
 ### v1.4.3 — 2026-03-30
 - `/genpptx:create` and `/genpptx:generate` now list available themes and prompt for selection when `--theme` is not specified (default `base` is used if the user continues without input)

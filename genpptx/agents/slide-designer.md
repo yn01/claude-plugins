@@ -99,7 +99,7 @@ allowed-tools: Read, Write, Glob
 出力する spec.yaml は以下のスキーマに厳密に従ってください。
 
 ```yaml
-theme: [テーマ名]            # 文字列。ユーザーが指定したテーマ名をそのまま使う
+theme: "[テーマ名]"          # 必ずダブルクォートで囲む（数字始まりでもYAMLが文字列として解釈するよう）
 title: "[プレゼン名]"
 
 slides:
