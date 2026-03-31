@@ -8,21 +8,6 @@
   },
   "plugins": [
     {
-      "name": "mcpd",
-      "source": "./mcpd",
-      "description": "Diagnose MCP server configuration, connectivity, and available tools",
-      "author": {
-        "name": "Yohei Nakanishi"
-      },
-      "keywords": [
-        "mcp",
-        "diagnostic",
-        "debug",
-        "tools",
-        "connectivity"
-      ]
-    },
-    {
       "name": "devteam",
       "source": "./devteam",
       "description": "Multi-agent development team orchestration with file-based message queues",
@@ -34,21 +19,6 @@
         "orchestration",
         "message-queue",
         "devteam"
-      ]
-    },
-    {
-      "name": "obsidian-archive",
-      "source": "./obsidian-archive",
-      "description": "Automatically archive Claude Code session summaries to Obsidian",
-      "author": {
-        "name": "Yohei Nakanishi"
-      },
-      "keywords": [
-        "obsidian",
-        "archive",
-        "session",
-        "summary",
-        "notes"
       ]
     },
     {
@@ -64,6 +34,36 @@
         "presentation",
         "slides",
         "generate"
+      ]
+    },
+    {
+      "name": "mcpd",
+      "source": "./mcpd",
+      "description": "Diagnose MCP server configuration, connectivity, and available tools",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "mcp",
+        "diagnostic",
+        "debug",
+        "tools",
+        "connectivity"
+      ]
+    },
+    {
+      "name": "obsidian-archive",
+      "source": "./obsidian-archive",
+      "description": "Automatically archive Claude Code session summaries to Obsidian",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "obsidian",
+        "archive",
+        "session",
+        "summary",
+        "notes"
       ]
     }
   ]
