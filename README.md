@@ -4,16 +4,6 @@ A collection of Claude Code plugins by Yohei Nakanishi. New plugins are added ov
 
 ## Plugins
 
-### [mcpd](./mcpd) `v1.0.0`
-
-Diagnose MCP server configuration, connectivity, and available tools.
-
-Reads all MCP configuration files (global and project-level), checks environment variables, verifies server connectivity, and lists available tools — all in one command.
-
-```
-/plugin install mcpd
-```
-
 ### [devteam](./devteam) `v1.1.0`
 
 Multi-agent development team orchestration with file-based message queues.
@@ -24,16 +14,6 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [obsidian-archive](./obsidian-archive) `v1.0.0`
-
-Automatically generates session summaries and saves them to an Obsidian vault.
-
-Captures what you built, decided, and carried over — at session end or on a configurable interval — as structured Markdown notes in your vault.
-
-```
-/plugin install obsidian-archive
-```
-
 ### [genpptx](./genpptx) `v1.4.4`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
@@ -42,6 +22,26 @@ Provide a content file and the plugin designs a story-driven slide structure, pr
 
 ```
 /plugin install genpptx
+```
+
+### [mcpd](./mcpd) `v1.0.0`
+
+Diagnose MCP server configuration, connectivity, and available tools.
+
+Reads all MCP configuration files (global and project-level), checks environment variables, verifies server connectivity, and lists available tools — all in one command.
+
+```
+/plugin install mcpd
+```
+
+### [obsidian-archive](./obsidian-archive) `v1.0.0`
+
+Automatically generates session summaries and saves them to an Obsidian vault.
+
+Captures what you built, decided, and carried over — at session end or on a configurable interval — as structured Markdown notes in your vault.
+
+```
+/plugin install obsidian-archive
 ```
 
 ## Installation
