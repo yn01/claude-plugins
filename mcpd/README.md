@@ -96,3 +96,8 @@ Checks each `env` block in server configurations to verify that required environ
 ### 4. Available Tools
 
 Displays the list of tools registered in each MCP server. Uses `claude mcp list` when available, otherwise reports tool counts as unknown.
+
+## Changelog
+
+### v1.0.0 — 2026-04-01
+- Initial release
