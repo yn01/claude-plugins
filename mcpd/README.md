@@ -99,5 +99,8 @@ Displays the list of tools registered in each MCP server. Uses `claude mcp list`
 
 ## Changelog
 
+### v1.0.1 — 2026-04-01
+- Fix: add `~/.claude.json` to global config search paths to detect servers registered via `claude mcp add --scope user`
+
 ### v1.0.0 — 2026-04-01
 - Initial release
