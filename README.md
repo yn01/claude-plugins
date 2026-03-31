@@ -4,6 +4,16 @@ A collection of Claude Code plugins by Yohei Nakanishi. New plugins are added ov
 
 ## Plugins
 
+### [mcpd](./mcpd) `v1.0.0`
+
+Diagnose MCP server configuration, connectivity, and available tools.
+
+Reads all MCP configuration files (global and project-level), checks environment variables, verifies server connectivity, and lists available tools — all in one command.
+
+```
+/plugin install mcpd
+```
+
 ### [devteam](./devteam) `v1.1.0`
 
 Multi-agent development team orchestration with file-based message queues.
@@ -54,4 +64,17 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 | `PATCH` | Bug fixes, documentation updates, minor refinements |
 
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
+
+## Changelog
+
+### 2026-04-01
+- Add **mcpd** v1.0.0 — MCP server diagnostic plugin
+
+### 2026-03-28
+- Update **devteam** to v1.1.0 — sprint contracts, evaluator agents, communication rules
+
+### 2026-03-17
+- Add **devteam** v1.0.0 — multi-agent development team orchestration
+- Add **obsidian-archive** v1.0.0 — automatic session archiving to Obsidian
+- Add **genpptx** v1.0.0 — PowerPoint generation from content files
 
