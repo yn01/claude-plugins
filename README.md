@@ -75,6 +75,6 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 
 ### 2026-03-17
 - Add **devteam** v1.0.0 — multi-agent development team orchestration
-- Add **obsidian-archive** v1.0.0 — automatic session archiving to Obsidian
 - Add **genpptx** v1.0.0 — PowerPoint generation from content files
+- Add **obsidian-archive** v1.0.0 — automatic session archiving to Obsidian
 
