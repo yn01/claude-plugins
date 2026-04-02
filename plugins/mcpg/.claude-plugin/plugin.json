@@ -1,0 +1,7 @@
+{
+  "name": "mcpg",
+  "version": "1.0.0",
+  "description": "Generate MCP server scaffold and tool implementation code from a natural language description",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}

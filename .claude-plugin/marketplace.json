@@ -37,6 +37,21 @@
       ]
     },
     {
+      "name": "mcpg",
+      "source": "./plugins/mcpg",
+      "description": "Generate MCP server scaffold and tool implementation code from a natural language description",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "mcp",
+        "generate",
+        "scaffold",
+        "typescript",
+        "python"
+      ]
+    },
+    {
       "name": "mcpd",
       "source": "./plugins/mcpd",
       "description": "Diagnose MCP server configuration, connectivity, and available tools",

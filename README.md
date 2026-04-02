@@ -24,6 +24,16 @@ Provide a content file and the plugin designs a story-driven slide structure, pr
 /plugin install genpptx
 ```
 
+### [mcpg](./plugins/mcpg) `v1.0.0`
+
+Generate MCP server scaffold and tool implementation code from a natural language description.
+
+Describe what tools you want in plain language, choose TypeScript or Python, and get a working server skeleton — complete with input schemas and handler logic — ready to install.
+
+```
+/plugin install mcpg
+```
+
 ### [mcpd](./plugins/mcpd) `v1.0.1`
 
 Diagnose MCP server configuration, connectivity, and available tools.
@@ -88,6 +98,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-04-02
+- Add **mcpg** v1.0.0 — generate MCP server scaffold from natural language description
 - Add **mcpr** v1.0.0 — run MCP server tools directly and inspect responses
 - Add **mcpx** v1.0.0 — interactive MCP server tool explorer
 
