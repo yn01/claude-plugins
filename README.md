@@ -34,6 +34,16 @@ Reads all MCP configuration files (global and project-level), checks environment
 /plugin install mcpd
 ```
 
+### [mcpr](./plugins/mcpr) `v1.0.0`
+
+Run MCP server tools directly and inspect their responses.
+
+Call any tool with explicit arguments for scripted use, or use interactive mode to walk through server → tool → argument input step by step.
+
+```
+/plugin install mcpr
+```
+
 ### [mcpx](./plugins/mcpx) `v1.0.0`
 
 Interactively explore MCP server tools and their input schemas.
@@ -78,6 +88,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-04-02
+- Add **mcpr** v1.0.0 — run MCP server tools directly and inspect responses
 - Add **mcpx** v1.0.0 — interactive MCP server tool explorer
 
 ### 2026-04-01

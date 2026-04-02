@@ -1,0 +1,7 @@
+{
+  "name": "mcpr",
+  "version": "1.0.0",
+  "description": "Run MCP server tools directly and inspect their responses",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}

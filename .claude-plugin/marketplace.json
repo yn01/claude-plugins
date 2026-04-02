@@ -67,6 +67,21 @@
       ]
     },
     {
+      "name": "mcpr",
+      "source": "./plugins/mcpr",
+      "description": "Run MCP server tools directly and inspect their responses",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "mcp",
+        "run",
+        "execute",
+        "tools",
+        "interactive"
+      ]
+    },
+    {
       "name": "obsidian-archive",
       "source": "./obsidian-archive",
       "description": "Automatically archive Claude Code session summaries to Obsidian",
