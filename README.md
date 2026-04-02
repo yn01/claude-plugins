@@ -24,7 +24,7 @@ Provide a content file and the plugin designs a story-driven slide structure, pr
 /plugin install genpptx
 ```
 
-### [mcpd](./mcpd) `v1.0.1`
+### [mcpd](./plugins/mcpd) `v1.0.1`
 
 Diagnose MCP server configuration, connectivity, and available tools.
 

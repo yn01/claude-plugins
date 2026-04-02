@@ -38,7 +38,7 @@
     },
     {
       "name": "mcpd",
-      "source": "./mcpd",
+      "source": "./plugins/mcpd",
       "description": "Diagnose MCP server configuration, connectivity, and available tools",
       "author": {
         "name": "Yohei Nakanishi"
