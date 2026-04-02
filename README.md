@@ -74,7 +74,7 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
-### [obsidian-archive](./obsidian-archive) `v1.0.0`
+### [obsidian-archive](./plugins/obsidian-archive) `v1.0.0`
 
 Automatically generates session summaries and saves them to an Obsidian vault.
 
