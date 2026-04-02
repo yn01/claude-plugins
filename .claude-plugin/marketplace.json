@@ -52,6 +52,21 @@
       ]
     },
     {
+      "name": "mcpx",
+      "source": "./plugins/mcpx",
+      "description": "Interactively explore MCP server tools and their input schemas",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "mcp",
+        "explore",
+        "tools",
+        "schema",
+        "interactive"
+      ]
+    },
+    {
       "name": "obsidian-archive",
       "source": "./obsidian-archive",
       "description": "Automatically archive Claude Code session summaries to Obsidian",

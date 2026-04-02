@@ -1,0 +1,7 @@
+{
+  "name": "mcpx",
+  "version": "1.0.0",
+  "description": "Interactively explore MCP server tools and their input schemas",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}
