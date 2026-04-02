@@ -1,0 +1,7 @@
+{
+  "name": "mcpl",
+  "version": "1.0.0",
+  "description": "Tail and display MCP server stderr logs in real time",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}

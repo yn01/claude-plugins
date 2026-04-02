@@ -74,6 +74,16 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
+### [mcpl](./plugins/mcpl) `v1.0.0`
+
+Tail and display MCP server stderr logs in real time.
+
+引数なしで設定済み全サーバーのログを統合表示、`--server` 指定で特定サーバーに絞ってリアルタイム監視する。
+
+```
+/plugin install mcpl
+```
+
 ### [obsidian-archive](./plugins/obsidian-archive) `v1.0.0`
 
 Automatically generates session summaries and saves them to an Obsidian vault.
@@ -106,6 +116,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-03
+- Add **mcpl** v1.0.0 — tail and display MCP server stderr logs in real time
 
 ### 2026-04-02
 - Add **mcpa** v1.0.0 — add stdio MCP servers to Claude Code interactively or with arguments

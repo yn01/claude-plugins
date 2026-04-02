@@ -112,6 +112,21 @@
       ]
     },
     {
+      "name": "mcpl",
+      "source": "./plugins/mcpl",
+      "description": "Tail and display MCP server stderr logs in real time",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "mcp",
+        "log",
+        "tail",
+        "stderr",
+        "monitor"
+      ]
+    },
+    {
       "name": "obsidian-archive",
       "source": "./plugins/obsidian-archive",
       "description": "Automatically archive Claude Code session summaries to Obsidian",
