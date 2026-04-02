@@ -24,6 +24,16 @@ Provide a content file and the plugin designs a story-driven slide structure, pr
 /plugin install genpptx
 ```
 
+### [mcpa](./plugins/mcpa) `v1.0.0`
+
+Add a stdio MCP server to Claude Code interactively or with arguments.
+
+A wrapper around `claude mcp add` that guides you through server name, command, args, env vars, and scope — or accepts them all as flags for one-shot registration.
+
+```
+/plugin install mcpa
+```
+
 ### [mcpg](./plugins/mcpg) `v1.0.0`
 
 Generate MCP server scaffold and tool implementation code from a natural language description.
@@ -98,6 +108,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-04-02
+- Add **mcpa** v1.0.0 — add stdio MCP servers to Claude Code interactively or with arguments
 - Add **mcpg** v1.0.0 — generate MCP server scaffold from natural language description
 - Add **mcpr** v1.0.0 — run MCP server tools directly and inspect responses
 - Add **mcpx** v1.0.0 — interactive MCP server tool explorer

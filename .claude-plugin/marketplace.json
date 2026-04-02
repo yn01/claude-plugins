@@ -37,6 +37,21 @@
       ]
     },
     {
+      "name": "mcpa",
+      "source": "./plugins/mcpa",
+      "description": "Add a stdio MCP server to Claude Code interactively or with arguments",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "mcp",
+        "add",
+        "register",
+        "stdio",
+        "interactive"
+      ]
+    },
+    {
       "name": "mcpg",
       "source": "./plugins/mcpg",
       "description": "Generate MCP server scaffold and tool implementation code from a natural language description",

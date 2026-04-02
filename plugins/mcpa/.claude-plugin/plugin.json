@@ -1,0 +1,7 @@
+{
+  "name": "mcpa",
+  "version": "1.0.0",
+  "description": "Add a stdio MCP server to Claude Code interactively or with arguments",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}
