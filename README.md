@@ -34,6 +34,16 @@ Reads all MCP configuration files (global and project-level), checks environment
 /plugin install mcpd
 ```
 
+### [mcpx](./plugins/mcpx) `v1.0.0`
+
+Interactively explore MCP server tools and their input schemas.
+
+Drill down from server → tool → schema to inspect parameter names, types, and descriptions — without writing any code.
+
+```
+/plugin install mcpx
+```
+
 ### [obsidian-archive](./obsidian-archive) `v1.0.0`
 
 Automatically generates session summaries and saves them to an Obsidian vault.
@@ -66,6 +76,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-02
+- Add **mcpx** v1.0.0 — interactive MCP server tool explorer
 
 ### 2026-04-01
 - Add **mcpd** v1.0.0 — MCP server diagnostic plugin
