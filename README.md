@@ -14,7 +14,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [genpptx](./genpptx) `v1.4.4`
+### [genpptx](./plugins/genpptx) `v1.4.4`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
 

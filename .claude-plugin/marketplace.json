@@ -23,7 +23,7 @@
     },
     {
       "name": "genpptx",
-      "source": "./genpptx",
+      "source": "./plugins/genpptx",
       "description": "Generate PowerPoint presentations from content using Claude Code",
       "author": {
         "name": "Yohei Nakanishi"
