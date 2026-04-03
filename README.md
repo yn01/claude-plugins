@@ -24,6 +24,16 @@ Provide a content file and the plugin designs a story-driven slide structure, pr
 /plugin install genpptx
 ```
 
+### [slide-revive](./plugins/slide-revive) `v1.0.0`
+
+Rebuild NotebookLM slide PDFs as fully editable PPTX files using Vision AI.
+
+NotebookLM exports embed each slide as a flat image with no editable content. slide-revive runs every page through Claude's Vision AI, reconstructs titles, bullets, and tables as native PPTX objects, and outputs `.pptx` + `.html` — no external API key required.
+
+```
+/plugin install slide-revive
+```
+
 ### [mcpa](./plugins/mcpa) `v1.0.0`
 
 Add a stdio MCP server to Claude Code interactively or with arguments.
@@ -118,6 +128,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-04-03
+- Add **slide-revive** v1.0.0 — rebuild NotebookLM slide PDFs as editable PPTX using Vision AI
 - Add **mcpl** v1.0.0 — tail and display MCP server stderr logs in real time
 
 ### 2026-04-02

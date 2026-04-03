@@ -1,0 +1,7 @@
+{
+  "name": "slide-revive",
+  "version": "1.0.0",
+  "description": "Rebuild NotebookLM slide PDFs as editable PPTX using Vision AI and genpptx",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}
