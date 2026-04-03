@@ -24,16 +24,6 @@ Provide a content file and the plugin designs a story-driven slide structure, pr
 /plugin install genpptx
 ```
 
-### [slide-revive](./plugins/slide-revive) `v1.0.0`
-
-Rebuild NotebookLM slide PDFs as fully editable PPTX files using Vision AI.
-
-NotebookLM exports embed each slide as a flat image with no editable content. slide-revive runs every page through Claude's Vision AI, reconstructs titles, bullets, and tables as native PPTX objects, and outputs `.pptx` + `.html` — no external API key required.
-
-```
-/plugin install slide-revive
-```
-
 ### [mcpa](./plugins/mcpa) `v1.0.0`
 
 Add a stdio MCP server to Claude Code interactively or with arguments.
@@ -42,6 +32,16 @@ A wrapper around `claude mcp add` that guides you through server name, command, 
 
 ```
 /plugin install mcpa
+```
+
+### [mcpd](./plugins/mcpd) `v1.0.1`
+
+Diagnose MCP server configuration, connectivity, and available tools.
+
+Reads all MCP configuration files (global and project-level), checks environment variables, verifies server connectivity, and lists available tools — all in one command.
+
+```
+/plugin install mcpd
 ```
 
 ### [mcpg](./plugins/mcpg) `v1.0.0`
@@ -54,14 +54,14 @@ Describe what tools you want in plain language, choose TypeScript or Python, and
 /plugin install mcpg
 ```
 
-### [mcpd](./plugins/mcpd) `v1.0.1`
+### [mcpl](./plugins/mcpl) `v1.0.0`
 
-Diagnose MCP server configuration, connectivity, and available tools.
+Tail and display MCP server stderr logs in real time.
 
-Reads all MCP configuration files (global and project-level), checks environment variables, verifies server connectivity, and lists available tools — all in one command.
+引数なしで設定済み全サーバーのログを統合表示、`--server` 指定で特定サーバーに絞ってリアルタイム監視する。
 
 ```
-/plugin install mcpd
+/plugin install mcpl
 ```
 
 ### [mcpr](./plugins/mcpr) `v1.0.0`
@@ -84,16 +84,6 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
-### [mcpl](./plugins/mcpl) `v1.0.0`
-
-Tail and display MCP server stderr logs in real time.
-
-引数なしで設定済み全サーバーのログを統合表示、`--server` 指定で特定サーバーに絞ってリアルタイム監視する。
-
-```
-/plugin install mcpl
-```
-
 ### [obsidian-archive](./plugins/obsidian-archive) `v1.0.0`
 
 Automatically generates session summaries and saves them to an Obsidian vault.
@@ -102,6 +92,16 @@ Captures what you built, decided, and carried over — at session end or on a co
 
 ```
 /plugin install obsidian-archive
+```
+
+### [slide-revive](./plugins/slide-revive) `v1.0.0`
+
+Rebuild NotebookLM slide PDFs as fully editable PPTX files using Vision AI.
+
+NotebookLM exports embed each slide as a flat image with no editable content. slide-revive runs every page through Claude's Vision AI, reconstructs titles, bullets, and tables as native PPTX objects, and outputs `.pptx` + `.html` — no external API key required.
+
+```
+/plugin install slide-revive
 ```
 
 ## Installation
