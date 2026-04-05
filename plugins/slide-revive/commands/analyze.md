@@ -6,7 +6,7 @@ argument-hint: "<pdf-path> [--theme <theme-name>] [--output <output-dir>]"
 
 # /slide-revive:analyze
 
-NotebookLMが生成したPDFをVision AIで解析し、`spec.yaml` を生成するが、PPTX生成は行わない。生成した `spec.yaml` を手動で確認・編集してから `/genpptx:generate` で生成する用途に使う。
+NotebookLMが生成したPDFをVision AIで解析し、`spec.yaml` を生成するが、PPTX生成は行わない。生成した `spec.yaml` を手動で確認・編集してから `/slide-revive:convert` で改めて生成する用途に使う。
 
 ## 引数
 
@@ -141,7 +141,8 @@ python3 "$SLIDE_REVIVE_DIR/src/to_spec.py" \
 ══════════════════════════════════════
 spec.yaml を確認・編集してから、以下のコマンドでPPTXを生成してください:
 
-  /genpptx:generate <OUTPUT_DIR>/spec.yaml
+  SLIDE_REVIVE_DIR=$(find ~/.claude/plugins/cache -path "*/slide-revive/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null | xargs dirname 2>/dev/null)
+  bash "$SLIDE_REVIVE_DIR/scripts/run.sh" generate.mjs <OUTPUT_DIR>/spec.yaml --skip-images
 ```
 
 ## 使用例

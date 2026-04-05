@@ -38,17 +38,7 @@ PDFファイルの存在を確認する:
 
 ```bash
 SLIDE_REVIVE_DIR=$(find ~/.claude/plugins/cache -path "*/slide-revive/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null | xargs dirname 2>/dev/null)
-GENPPTX_DIR=$(find ~/.claude/plugins/cache -path "*/genpptx/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null | xargs dirname 2>/dev/null)
 echo "slide-revive: $SLIDE_REVIVE_DIR"
-echo "genpptx: $GENPPTX_DIR"
-```
-
-`GENPPTX_DIR` が空の場合は以下を表示して終了する:
-
-```
-❌ エラー: genpptxプラグインが見つかりません。
-先にgenpptxをインストールしてください:
-  claude plugin add https://github.com/yn01/claude-plugins/tree/main/plugins/genpptx
 ```
 
 `SLIDE_REVIVE_DIR` が空の場合は以下を表示して終了する:
@@ -149,10 +139,10 @@ python3 "$SLIDE_REVIVE_DIR/src/to_spec.py" \
 
 ### Step 7: PPTX + HTML を生成
 
-genpptxのgenerate.mjsを呼び出してPPTX+HTMLを生成する:
+同梱の generate.mjs を呼び出してPPTX+HTMLを生成する:
 
 ```bash
-bash "$GENPPTX_DIR/scripts/run.sh" generate.mjs \
+bash "$SLIDE_REVIVE_DIR/scripts/run.sh" generate.mjs \
   "<OUTPUT_DIR>/spec.yaml" \
   --theme "<THEME>" \
   --skip-images

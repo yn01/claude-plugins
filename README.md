@@ -127,8 +127,10 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 
 ## Changelog
 
-### 2026-04-03
+### 2026-04-05
 - Add **slide-revive** v1.0.0 — rebuild NotebookLM slide PDFs as editable PPTX using Vision AI
+
+### 2026-04-03
 - Add **mcpl** v1.0.0 — tail and display MCP server stderr logs in real time
 
 ### 2026-04-02
