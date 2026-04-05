@@ -36,7 +36,7 @@ PDFファイルの存在を確認する:
 ### Step 2: プラグインディレクトリの特定
 
 ```bash
-SLIDE_REVIVE_DIR=$(find ~/.claude/plugins/cache -path "*/slide-revive/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null)
+SLIDE_REVIVE_DIR=$(find ~/.claude/plugins/cache -path "*/slide-revive/*/plugin.json" 2>/dev/null | sort -r | head -1 | xargs dirname 2>/dev/null | xargs dirname 2>/dev/null)
 echo "slide-revive: $SLIDE_REVIVE_DIR"
 ```
 
