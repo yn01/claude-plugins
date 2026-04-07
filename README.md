@@ -14,6 +14,16 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
+### [dev-forge](./plugins/dev-forge) `v1.0.0`
+
+SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation.
+
+Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes sprint contracts, Generator/Evaluator pattern, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture.
+
+```
+/plugin install dev-forge
+```
+
 ### [genpptx](./plugins/genpptx) `v1.4.4`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
@@ -126,6 +136,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-07
+- Add **dev-forge** v1.0.0 — SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation
 
 ### 2026-04-05
 - Add **slide-revive** v1.0.0 — rebuild NotebookLM slide PDFs as editable PPTX using Vision AI

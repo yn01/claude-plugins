@@ -1,0 +1,10 @@
+{
+  "description": "Recommended MCP servers that enhance dev-forge capabilities",
+  "servers": [
+    {
+      "name": "obsidian",
+      "description": "Enables Obsidian vault integration for wiki storage. Required when wiki.storage is set to 'obsidian' in devforge.yaml.",
+      "install": "claude mcp add obsidian"
+    }
+  ]
+}
