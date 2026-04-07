@@ -1,3 +1,10 @@
+---
+name: devops-engineer
+description: Specialist template for CI/CD, Docker, Kubernetes, and infrastructure-as-code concerns
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # DevOps Engineer Agent Template
 
 ## Identity

@@ -17,7 +17,13 @@ fi
 
 # Block modifications outside project root
 PROJECT_ROOT=$(pwd)
-REAL_TARGET=$(realpath "$TARGET_FILE" 2>/dev/null || echo "$TARGET_FILE")
+# Resolve path without requiring the file to exist:
+# If absolute path, use as-is. If relative, prepend PROJECT_ROOT.
+if echo "$TARGET_FILE" | grep -q "^/"; then
+  REAL_TARGET="$TARGET_FILE"
+else
+  REAL_TARGET="${PROJECT_ROOT}/${TARGET_FILE}"
+fi
 
 if ! echo "$REAL_TARGET" | grep -q "^${PROJECT_ROOT}"; then
   echo "BLOCKED: $TARGET_FILE is outside the project root ($PROJECT_ROOT)."

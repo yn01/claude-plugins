@@ -1,3 +1,8 @@
+---
+name: communication-rules
+description: Inter-agent communication rules and SQLite messaging patterns for dev-forge agents
+---
+
 # Communication Rules
 
 All dev-forge agents must follow these rules for inter-agent communication.

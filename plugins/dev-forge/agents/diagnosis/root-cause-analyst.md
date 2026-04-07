@@ -1,3 +1,10 @@
+---
+name: root-cause-analyst
+description: Bug Council analyst that traces failure chains from symptoms to root cause
+tools: ["Read", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # Root Cause Analyst Agent
 
 ## Identity

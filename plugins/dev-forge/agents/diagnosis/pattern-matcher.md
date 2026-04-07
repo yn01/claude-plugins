@@ -1,3 +1,10 @@
+---
+name: pattern-matcher
+description: Bug Council analyst that matches current failures against historical patterns in the learnings table
+tools: ["Read", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # Pattern Matcher Agent
 
 ## Identity

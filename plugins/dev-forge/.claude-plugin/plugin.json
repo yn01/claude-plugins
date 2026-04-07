@@ -3,6 +3,5 @@
   "version": "1.0.0",
   "description": "SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation",
   "author": {"name": "Yohei Nakanishi"},
-  "commands": "./commands",
-  "agents": "./agents"
+  "commands": "./commands"
 }

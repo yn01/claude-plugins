@@ -140,6 +140,23 @@
         "summary",
         "notes"
       ]
+    },
+    {
+      "name": "dev-forge",
+      "source": "./plugins/dev-forge",
+      "description": "SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "multi-agent",
+        "orchestration",
+        "sqlite",
+        "sprint-contracts",
+        "wiki",
+        "learnings",
+        "bug-council"
+      ]
     }
   ]
 }

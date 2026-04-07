@@ -10,10 +10,15 @@ if ($TargetFile -match "\.dev-forge.dev-forge\.db") {
     exit 1
 }
 
-$ProjectRoot = Get-Location
-$RealTarget = Resolve-Path $TargetFile -ErrorAction SilentlyContinue
+$ProjectRoot = (Get-Location).Path
+# Resolve path without requiring the file to exist
+if ([System.IO.Path]::IsPathRooted($TargetFile)) {
+    $RealTarget = $TargetFile
+} else {
+    $RealTarget = [System.IO.Path]::Combine($ProjectRoot, $TargetFile)
+}
 
-if ($RealTarget -and -not $RealTarget.Path.StartsWith($ProjectRoot.Path)) {
+if (-not $RealTarget.StartsWith($ProjectRoot)) {
     Write-Output "BLOCKED: $TargetFile is outside the project root ($ProjectRoot)."
     exit 1
 }

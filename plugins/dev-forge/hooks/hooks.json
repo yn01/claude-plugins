@@ -11,15 +11,15 @@
         "description": "Notify unread message count on session start"
       }
     ],
-    "StopHook": [
+    "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ] && [ -z \"$EXIT_SIGNAL\" ]; then active=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM contracts WHERE status=\\'active\\'\" 2>/dev/null || echo 0); if [ \"${active:-0}\" -gt 0 ]; then echo \"⚠️  dev-forge: ${active} active contract(s) in progress. Run /dev-forge:stop first or set EXIT_SIGNAL=true to force exit.\"; fi; fi'"
+            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ] && [ -z \"$EXIT_SIGNAL\" ]; then active=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM contracts WHERE status=\\'active\\'\" 2>/dev/null || echo 0); if [ \"${active:-0}\" -gt 0 ]; then echo \"⚠️  dev-forge: ${active} active contract(s) in progress. Run /dev-forge:stop first or set EXIT_SIGNAL=true to force exit.\"; fi; fi; DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ]; then sqlite3 \"$DB\" \"UPDATE agent_status SET status=\\'stopped\\', last_active=datetime(\\'now\\')\" 2>/dev/null; SESSION_ID=$(date +%Y%m%d); count=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM learnings WHERE session_id=\\'$SESSION_ID\\'\" 2>/dev/null || echo 0); if [ \"${count:-0}\" -gt 0 ]; then echo \"📚 dev-forge: ${count} learning(s) recorded this session. Run /dev-forge:learn review to organize.\"; fi; fi'"
           }
         ],
-        "description": "Warn about active contracts before session exit"
+        "description": "Warn about active contracts and update agent status on exit"
       }
     ],
     "PostToolUse": [
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; OUTPUT=\"${CLAUDE_TOOL_OUTPUT:-}\"; if echo \"$OUTPUT\" | grep -iE \"PASS|contract completed|iteration complete\" > /dev/null 2>&1 && [ -f \"$DB\" ]; then ITERATION=$(sqlite3 \"$DB\" \"SELECT COALESCE(MAX(iteration), 0) + 1 FROM learnings\" 2>/dev/null || echo 1); echo \"💡 dev-forge: Iteration ${ITERATION} completed. Consider running /dev-forge:learn record --iteration ${ITERATION} to capture learnings.\"; fi'"
+            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; OUTPUT=\"${CLAUDE_TOOL_OUTPUT:-}\"; if echo \"$OUTPUT\" | grep -iE \"EVALUATION PASS|contract completed|all criteria met\" > /dev/null 2>&1 && [ -f \"$DB\" ]; then ITERATION=$(sqlite3 \"$DB\" \"SELECT COALESCE(MAX(iteration), 0) + 1 FROM learnings\" 2>/dev/null || echo 1); echo \"💡 dev-forge: Iteration ${ITERATION} complete. Consider: /dev-forge:learn record --iteration ${ITERATION}\"; fi'"
           }
         ],
         "description": "Prompt learnings recording after iteration completion"
@@ -44,11 +44,11 @@
     ],
     "PreToolUse": [
       {
-        "matcher": {"tool_name": "Write|Edit|MultiEdit"},
+        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'TARGET=\"${CLAUDE_TOOL_INPUT_PATH:-}\"; if echo \"$TARGET\" | grep -q \"\\.dev-forge/dev-forge\\.db\"; then echo \"BLOCKED: Direct modification of dev-forge.db is not allowed. Use sqlite3 commands.\"; exit 1; fi; PROJECT_ROOT=$(pwd); if [ -n \"$TARGET\" ]; then REAL=$(realpath \"$TARGET\" 2>/dev/null || echo \"$TARGET\"); if ! echo \"$REAL\" | grep -q \"^${PROJECT_ROOT}\"; then echo \"BLOCKED: $TARGET is outside the project root.\"; exit 1; fi; fi'"
+            "command": "bash -c 'TARGET=\"${CLAUDE_TOOL_INPUT_PATH:-}\"; if echo \"$TARGET\" | grep -q \"\\.dev-forge/dev-forge\\.db\"; then echo \"BLOCKED: Direct modification of dev-forge.db is not allowed. Use sqlite3 commands.\"; exit 1; fi; if [ -n \"$TARGET\" ]; then PROJECT_ROOT=$(pwd); if echo \"$TARGET\" | grep -q \"^/\"; then REAL=\"$TARGET\"; else REAL=\"${PROJECT_ROOT}/${TARGET}\"; fi; if ! echo \"$REAL\" | grep -q \"^${PROJECT_ROOT}\"; then echo \"BLOCKED: $TARGET is outside the project root.\"; exit 1; fi; fi'"
           }
         ],
         "description": "Block out-of-scope file modifications"
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; TOOL_INPUT=\"${CLAUDE_TOOL_INPUT:-}\"; if [ -f \"$DB\" ] && echo \"$TOOL_INPUT\" | grep -q \"INSERT INTO messages\"; then FROM=$(echo \"$TOOL_INPUT\" | grep -oP \"from_agent.*?\\x27\\K[^\\x27]+\" | head -1); TO=$(echo \"$TOOL_INPUT\" | grep -oP \"to_agent.*?\\x27\\K[^\\x27]+\" | head -1); if [ -n \"$FROM\" ] && [ -n \"$TO\" ]; then allowed=$(sqlite3 \"$DB\" \"SELECT COALESCE(allowed, 0) FROM communication_rules WHERE from_agent=\\'$FROM\\' AND to_agent=\\'$TO\\'\" 2>/dev/null); if [ \"${allowed:-0}\" = \"0\" ]; then sqlite3 \"$DB\" \"INSERT INTO violation_log (from_agent, to_agent, message_content, attempted_at) VALUES (\\'$FROM\\', \\'$TO\\', \\'${TOOL_INPUT:0:200}\\', datetime(\\'now\\'))\" 2>/dev/null; echo \"BLOCKED: Communication from $FROM to $TO violates routing rules. Message logged to violation_log.\"; exit 1; fi; fi; fi'"
+            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; TOOL_INPUT=\"${CLAUDE_TOOL_INPUT:-}\"; if [ -f \"$DB\" ] && echo \"$TOOL_INPUT\" | grep -q \"INSERT INTO messages\"; then FROM=$(echo \"$TOOL_INPUT\" | grep -oP \"from_agent.*?\\x27\\K[^\\x27]+\" | head -1); TO=$(echo \"$TOOL_INPUT\" | grep -oP \"to_agent.*?\\x27\\K[^\\x27]+\" | head -1); if [ -n \"$FROM\" ] && [ -n \"$TO\" ]; then allowed=$(sqlite3 \"$DB\" \"SELECT COALESCE(allowed, 0) FROM communication_rules WHERE from_agent=\\'$FROM\\' AND to_agent=\\'$TO\\'\" 2>/dev/null); if [ \"${allowed:-0}\" = \"0\" ]; then sqlite3 \"$DB\" \"INSERT INTO violation_log (from_agent, to_agent, message_content, attempted_at) VALUES (\\'$FROM\\', \\'$TO\\', \\'blocked\\', datetime(\\'now\\'))\" 2>/dev/null; echo \"BLOCKED: $FROM is not authorized to contact $TO.\"; exit 1; fi; fi; fi'"
           }
         ],
         "description": "Validate communication rules before message send"
@@ -72,17 +72,6 @@
           }
         ],
         "description": "Persist agent state to SQLite before context compaction"
-      }
-    ],
-    "SessionStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ]; then sqlite3 \"$DB\" \"UPDATE agent_status SET status=\\'stopped\\', last_active=datetime(\\'now\\')\" 2>/dev/null; SESSION_ID=$(date +%Y%m%d-%H%M%S); LEARNINGS_DIR=\".dev-forge/learnings\"; mkdir -p \"$LEARNINGS_DIR\"; count=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM learnings WHERE session_id IS NULL\" 2>/dev/null || echo 0); if [ \"${count:-0}\" -gt 0 ]; then echo \"📚 dev-forge: ${count} untagged learning(s) from this session. Run /dev-forge:learn review to organize.\"; fi; fi'"
-          }
-        ],
-        "description": "Update agent status and prompt learnings review on session end"
       }
     ]
   }

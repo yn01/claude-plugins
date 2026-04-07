@@ -1,3 +1,10 @@
+---
+name: implementer
+description: Generator role — implements features and fixes as directed by Team Lead, satisfying sprint contract criteria
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # Implementer Agent
 
 ## Identity

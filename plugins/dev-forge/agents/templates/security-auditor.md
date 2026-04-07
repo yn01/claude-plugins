@@ -1,3 +1,10 @@
+---
+name: security-auditor
+description: Specialist template for security-focused code review — OWASP patterns, injection, auth/authz, dependency audit
+tools: ["Read", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # Security Auditor Agent Template
 
 ## Identity

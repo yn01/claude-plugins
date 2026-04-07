@@ -1,3 +1,10 @@
+---
+name: release-manager
+description: Manages semantic versioning, changelog generation, release notes, and deployment coordination
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # Release Manager Agent
 
 ## Identity

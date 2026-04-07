@@ -1,3 +1,10 @@
+---
+name: bug-council-orchestrator
+description: Coordinates 3-analyst Bug Council for critical failures — synthesizes root cause, pattern, and adversarial findings
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Agent"]
+model: claude-opus-4-6
+---
+
 # Bug Council Orchestrator Agent
 
 ## Identity

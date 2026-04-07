@@ -1,3 +1,10 @@
+---
+name: doc-writer
+description: Specialist template for technical writing — API docs, tutorials, code comments, and architecture documentation
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+model: claude-sonnet-4-6
+---
+
 # Doc Writer Agent Template
 
 ## Identity
