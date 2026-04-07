@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ]; then count=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM messages WHERE status=\\'unread\\'\" 2>/dev/null || echo 0); if [ \"${count:-0}\" -gt 0 ]; then echo \"📬 dev-forge: You have ${count} unread message(s). Run /dev-forge:status to review.\"; fi; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/session-start.sh"
           }
         ],
         "description": "Notify unread message count on session start"
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ] && [ -z \"$EXIT_SIGNAL\" ]; then active=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM contracts WHERE status=\\'active\\'\" 2>/dev/null || echo 0); if [ \"${active:-0}\" -gt 0 ]; then echo \"⚠️  dev-forge: ${active} active contract(s) in progress. Run /dev-forge:stop first or set EXIT_SIGNAL=true to force exit.\"; fi; fi; DB=\".dev-forge/dev-forge.db\"; if [ -f \"$DB\" ]; then sqlite3 \"$DB\" \"UPDATE agent_status SET status=\\'stopped\\', last_active=datetime(\\'now\\')\" 2>/dev/null; SESSION_ID=$(date +%Y%m%d); count=$(sqlite3 \"$DB\" \"SELECT COUNT(*) FROM learnings WHERE session_id=\\'$SESSION_ID\\'\" 2>/dev/null || echo 0); if [ \"${count:-0}\" -gt 0 ]; then echo \"📚 dev-forge: ${count} learning(s) recorded this session. Run /dev-forge:learn review to organize.\"; fi; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/stop-hook.sh"
           }
         ],
         "description": "Warn about active contracts and update agent status on exit"
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'OUTPUT=\"${CLAUDE_TOOL_OUTPUT:-}\"; ABANDON_PATTERNS=\"cannot continue|I.ll stop|unable to proceed|I give up|too complex to\"; if echo \"$OUTPUT\" | grep -iE \"$ABANDON_PATTERNS\" > /dev/null 2>&1; then echo \"🔄 dev-forge persistence: Task abandonment detected. Please break the task into smaller steps and continue.\"; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/post-tool-use-hook.sh"
           }
         ],
         "description": "Detect task abandonment and prompt re-engagement"
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; OUTPUT=\"${CLAUDE_TOOL_OUTPUT:-}\"; if echo \"$OUTPUT\" | grep -iE \"EVALUATION PASS|contract completed|all criteria met\" > /dev/null 2>&1 && [ -f \"$DB\" ]; then ITERATION=$(sqlite3 \"$DB\" \"SELECT COALESCE(MAX(iteration), 0) + 1 FROM learnings\" 2>/dev/null || echo 1); echo \"💡 dev-forge: Iteration ${ITERATION} complete. Consider: /dev-forge:learn record --iteration ${ITERATION}\"; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/session-end.sh"
           }
         ],
         "description": "Prompt learnings recording after iteration completion"
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'TARGET=\"${CLAUDE_TOOL_INPUT_PATH:-}\"; if echo \"$TARGET\" | grep -q \"\\.dev-forge/dev-forge\\.db\"; then echo \"BLOCKED: Direct modification of dev-forge.db is not allowed. Use sqlite3 commands.\"; exit 1; fi; if [ -n \"$TARGET\" ]; then PROJECT_ROOT=$(pwd); if echo \"$TARGET\" | grep -q \"^/\"; then REAL=\"$TARGET\"; else REAL=\"${PROJECT_ROOT}/${TARGET}\"; fi; if ! echo \"$REAL\" | grep -q \"^${PROJECT_ROOT}\"; then echo \"BLOCKED: $TARGET is outside the project root.\"; exit 1; fi; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/scope-check.sh"
           }
         ],
         "description": "Block out-of-scope file modifications"
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; TOOL_INPUT=\"${CLAUDE_TOOL_INPUT:-}\"; if [ -f \"$DB\" ] && echo \"$TOOL_INPUT\" | grep -q \"INSERT INTO messages\"; then FROM=$(echo \"$TOOL_INPUT\" | grep -oP \"from_agent.*?\\x27\\K[^\\x27]+\" | head -1); TO=$(echo \"$TOOL_INPUT\" | grep -oP \"to_agent.*?\\x27\\K[^\\x27]+\" | head -1); if [ -n \"$FROM\" ] && [ -n \"$TO\" ]; then allowed=$(sqlite3 \"$DB\" \"SELECT COALESCE(allowed, 0) FROM communication_rules WHERE from_agent=\\'$FROM\\' AND to_agent=\\'$TO\\'\" 2>/dev/null); if [ \"${allowed:-0}\" = \"0\" ]; then sqlite3 \"$DB\" \"INSERT INTO violation_log (from_agent, to_agent, message_content, attempted_at) VALUES (\\'$FROM\\', \\'$TO\\', \\'blocked\\', datetime(\\'now\\'))\" 2>/dev/null; echo \"BLOCKED: $FROM is not authorized to contact $TO.\"; exit 1; fi; fi; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/pre-tool-use-hook.sh"
           }
         ],
         "description": "Validate communication rules before message send"
@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'DB=\".dev-forge/dev-forge.db\"; AGENT=\"${DEV_FORGE_AGENT_NAME:-}\"; TASK=\"${DEV_FORGE_CURRENT_TASK:-}\"; if [ -f \"$DB\" ] && [ -n \"$AGENT\" ]; then sqlite3 \"$DB\" \"UPDATE agent_status SET last_active=datetime(\\'now\\'), current_task=\\'${TASK}\\' WHERE agent_name=\\'${AGENT}\\'\" 2>/dev/null; fi'"
+            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-forge/hooks/pre-compact.sh"
           }
         ],
         "description": "Persist agent state to SQLite before context compaction"

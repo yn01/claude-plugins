@@ -132,6 +132,8 @@ Available templates: `security-auditor`, `performance-analyst`, `devops-engineer
 
 ## Architecture
 
+![dev-forge architecture](docs/dev-forge-architecture.svg)
+
 ```
 User
  │

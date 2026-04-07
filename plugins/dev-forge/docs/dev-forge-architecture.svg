@@ -1,0 +1,185 @@
+<svg width="100%" viewBox="0 0 680 580" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+<style>
+.t  { font-family: sans-serif; font-size: 14px; font-weight: 400; fill: #3d3d3a; }
+.ts { font-family: sans-serif; font-size: 12px; font-weight: 400; fill: #73726c; }
+.th { font-family: sans-serif; font-size: 14px; font-weight: 500; fill: #3d3d3a; }
+.c-gray   rect { fill: #F1EFE8; stroke: #5F5E5A; }
+.c-gray   .th, .c-gray   .t, .c-gray   .ts { fill: #444441; }
+.c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
+.c-purple .th, .c-purple .t { fill: #3C3489; }
+.c-purple .ts { fill: #534AB7; }
+.c-blue   rect { fill: #E6F1FB; stroke: #185FA5; }
+.c-blue   .th, .c-blue   .t { fill: #0C447C; }
+.c-blue   .ts { fill: #185FA5; }
+.c-coral  rect { fill: #FAECE7; stroke: #993C1D; }
+.c-coral  .th, .c-coral  .t { fill: #712B13; }
+.c-coral  .ts { fill: #993C1D; }
+.c-teal   rect { fill: #E1F5EE; stroke: #0F6E56; }
+.c-teal   .th, .c-teal   .t { fill: #085041; }
+.c-teal   .ts { fill: #0F6E56; }
+.c-amber  rect { fill: #FAEEDA; stroke: #854F0B; }
+.c-amber  .th, .c-amber  .t { fill: #633806; }
+.c-amber  .ts { fill: #854F0B; }
+.c-green  rect { fill: #EAF3DE; stroke: #3B6D11; }
+.c-green  .th, .c-green  .t { fill: #27500A; }
+.c-green  .ts { fill: #3B6D11; }
+.c-red    rect { fill: #FCEBEB; stroke: #A32D2D; }
+.c-red    .th, .c-red    .t { fill: #791F1F; }
+.c-red    .ts { fill: #A32D2D; }
+line { stroke: #888780; stroke-width: 1; fill: none; }
+</style>
+</defs>
+
+<!-- User -->
+<g class="c-gray">
+  <rect x="270" y="24" width="140" height="40" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="44" text-anchor="middle" dominant-baseline="central">User</text>
+</g>
+
+<!-- Arrow: User -> Orchestrator -->
+<line x1="340" y1="64" x2="340" y2="96" marker-end="url(#arrow)"/>
+
+<!-- Orchestrator -->
+<g class="c-purple">
+  <rect x="220" y="96" width="240" height="48" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="114" text-anchor="middle" dominant-baseline="central">Orchestrator</text>
+  <text class="ts" x="340" y="132" text-anchor="middle" dominant-baseline="central">claude-opus-4-6</text>
+</g>
+
+<!-- Arrow: Orchestrator -> Team Alpha Lead -->
+<line x1="280" y1="144" x2="130" y2="196" marker-end="url(#arrow)"/>
+<!-- Arrow: Orchestrator -> Team Beta Lead -->
+<line x1="360" y1="144" x2="400" y2="196" marker-end="url(#arrow)"/>
+<!-- Arrow: Orchestrator -> cross-team -->
+<line x1="420" y1="144" x2="560" y2="196" marker-end="url(#arrow)"/>
+
+<!-- Team Alpha container -->
+<g class="c-blue">
+  <rect x="24" y="196" width="210" height="196" rx="12" stroke-width="0.5"/>
+</g>
+<text class="th" x="129" y="218" text-anchor="middle" dominant-baseline="central">Team Alpha</text>
+
+<!-- Team Alpha Lead -->
+<g class="c-blue">
+  <rect x="44" y="228" width="170" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="129" y="244" text-anchor="middle" dominant-baseline="central">team-alpha-lead</text>
+  <text class="ts" x="129" y="258" text-anchor="middle" dominant-baseline="central">sonnet</text>
+</g>
+
+<!-- Arrows: Alpha Lead -> members -->
+<line x1="80"  y1="268" x2="64"  y2="302" marker-end="url(#arrow)"/>
+<line x1="129" y1="268" x2="129" y2="302" marker-end="url(#arrow)"/>
+<line x1="178" y1="268" x2="194" y2="302" marker-end="url(#arrow)"/>
+
+<!-- Implementer A -->
+<g class="c-blue">
+  <rect x="32" y="302" width="88" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="76" y="318" text-anchor="middle" dominant-baseline="central">Implementer</text>
+  <text class="ts" x="76" y="332" text-anchor="middle" dominant-baseline="central">Generator</text>
+</g>
+
+<!-- Evaluator A -->
+<g class="c-blue">
+  <rect x="85" y="302" width="88" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="129" y="318" text-anchor="middle" dominant-baseline="central">Evaluator</text>
+  <text class="ts" x="129" y="332" text-anchor="middle" dominant-baseline="central">Verifier</text>
+</g>
+
+<!-- Reviewer A -->
+<g class="c-blue">
+  <rect x="138" y="302" width="88" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="182" y="318" text-anchor="middle" dominant-baseline="central">Reviewer</text>
+  <text class="ts" x="182" y="332" text-anchor="middle" dominant-baseline="central">Quality</text>
+</g>
+
+<!-- Team Beta container -->
+<g class="c-coral">
+  <rect x="258" y="196" width="210" height="196" rx="12" stroke-width="0.5"/>
+</g>
+<text class="th" x="363" y="218" text-anchor="middle" dominant-baseline="central">Team Beta</text>
+
+<!-- Team Beta Lead -->
+<g class="c-coral">
+  <rect x="278" y="228" width="170" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="363" y="244" text-anchor="middle" dominant-baseline="central">team-beta-lead</text>
+  <text class="ts" x="363" y="258" text-anchor="middle" dominant-baseline="central">sonnet</text>
+</g>
+
+<!-- Arrows: Beta Lead -> members -->
+<line x1="320" y1="268" x2="302" y2="302" marker-end="url(#arrow)"/>
+<line x1="363" y1="268" x2="363" y2="302" marker-end="url(#arrow)"/>
+<line x1="406" y1="268" x2="424" y2="302" marker-end="url(#arrow)"/>
+
+<!-- Implementer B -->
+<g class="c-coral">
+  <rect x="266" y="302" width="88" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="310" y="318" text-anchor="middle" dominant-baseline="central">Implementer</text>
+  <text class="ts" x="310" y="332" text-anchor="middle" dominant-baseline="central">Generator</text>
+</g>
+
+<!-- Evaluator B -->
+<g class="c-coral">
+  <rect x="319" y="302" width="88" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="363" y="318" text-anchor="middle" dominant-baseline="central">Evaluator</text>
+  <text class="ts" x="363" y="332" text-anchor="middle" dominant-baseline="central">Verifier</text>
+</g>
+
+<!-- Reviewer B -->
+<g class="c-coral">
+  <rect x="372" y="302" width="88" height="40" rx="6" stroke-width="0.5"/>
+  <text class="th" x="416" y="318" text-anchor="middle" dominant-baseline="central">Reviewer</text>
+  <text class="ts" x="416" y="332" text-anchor="middle" dominant-baseline="central">Quality</text>
+</g>
+
+<!-- Cross-team container -->
+<g class="c-teal">
+  <rect x="492" y="196" width="164" height="72" rx="8" stroke-width="0.5"/>
+  <text class="th" x="574" y="216" text-anchor="middle" dominant-baseline="central">Cross-team</text>
+  <text class="ts" x="574" y="234" text-anchor="middle" dominant-baseline="central">doc-manager</text>
+  <text class="ts" x="574" y="250" text-anchor="middle" dominant-baseline="central">release-manager · explorer</text>
+</g>
+
+<!-- SQLite DB -->
+<g class="c-amber">
+  <rect x="194" y="430" width="292" height="48" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="448" text-anchor="middle" dominant-baseline="central">dev-forge.db (SQLite)</text>
+  <text class="ts" x="340" y="464" text-anchor="middle" dominant-baseline="central">messages · contracts · rules · learnings</text>
+</g>
+
+<!-- Arrows to DB -->
+<line x1="129" y1="392" x2="240" y2="430" marker-end="url(#arrow)"/>
+<line x1="363" y1="392" x2="340" y2="430" marker-end="url(#arrow)"/>
+<line x1="574" y1="268" x2="420" y2="430" marker-end="url(#arrow)"/>
+
+<!-- Knowledge Wiki -->
+<g class="c-teal">
+  <rect x="24"  y="510" width="150" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="99"  y="530" text-anchor="middle" dominant-baseline="central">Knowledge Wiki</text>
+  <text class="ts" x="99"  y="548" text-anchor="middle" dominant-baseline="central">local / Obsidian</text>
+</g>
+
+<!-- Learnings -->
+<g class="c-green">
+  <rect x="265" y="510" width="150" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="340" y="530" text-anchor="middle" dominant-baseline="central">Learnings</text>
+  <text class="ts" x="340" y="548" text-anchor="middle" dominant-baseline="central">SQLite + Markdown</text>
+</g>
+
+<!-- Bug Council -->
+<g class="c-red">
+  <rect x="506" y="510" width="150" height="56" rx="8" stroke-width="0.5"/>
+  <text class="th" x="581" y="524" text-anchor="middle" dominant-baseline="central">Bug Council</text>
+  <text class="ts" x="581" y="540" text-anchor="middle" dominant-baseline="central">Root Cause · Pattern</text>
+  <text class="ts" x="581" y="556" text-anchor="middle" dominant-baseline="central">Adversarial · (opus)</text>
+</g>
+
+<!-- Arrows DB -> bottom row -->
+<line x1="260" y1="468" x2="140" y2="510" marker-end="url(#arrow)"/>
+<line x1="340" y1="478" x2="340" y2="510" marker-end="url(#arrow)"/>
+<line x1="420" y1="468" x2="540" y2="510" marker-end="url(#arrow)"/>
+
+</svg>
