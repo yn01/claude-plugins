@@ -212,5 +212,5 @@ dev-forge supports Windows via PowerShell equivalents for all shell hooks. When 
 - Bug Council with 3-analyst diagnosis
 - Knowledge Wiki with local and Obsidian storage backends
 - Agent Learnings with SQLite storage and Markdown export
-- 8 lifecycle hooks with macOS/Linux and Windows support
+- Lifecycle hooks (SessionStart, Stop, PreToolUse, PostToolUse, PreCompact) with macOS/Linux and Windows support
 - Communication rules enforcement with violation logging
