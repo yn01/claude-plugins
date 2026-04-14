@@ -39,6 +39,11 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
    ```bash
    cp $(claude plugin path dev-forge)/templates/devforge.yaml ./devforge.yaml
    ```
+   > **パスが不明な場合は直接指定してください。** macOS の例:
+   > ```bash
+   > cp /Users/your-username/.claude/plugins/dev-forge/templates/devforge.yaml ./devforge.yaml
+   > ```
+   > `your-username` は実際のユーザー名に置き換えてください。
 
 2. (Optional) Edit `devforge.yaml` to customize team names and models.
 
@@ -49,7 +54,7 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
 
 4. Create your first sprint contract:
    ```
-   /dev-forge:contract create team-alpha-lead "Implement user authentication with JWT"
+   /dev-forge:contract create orchestrator "Implement user authentication with JWT"
    ```
 
 5. Monitor progress:
