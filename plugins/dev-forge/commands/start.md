@@ -131,6 +131,11 @@ SYSTEM_PROMPT_FILE="$3"
 DB=".dev-forge/dev-forge.db"
 POLL_INTERVAL=5
 
+# Unset ANTHROPIC_API_KEY so claude uses ~/.claude/ credentials.
+# If this env var is set to an invalid value it overrides stored auth and
+# causes "Invalid API key" errors in non-interactive claude --print calls.
+unset ANTHROPIC_API_KEY
+
 echo "[dev-forge] $AGENT_ID watchdog started (model: $MODEL)"
 
 while true; do
