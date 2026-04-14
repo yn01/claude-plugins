@@ -131,6 +131,12 @@ SYSTEM_PROMPT_FILE="$3"
 DB=".dev-forge/dev-forge.db"
 POLL_INTERVAL=5
 
+# Source login profiles to pick up ANTHROPIC_API_KEY and PATH.
+# ~/.zprofile (zsh) and ~/.bash_profile (bash) contain only env vars and PATH,
+# avoiding the interactive-shell side effects of sourcing ~/.zshrc.
+[ -f "$HOME/.zprofile" ]    && source "$HOME/.zprofile"    2>/dev/null
+[ -f "$HOME/.bash_profile" ] && source "$HOME/.bash_profile" 2>/dev/null
+
 echo "[dev-forge] $AGENT_ID watchdog started (model: $MODEL)"
 
 while true; do
