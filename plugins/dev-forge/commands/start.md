@@ -129,7 +129,7 @@ AGENT_ID="$1"
 MODEL="$2"
 SYSTEM_PROMPT_FILE="$3"
 DB=".dev-forge/dev-forge.db"
-POLL_INTERVAL=3
+POLL_INTERVAL=5
 
 echo "[dev-forge] $AGENT_ID watchdog started (model: $MODEL)"
 
