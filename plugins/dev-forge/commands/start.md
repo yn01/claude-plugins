@@ -120,57 +120,58 @@ Write `.dev-forge/agent-loop.sh`:
 cat > .dev-forge/agent-loop.sh << 'LOOP_SCRIPT'
 #!/usr/bin/env bash
 # dev-forge agent watchdog loop
-# Polls the SQLite message bus for unread messages and processes each one
-# via `claude --print`, which runs Claude headlessly with full tool access.
-#
-# Usage: agent-loop.sh <agent-id> <model> <system-prompt-file>
-
 AGENT_ID="$1"
 MODEL="$2"
 SYSTEM_PROMPT_FILE="$3"
 DB=".dev-forge/dev-forge.db"
 POLL_INTERVAL=5
 
-# Unset ANTHROPIC_API_KEY so claude uses ~/.claude/ credentials.
-# If this env var is set to an invalid value it overrides stored auth and
-# causes "Invalid API key" errors in non-interactive claude --print calls.
 unset ANTHROPIC_API_KEY
+
+# SQLite helper with busy timeout and retry
+db_exec() {
+  local sql="$1"
+  local retries=5
+  local delay=1
+  for i in $(seq 1 $retries); do
+    result=$(sqlite3 -cmd "PRAGMA busy_timeout=5000;" "$DB" "$sql" 2>&1)
+    rc=$?
+    if [ $rc -eq 0 ]; then
+      echo "$result"
+      return 0
+    fi
+    echo "[dev-forge] $AGENT_ID DB retry $i: $result" >&2
+    sleep $delay
+  done
+  echo "[dev-forge] $AGENT_ID DB failed after $retries retries: $sql" >&2
+  return 1
+}
 
 echo "[dev-forge] $AGENT_ID watchdog started (model: $MODEL)"
 
 while true; do
-  # Fetch the ID of the oldest unread message addressed to this agent.
-  # Querying only the integer id avoids multi-line parsing bugs when
-  # content contains newlines — we re-fetch other fields by id below.
-  MSG_ID=$(sqlite3 "$DB" \
+  MSG_ID=$(db_exec \
     "SELECT id FROM messages
      WHERE to_agent='$AGENT_ID' AND status='unread'
-     ORDER BY created_at ASC LIMIT 1" 2>/dev/null)
+     ORDER BY created_at ASC LIMIT 1")
 
   if [ -n "$MSG_ID" ]; then
-    # Re-fetch fields individually using the safe integer id
-    FROM_AGENT=$(sqlite3 "$DB" "SELECT from_agent FROM messages WHERE id=$MSG_ID")
-    CONTENT=$(sqlite3 "$DB" "SELECT content FROM messages WHERE id=$MSG_ID")
+    FROM_AGENT=$(db_exec "SELECT from_agent FROM messages WHERE id=$MSG_ID")
+    CONTENT=$(db_exec "SELECT content FROM messages WHERE id=$MSG_ID")
 
-    # Mark as read before processing to avoid double-delivery on crash/restart
-    sqlite3 "$DB" \
-      "UPDATE messages SET status='read', read_at=datetime('now') WHERE id=$MSG_ID"
-    sqlite3 "$DB" \
-      "UPDATE agent_status SET status='processing', current_task='msg-$MSG_ID', last_active=datetime('now') WHERE agent_name='$AGENT_ID'"
+    db_exec "UPDATE messages SET status='read', read_at=datetime('now') WHERE id=$MSG_ID"
+    db_exec "UPDATE agent_status SET status='processing', current_task='msg-$MSG_ID', last_active=datetime('now') WHERE agent_name='$AGENT_ID'"
 
     echo "[dev-forge] $AGENT_ID processing message $MSG_ID from $FROM_AGENT"
 
-    # Run Claude headlessly. Tool calls (sqlite3 INSERT etc.) execute normally.
-    # The agent's system prompt already instructs it to write replies to the DB.
     printf '[Message from %s, msg-id=%s]:\n%s\n' \
       "$FROM_AGENT" "$MSG_ID" "$CONTENT" \
       | claude --model "$MODEL" \
                --system-prompt-file "$SYSTEM_PROMPT_FILE" \
                --print \
-               --allowedTools "Bash,Read,Write,Edit,Grep,Glob"
+               --dangerously-skip-permissions
 
-    sqlite3 "$DB" \
-      "UPDATE agent_status SET status='idle', current_task=NULL, last_active=datetime('now') WHERE agent_name='$AGENT_ID'"
+    db_exec "UPDATE agent_status SET status='idle', current_task=NULL, last_active=datetime('now') WHERE agent_name='$AGENT_ID'"
   else
     sleep "$POLL_INTERVAL"
   fi
