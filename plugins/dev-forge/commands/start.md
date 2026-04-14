@@ -134,16 +134,18 @@ POLL_INTERVAL=5
 echo "[dev-forge] $AGENT_ID watchdog started (model: $MODEL)"
 
 while true; do
-  # Fetch the oldest unread message addressed to this agent
-  MSG_ROW=$(sqlite3 "$DB" \
-    "SELECT id, from_agent, content FROM messages
+  # Fetch the ID of the oldest unread message addressed to this agent.
+  # Querying only the integer id avoids multi-line parsing bugs when
+  # content contains newlines — we re-fetch other fields by id below.
+  MSG_ID=$(sqlite3 "$DB" \
+    "SELECT id FROM messages
      WHERE to_agent='$AGENT_ID' AND status='unread'
      ORDER BY created_at ASC LIMIT 1" 2>/dev/null)
 
-  if [ -n "$MSG_ROW" ]; then
-    MSG_ID=$(echo "$MSG_ROW"   | cut -d'|' -f1)
-    FROM_AGENT=$(echo "$MSG_ROW" | cut -d'|' -f2)
-    CONTENT=$(echo "$MSG_ROW"  | cut -d'|' -f3)
+  if [ -n "$MSG_ID" ]; then
+    # Re-fetch fields individually using the safe integer id
+    FROM_AGENT=$(sqlite3 "$DB" "SELECT from_agent FROM messages WHERE id=$MSG_ID")
+    CONTENT=$(sqlite3 "$DB" "SELECT content FROM messages WHERE id=$MSG_ID")
 
     # Mark as read before processing to avoid double-delivery on crash/restart
     sqlite3 "$DB" \
@@ -191,7 +193,7 @@ launch_agent() {
   { cat "$AGENT_MD"; echo; echo "---"; echo; echo "$COMM_RULES"; } > "$PROMPT_FILE"
 
   tmux new-session -d -s "dev-forge-$AGENT_ID" \
-    "bash .dev-forge/agent-loop.sh '$AGENT_ID' '$MODEL' '$PROMPT_FILE'; \
+    "bash -l -c 'bash .dev-forge/agent-loop.sh \"$AGENT_ID\" \"$MODEL\" \"$PROMPT_FILE\"'; \
      echo '[dev-forge] $AGENT_ID loop exited'; read"
 
   sqlite3 "$DB" \
@@ -210,7 +212,7 @@ for TEAM in alpha beta; do
   sed "s/{{TEAM_NAME}}/$TEAM/g" "$PLUGIN_DIR/agents/team/team-lead.md" > "$LEAD_PROMPT"
   echo; echo "$COMM_RULES" >> "$LEAD_PROMPT"
   tmux new-session -d -s "dev-forge-team-$TEAM-lead" \
-    "bash .dev-forge/agent-loop.sh 'team-$TEAM-lead' 'claude-sonnet-4-6' '$LEAD_PROMPT'; read"
+    "bash -l -c 'bash .dev-forge/agent-loop.sh \"team-$TEAM-lead\" \"claude-sonnet-4-6\" \"$LEAD_PROMPT\"'; read"
   sqlite3 "$DB" "UPDATE agent_status SET status='idle', last_active=datetime('now') WHERE agent_name='team-$TEAM-lead'"
 
   for ROLE in implementer evaluator reviewer; do
@@ -218,7 +220,7 @@ for TEAM in alpha beta; do
     sed "s/{{TEAM_NAME}}/$TEAM/g" "$PLUGIN_DIR/agents/team/$ROLE.md" > "$MEMBER_PROMPT"
     echo; echo "$COMM_RULES" >> "$MEMBER_PROMPT"
     tmux new-session -d -s "dev-forge-$ROLE-$TEAM" \
-      "bash .dev-forge/agent-loop.sh '$ROLE-$TEAM' 'claude-sonnet-4-6' '$MEMBER_PROMPT'; read"
+      "bash -l -c 'bash .dev-forge/agent-loop.sh \"$ROLE-$TEAM\" \"claude-sonnet-4-6\" \"$MEMBER_PROMPT\"'; read"
     sqlite3 "$DB" "UPDATE agent_status SET status='idle', last_active=datetime('now') WHERE agent_name='$ROLE-$TEAM'"
   done
 done
