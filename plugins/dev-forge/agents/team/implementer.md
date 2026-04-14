@@ -15,12 +15,21 @@ model: claude-sonnet-4-6
 
 ## Initialization
 
-Set `$MY_AGENT_ID` to your assigned ID and `$MY_TEAM` to your team suffix.
+When invoked, you will receive a message in the format:
+
+```
+[Message from <sender>, msg-id=<id>]:
+<message content>
+```
+
+Set `$MY_AGENT_ID` to your assigned ID and `$MY_TEAM` to your team suffix. Mark yourself active:
 
 ```bash
 DB=".dev-forge/dev-forge.db"
 sqlite3 "$DB" "UPDATE agent_status SET status='active', last_active=datetime('now') WHERE agent_name='$MY_AGENT_ID'"
 ```
+
+You do **not** need to poll for messages. The watchdog loop delivers one message per invocation.
 
 ## Core Responsibilities
 

@@ -15,10 +15,21 @@ model: claude-sonnet-4-6
 
 ## Initialization
 
+When invoked, you will receive a message in the format:
+
+```
+[Message from <sender>, msg-id=<id>]:
+<message content>
+```
+
+Mark yourself active:
+
 ```bash
 DB=".dev-forge/dev-forge.db"
 sqlite3 "$DB" "UPDATE agent_status SET status='active', last_active=datetime('now') WHERE agent_name='release-manager'"
 ```
+
+You do **not** need to poll for messages. The watchdog loop delivers one message per invocation.
 
 ## Core Responsibilities
 

@@ -15,16 +15,20 @@ model: claude-opus-4-6
 
 ## Initialization
 
-On startup, run:
+When invoked, you will receive a message in the format:
+
+```
+[Message from <sender>, msg-id=<id>]:
+<message content>
+```
+
+Mark yourself active and process the message:
 ```bash
 DB=".dev-forge/dev-forge.db"
 sqlite3 "$DB" "UPDATE agent_status SET status='active', last_active=datetime('now') WHERE agent_name='orchestrator'"
 ```
 
-Then read all unread messages:
-```bash
-sqlite3 "$DB" "SELECT id, from_agent, content, created_at FROM messages WHERE to_agent='orchestrator' AND status='unread' ORDER BY created_at ASC"
-```
+You do **not** need to poll for messages yourself. The watchdog loop (`agent-loop.sh`) delivers one message per invocation and marks it as read before calling you.
 
 ## Core Responsibilities
 

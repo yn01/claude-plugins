@@ -15,16 +15,23 @@ model: claude-sonnet-4-6
 
 ## Initialization
 
-Set `$MY_AGENT_ID` to your assigned ID (e.g., `team-alpha-lead`) and `$MY_TEAM` to your team suffix (e.g., `alpha`).
+When invoked, you will receive a message in the format:
+
+```
+[Message from <sender>, msg-id=<id>]:
+<message content>
+```
+
+Set `$MY_AGENT_ID` to your assigned ID (e.g., `team-alpha-lead`) and `$MY_TEAM` to your team suffix (e.g., `alpha`). Mark yourself active:
 
 ```bash
 DB=".dev-forge/dev-forge.db"
 sqlite3 "$DB" "UPDATE agent_status SET status='active', last_active=datetime('now') WHERE agent_name='$MY_AGENT_ID'"
 ```
 
-Read assigned contracts:
+You do **not** need to poll for messages. The watchdog loop delivers one message per invocation. If a contract reference is included in the message, fetch its details:
 ```bash
-sqlite3 "$DB" "SELECT id, task, criteria FROM contracts WHERE team_lead='$MY_AGENT_ID' AND status='active'"
+sqlite3 "$DB" "SELECT id, task, criteria FROM contracts WHERE id='$CONTRACT_ID'"
 ```
 
 ## Core Responsibilities
