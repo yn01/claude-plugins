@@ -131,12 +131,6 @@ SYSTEM_PROMPT_FILE="$3"
 DB=".dev-forge/dev-forge.db"
 POLL_INTERVAL=5
 
-# Source login profiles to pick up ANTHROPIC_API_KEY and PATH.
-# ~/.zprofile (zsh) and ~/.bash_profile (bash) contain only env vars and PATH,
-# avoiding the interactive-shell side effects of sourcing ~/.zshrc.
-[ -f "$HOME/.zprofile" ]    && source "$HOME/.zprofile"    2>/dev/null
-[ -f "$HOME/.bash_profile" ] && source "$HOME/.bash_profile" 2>/dev/null
-
 echo "[dev-forge] $AGENT_ID watchdog started (model: $MODEL)"
 
 while true; do
@@ -199,7 +193,8 @@ launch_agent() {
   { cat "$AGENT_MD"; echo; echo "---"; echo; echo "$COMM_RULES"; } > "$PROMPT_FILE"
 
   tmux new-session -d -s "dev-forge-$AGENT_ID" \
-    "bash -l -c 'bash .dev-forge/agent-loop.sh \"$AGENT_ID\" \"$MODEL\" \"$PROMPT_FILE\"'; \
+    -e "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" \
+    "bash .dev-forge/agent-loop.sh '$AGENT_ID' '$MODEL' '$PROMPT_FILE'; \
      echo '[dev-forge] $AGENT_ID loop exited'; read"
 
   sqlite3 "$DB" \
@@ -218,7 +213,8 @@ for TEAM in alpha beta; do
   sed "s/{{TEAM_NAME}}/$TEAM/g" "$PLUGIN_DIR/agents/team/team-lead.md" > "$LEAD_PROMPT"
   echo; echo "$COMM_RULES" >> "$LEAD_PROMPT"
   tmux new-session -d -s "dev-forge-team-$TEAM-lead" \
-    "bash -l -c 'bash .dev-forge/agent-loop.sh \"team-$TEAM-lead\" \"claude-sonnet-4-6\" \"$LEAD_PROMPT\"'; read"
+    -e "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" \
+    "bash .dev-forge/agent-loop.sh 'team-$TEAM-lead' 'claude-sonnet-4-6' '$LEAD_PROMPT'; read"
   sqlite3 "$DB" "UPDATE agent_status SET status='idle', last_active=datetime('now') WHERE agent_name='team-$TEAM-lead'"
 
   for ROLE in implementer evaluator reviewer; do
@@ -226,7 +222,8 @@ for TEAM in alpha beta; do
     sed "s/{{TEAM_NAME}}/$TEAM/g" "$PLUGIN_DIR/agents/team/$ROLE.md" > "$MEMBER_PROMPT"
     echo; echo "$COMM_RULES" >> "$MEMBER_PROMPT"
     tmux new-session -d -s "dev-forge-$ROLE-$TEAM" \
-      "bash -l -c 'bash .dev-forge/agent-loop.sh \"$ROLE-$TEAM\" \"claude-sonnet-4-6\" \"$MEMBER_PROMPT\"'; read"
+      -e "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY" \
+      "bash .dev-forge/agent-loop.sh '$ROLE-$TEAM' 'claude-sonnet-4-6' '$MEMBER_PROMPT'; read"
     sqlite3 "$DB" "UPDATE agent_status SET status='idle', last_active=datetime('now') WHERE agent_name='$ROLE-$TEAM'"
   done
 done
