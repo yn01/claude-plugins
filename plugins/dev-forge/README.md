@@ -39,11 +39,11 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
    ```bash
    cp $(claude plugin path dev-forge)/templates/devforge.yaml ./devforge.yaml
    ```
-   > **パスが不明な場合は直接指定してください。** macOS の例:
+   > **If the path is unclear, specify it directly.** Example on macOS:
    > ```bash
    > cp /Users/your-username/.claude/plugins/dev-forge/templates/devforge.yaml ./devforge.yaml
    > ```
-   > `your-username` は実際のユーザー名に置き換えてください。
+   > Replace `your-username` with your actual username.
 
 2. (Optional) Edit `devforge.yaml` to customize team names and models.
 
