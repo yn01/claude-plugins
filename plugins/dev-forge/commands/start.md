@@ -134,7 +134,7 @@ db_exec() {
   local retries=5
   local delay=1
   for i in $(seq 1 $retries); do
-    result=$(sqlite3 -cmd "PRAGMA busy_timeout=5000;" "$DB" "$sql" 2>&1)
+    result=$(sqlite3 -cmd ".timeout 5000" "$DB" "$sql" 2>&1)
     rc=$?
     if [ $rc -eq 0 ]; then
       echo "$result"
