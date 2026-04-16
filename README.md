@@ -14,7 +14,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v1.0.0`
+### [dev-forge](./plugins/dev-forge) `v1.1.0`
 
 SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation.
 
@@ -136,6 +136,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-17
+- Update **dev-forge** to v1.1.0 — auto-assign learning numbers, add `learn status` subcommand, add Key Concepts glossary to README
 
 ### 2026-04-07
 - Add **dev-forge** v1.0.0 — SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation

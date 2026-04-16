@@ -13,23 +13,31 @@ Capture and review agent learnings — mistakes made, anti-patterns identified, 
 
 ```
 /dev-forge:learn
-/dev-forge:learn record --iteration <n> --mistake "<text>" --pattern "<text>" --recommendation "<text>" --impact <low|medium|high|critical>
+/dev-forge:learn record [--iteration <n>] --mistake "<text>" --pattern "<text>" --recommendation "<text>" --impact <low|medium|high|critical>
 ```
 
-1. If arguments are not provided, prompt the user interactively for each field
-2. Insert into `learnings` table:
+`--iteration` is optional. When omitted, the learning number is assigned automatically as `MAX(iteration) + 1` from the `learnings` table (or `1` if no learnings exist yet).
+
+1. If `--mistake`, `--pattern`, `--recommendation`, or `--impact` are not provided, prompt the user interactively for each field
+2. Resolve the learning number:
    ```bash
    DB=".dev-forge/dev-forge.db"
+   if [ -z "$ITERATION" ]; then
+     ITERATION=$(sqlite3 "$DB" "SELECT COALESCE(MAX(iteration), 0) + 1 FROM learnings")
+   fi
+   ```
+3. Insert into `learnings` table:
+   ```bash
    SESSION_ID=$(date +%Y%m%d)
    sqlite3 "$DB" "INSERT INTO learnings (iteration, mistake, pattern, recommendation, impact, created_at, session_id) VALUES ($ITERATION, '$MISTAKE', '$PATTERN', '$RECOMMENDATION', '$IMPACT', datetime('now'), '$SESSION_ID')"
    ```
-3. Write human-readable mirror to `.dev-forge/learnings/`:
+4. Write human-readable mirror to `.dev-forge/learnings/`:
    ```bash
    LEARNINGS_DIR=".dev-forge/learnings"
    mkdir -p "$LEARNINGS_DIR"
    cat >> "$LEARNINGS_DIR/LEARNINGS.md" << EOF
 
-   ## Agent Learning Log: Iteration #$ITERATION
+   ## Learning #$ITERATION
 
    ### Mistake Made
    - *Description:* $MISTAKE
@@ -44,7 +52,29 @@ Capture and review agent learnings — mistakes made, anti-patterns identified, 
    ---
    EOF
    ```
-4. Output: `Learning recorded (iteration #$ITERATION, impact: $IMPACT)`
+5. Output: `Learning #$ITERATION recorded (impact: $IMPACT)`
+
+### status
+
+```
+/dev-forge:learn status
+```
+
+Show the current state of learnings:
+
+```bash
+DB=".dev-forge/dev-forge.db"
+NEXT=$(sqlite3 "$DB" "SELECT COALESCE(MAX(iteration), 0) + 1 FROM learnings")
+TOTAL=$(sqlite3 "$DB" "SELECT COUNT(*) FROM learnings")
+echo "Next learning number : $NEXT"
+echo "Total learnings      : $TOTAL"
+echo ""
+echo "Recent learnings:"
+sqlite3 "$DB" "SELECT iteration, impact, date(created_at), mistake FROM learnings ORDER BY iteration DESC LIMIT 5" \
+  | while IFS='|' read n impact date mistake; do
+      printf "  #%-4s | %-8s | %s | %s\n" "$n" "$impact" "$date" "$mistake"
+    done
+```
 
 ### review
 

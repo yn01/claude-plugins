@@ -94,7 +94,8 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
 | `/dev-forge:wiki lint` | Check wiki for issues |
 | `/dev-forge:guideline add "<title>" "<content>"` | Add a coding guideline |
 | `/dev-forge:guideline list` | List all guidelines |
-| `/dev-forge:learn` | Record learnings from the current iteration |
+| `/dev-forge:learn` | Record a learning (learning number auto-assigned) |
+| `/dev-forge:learn status` | Show next learning number and recent entries |
 | `/dev-forge:learn review` | Browse accumulated learnings |
 | `/dev-forge:learn export` | Export all learnings to Markdown |
 
@@ -174,6 +175,28 @@ The predecessor `devteam` plugin uses Markdown files in inbox directories. dev-f
 4. **Human-readable export**: `/dev-forge:export` converts the DB to Markdown when human review is needed.
 5. **Single file**: One `.dev-forge/dev-forge.db` file to back up, restore, or share.
 
+## Key Concepts
+
+Understanding these terms will help you use dev-forge effectively.
+
+**Contract**
+A unit of work assigned from the Orchestrator to a team lead. Contracts include a task description and acceptance criteria that must be met before the work is considered done. Create one with `/dev-forge:contract create`.
+
+**Generator/Evaluator pattern**
+The implementer (Generator) produces code; the evaluator (Evaluator) judges it against the contract criteria. These are always separate agents to prevent self-evaluation bias. A failed evaluation triggers a retry; repeated failures escalate the model or invoke the Bug Council.
+
+**Bug Council**
+A panel of three specialist agents (root-cause analyst, pattern-matcher, adversarial tester) convened automatically when an agent fails six or more times consecutively, or when a critical bug is detected. The Bug Council diagnoses the root cause and recommends a fix.
+
+**Learning number**
+A sequential integer assigned to each learning record in the `learnings` table. It is simply a unique identifier — it does not represent a sprint cycle or any particular unit of time. When you run `/dev-forge:learn record`, the number is auto-assigned as `MAX + 1`. Use `/dev-forge:learn status` to see the next available number and recent entries.
+
+**Model escalation**
+When an agent fails repeatedly, dev-forge automatically upgrades its model: Haiku → Sonnet at 2 failures, Sonnet → Opus at 4, Opus → Bug Council at 6. This balances cost against the need for stronger reasoning on hard problems.
+
+**Wiki**
+A collection of Markdown files in `.dev-forge/wiki/` that agents consult before starting tasks. Humans add content via `/dev-forge:wiki ingest`; the `doc-manager` agent maintains it during a session.
+
 ## Wiki and Learnings
 
 ### Wiki
@@ -184,7 +207,7 @@ For Obsidian users, set `wiki.storage: obsidian` and `wiki.obsidian_vault: /path
 
 ### Learnings
 
-After each sprint iteration (especially evaluator PASS events), the `post-tool-use` hook suggests recording a learning. Learnings are stored in SQLite and mirrored to `.dev-forge/learnings/LEARNINGS.md`. The `pattern-matcher` Bug Council agent queries learnings when diagnosing failures.
+After each completed evaluation (PASS event), the `post-tool-use` hook suggests recording a learning. The learning number is auto-assigned — you do not need to track it manually. Use `/dev-forge:learn status` to see the current state. Learnings are stored in SQLite and mirrored to `.dev-forge/learnings/LEARNINGS.md`. The `pattern-matcher` Bug Council agent queries learnings when diagnosing failures.
 
 ## Directory Structure
 
