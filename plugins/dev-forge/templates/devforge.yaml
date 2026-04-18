@@ -1,8 +1,30 @@
 # dev-forge configuration template
 # Copy this file to your project root as devforge.yaml
 
+model_aliases:
+  opus: claude-opus-4-6
+  sonnet: claude-sonnet-4-6
+  haiku: claude-haiku-4-5-20251001
+
+model_profile: balanced
+
+model_profiles:
+  economy:
+    orchestrator: sonnet
+    bug-council-orchestrator: sonnet
+    default: haiku
+  balanced:
+    orchestrator: opus
+    bug-council-orchestrator: opus
+    explorer: haiku
+    default: sonnet
+  quality:
+    orchestrator: opus
+    bug-council-orchestrator: opus
+    explorer: sonnet
+    default: opus
+
 orchestrator:
-  model: claude-opus-4-6
   can_contact:
     - team-alpha-lead
     - team-beta-lead
@@ -12,19 +34,15 @@ orchestrator:
 
 cross_team_agents:
   doc-manager:
-    model: claude-sonnet-4-6
     can_contact: [orchestrator, team-alpha-lead, team-beta-lead]
   release-manager:
-    model: claude-sonnet-4-6
     can_contact: [orchestrator, team-alpha-lead, team-beta-lead]
   explorer:
-    model: claude-haiku-4-5-20251001
     can_contact: [orchestrator, team-alpha-lead, team-beta-lead]
 
 teams:
   - name: alpha
     lead:
-      model: claude-sonnet-4-6
       can_contact:
         - orchestrator
         - doc-manager
@@ -36,20 +54,16 @@ teams:
     members:
       - id: implementer-alpha
         role: implementer
-        model: claude-sonnet-4-6
         can_contact: [team-alpha-lead, evaluator-alpha, reviewer-alpha]
       - id: evaluator-alpha
         role: evaluator
-        model: claude-sonnet-4-6
         can_contact: [team-alpha-lead, implementer-alpha]
       - id: reviewer-alpha
         role: reviewer
-        model: claude-sonnet-4-6
         can_contact: [team-alpha-lead, implementer-alpha]
 
   - name: beta
     lead:
-      model: claude-sonnet-4-6
       can_contact:
         - orchestrator
         - doc-manager
@@ -61,22 +75,19 @@ teams:
     members:
       - id: implementer-beta
         role: implementer
-        model: claude-sonnet-4-6
         can_contact: [team-beta-lead, evaluator-beta, reviewer-beta]
       - id: evaluator-beta
         role: evaluator
-        model: claude-sonnet-4-6
         can_contact: [team-beta-lead, implementer-beta]
       - id: reviewer-beta
         role: reviewer
-        model: claude-sonnet-4-6
         can_contact: [team-beta-lead, implementer-beta]
 
 model_escalation:
   enabled: true
   on_consecutive_failures:
-    2: claude-sonnet-4-6
-    4: claude-opus-4-6
+    2: sonnet
+    4: opus
   bug_council_trigger: 6
 
 wiki:

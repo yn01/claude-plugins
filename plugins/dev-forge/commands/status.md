@@ -18,16 +18,70 @@ if [ ! -f "$DB" ]; then
   exit 0
 fi
 
-echo "=== Agent Status ==="
-echo ""
-printf "%-25s %-12s %-20s %-28s\n" "Agent" "DB Status" "Live Session" "Last Active"
-printf "%-25s %-12s %-20s %-28s\n" "─────────────────────────" "───────────" "────────────────────" "────────────────────────────"
+# Helper: convert full model ID to short alias for display
+short_model() {
+  case "$1" in
+    claude-opus-4-6)            echo "opus" ;;
+    claude-sonnet-4-6)          echo "sonnet" ;;
+    claude-haiku-4-5-20251001)  echo "haiku" ;;
+    *)                          echo "$1" ;;
+  esac
+}
 
+# Read active profile and compute expected model per agent for override detection
+ACTIVE_PROFILE=$(sqlite3 "$DB" "SELECT value FROM config WHERE key='model_profile'" 2>/dev/null || echo "balanced")
+
+# Build expected model map from devforge.yaml profile (if file exists)
+declare -A EXPECTED_MODEL
+if [ -f "devforge.yaml" ]; then
+  while IFS= read -r agent_name; do
+    # Look up agent-specific override in profile, else use default
+    agent_alias=$(awk "
+      /^model_profiles:/ { in_profiles=1; next }
+      in_profiles && /^  $ACTIVE_PROFILE:/ { in_profile=1; next }
+      in_profile && /^  [a-z]/ && !/^  $ACTIVE_PROFILE:/ { in_profile=0 }
+      in_profile && /^    $agent_name:/ { print \$2; exit }
+    " devforge.yaml)
+    if [ -z "$agent_alias" ]; then
+      agent_alias=$(awk "
+        /^model_profiles:/ { in_profiles=1; next }
+        in_profiles && /^  $ACTIVE_PROFILE:/ { in_profile=1; next }
+        in_profile && /^  [a-z]/ && !/^  $ACTIVE_PROFILE:/ { in_profile=0 }
+        in_profile && /^    default:/ { print \$2; exit }
+      " devforge.yaml)
+    fi
+    case "${agent_alias:-sonnet}" in
+      opus)   EXPECTED_MODEL[$agent_name]="claude-opus-4-6" ;;
+      sonnet) EXPECTED_MODEL[$agent_name]="claude-sonnet-4-6" ;;
+      haiku)  EXPECTED_MODEL[$agent_name]="claude-haiku-4-5-20251001" ;;
+      *)      EXPECTED_MODEL[$agent_name]="${agent_alias}" ;;
+    esac
+  done < <(sqlite3 "$DB" "SELECT agent_name FROM agent_status ORDER BY agent_name")
+fi
+
+echo "=== Agent Status ===  [profile: $ACTIVE_PROFILE]"
+echo ""
+printf "%-25s %-10s %-12s %-20s %-28s\n" "Agent" "Model" "DB Status" "Live Session" "Last Active"
+printf "%-25s %-10s %-12s %-20s %-28s\n" "─────────────────────────" "──────────" "───────────" "────────────────────" "────────────────────────────"
+
+OVERRIDE_COUNT=0
 sqlite3 "$DB" "SELECT agent_name, status, model, last_active FROM agent_status ORDER BY agent_name" | while IFS='|' read agent db_status model last_active; do
   live="stopped"
   tmux has-session -t "dev-forge-$agent" 2>/dev/null && live="running"
-  printf "%-25s %-12s %-20s %-28s\n" "$agent" "$db_status" "$live" "${last_active:-never}"
+  short=$(short_model "$model")
+  # Mark overrides with *
+  expected="${EXPECTED_MODEL[$agent]}"
+  if [ -n "$expected" ] && [ "$model" != "$expected" ]; then
+    short="${short}*"
+    OVERRIDE_COUNT=$((OVERRIDE_COUNT + 1))
+  fi
+  printf "%-25s %-10s %-12s %-20s %-28s\n" "$agent" "$short" "$db_status" "$live" "${last_active:-never}"
 done
+
+if [ "$OVERRIDE_COUNT" -gt 0 ]; then
+  echo ""
+  echo "  * = overridden from profile default. Use /dev-forge:model reset to restore."
+fi
 ```
 
 ### 2. Show unread message counts per agent

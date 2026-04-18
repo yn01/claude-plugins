@@ -11,7 +11,8 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
 - **SQLite message bus**: All inter-agent communication goes through `.dev-forge/dev-forge.db`. No scattered inbox files.
 - **Sprint Contracts**: Pre-agreed acceptance criteria before implementation begins. Eliminates ambiguous handoffs.
 - **Generator/Evaluator pattern**: Implementer and Evaluator are always separate agents — no self-evaluation bias.
-- **Model Escalation**: Automatically upgrades agent models on repeated failures (Sonnet → Opus → Bug Council).
+- **Model Profiles**: Switch all agents between `economy`, `balanced`, and `quality` profiles in one command. Override individual agents at runtime — no restart needed.
+- **Model Escalation**: Automatically upgrades agent models on repeated failures (sonnet → opus → Bug Council).
 - **Bug Council**: 3-analyst multi-perspective diagnosis triggered at 6 consecutive failures or critical bugs.
 - **Knowledge Wiki**: Karpathy-style LLM wiki for project knowledge accumulation.
 - **Learnings capture**: Mistakes and patterns recorded to SQLite, queryable by future agents.
@@ -45,7 +46,7 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
    > ```
    > Replace `your-username` with your actual username.
 
-2. (Optional) Edit `devforge.yaml` to customize team names and models.
+2. (Optional) Edit `devforge.yaml` to customize team names and model profiles.
 
 3. Start the dev-forge team:
    ```
@@ -94,6 +95,9 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
 | `/dev-forge:wiki lint` | Check wiki for issues |
 | `/dev-forge:guideline add "<title>" "<content>"` | Add a coding guideline |
 | `/dev-forge:guideline list` | List all guidelines |
+| `/dev-forge:model profile <name>` | Switch all agents to a named model profile |
+| `/dev-forge:model set <agent> <model>` | Override a specific agent's model (accepts alias or full ID) |
+| `/dev-forge:model reset` | Re-apply active profile, clearing individual overrides |
 | `/dev-forge:learn` | Record a learning (learning number auto-assigned) |
 | `/dev-forge:learn status` | Show next learning number and recent entries |
 | `/dev-forge:learn review` | Browse accumulated learnings |
@@ -101,18 +105,38 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
 
 ## Customizing devforge.yaml
 
+### Model profiles
+
+`devforge.yaml` ships with three built-in profiles. Switch at runtime — no restart needed:
+
+```
+/dev-forge:model profile economy    # cost-optimized
+/dev-forge:model profile balanced   # default
+/dev-forge:model profile quality    # maximum capability
+```
+
+To override a single agent:
+```
+/dev-forge:model set implementer-alpha opus
+```
+
+To restore all agents to the active profile's defaults:
+```
+/dev-forge:model reset
+```
+
+Profiles are defined in `devforge.yaml`. Model aliases (`opus`, `sonnet`, `haiku`) and full model IDs are both accepted.
+
 ### Adding a team
 
 ```yaml
 teams:
   - name: gamma           # Add this block
     lead:
-      model: claude-sonnet-4-6
       can_contact: [orchestrator, doc-manager, implementer-gamma, evaluator-gamma, reviewer-gamma]
     members:
       - id: implementer-gamma
         role: implementer
-        model: claude-sonnet-4-6
         can_contact: [team-gamma-lead, evaluator-gamma, reviewer-gamma]
 ```
 
@@ -143,26 +167,26 @@ Available templates: `security-auditor`, `performance-analyst`, `devops-engineer
 ```
 User
  │
- └── Orchestrator (claude-opus-4-6)
-     ├── doc-manager (sonnet)
-     ├── release-manager (sonnet)
-     ├── explorer (haiku)
-     ├── team-alpha-lead (sonnet)
+ └── Orchestrator             (opus  — balanced profile default)
+     ├── doc-manager          (sonnet)
+     ├── release-manager      (sonnet)
+     ├── explorer             (haiku)
+     ├── team-alpha-lead      (sonnet)
      │   ├── implementer-alpha (sonnet)   <- Generator
-     │   ├── evaluator-alpha (sonnet)     <- Evaluator
-     │   └── reviewer-alpha (sonnet)      <- Quality
-     └── team-beta-lead (sonnet)
-         ├── implementer-beta (sonnet)
-         ├── evaluator-beta (sonnet)
-         └── reviewer-beta (sonnet)
+     │   ├── evaluator-alpha   (sonnet)   <- Evaluator
+     │   └── reviewer-alpha    (sonnet)   <- Quality
+     └── team-beta-lead       (sonnet)
+         ├── implementer-beta  (sonnet)
+         ├── evaluator-beta    (sonnet)
+         └── reviewer-beta     (sonnet)
 
 All communication -> .dev-forge/dev-forge.db (SQLite)
 
 Bug Council (triggered at 6+ failures):
-  bug-council-orchestrator (opus)
-  ├── root-cause-analyst (sonnet)
-  ├── pattern-matcher (sonnet)
-  └── adversarial-tester (sonnet)
+  bug-council-orchestrator (opus  — balanced profile default)
+  ├── root-cause-analyst   (sonnet)
+  ├── pattern-matcher      (sonnet)
+  └── adversarial-tester   (sonnet)
 ```
 
 ## Why SQLite Instead of File-Based Queues?
@@ -192,7 +216,7 @@ A panel of three specialist agents (root-cause analyst, pattern-matcher, adversa
 A sequential integer assigned to each learning record in the `learnings` table. It is simply a unique identifier — it does not represent a sprint cycle or any particular unit of time. When you run `/dev-forge:learn record`, the number is auto-assigned as `MAX + 1`. Use `/dev-forge:learn status` to see the next available number and recent entries.
 
 **Model escalation**
-When an agent fails repeatedly, dev-forge automatically upgrades its model: Haiku → Sonnet at 2 failures, Sonnet → Opus at 4, Opus → Bug Council at 6. This balances cost against the need for stronger reasoning on hard problems.
+When an agent fails repeatedly, dev-forge automatically upgrades its model: haiku → sonnet at 2 failures, sonnet → opus at 4, opus → Bug Council at 6. Because the model is read from the database on every message, escalation takes effect immediately without restarting the agent.
 
 **Wiki**
 A collection of Markdown files in `.dev-forge/wiki/` that agents consult before starting tasks. Humans add content via `/dev-forge:wiki ingest`; the `doc-manager` agent maintains it during a session.
@@ -231,6 +255,19 @@ dev-forge supports Windows via PowerShell equivalents for all shell hooks. When 
 - Path separators use `\` in PowerShell commands
 
 ## Changelog
+
+### v1.2.0 — 2026-04-19
+- **Model profiles**: Replace per-agent `model:` fields with `model_profiles` in `devforge.yaml` (economy / balanced / quality)
+- **Runtime model changes**: `agent-loop.sh` now reads the model from the database on every message — no agent restart needed
+- **`/dev-forge:model` command**: `profile`, `set`, and `reset` subcommands for model management
+- **Model aliases**: `opus`, `sonnet`, `haiku` accepted everywhere instead of full model IDs
+- **`/dev-forge:status`** now shows active profile name, short model aliases, and `*` marker for overridden agents
+- **`configテーブル`**: New `config` table in SQLite stores active profile name
+
+### v1.1.0 — 2026-04-17
+- Auto-assign learning numbers
+- Add `learn status` subcommand
+- Add Key Concepts glossary to README
 
 ### v1.0.0 — 2026-04-07
 - Initial release

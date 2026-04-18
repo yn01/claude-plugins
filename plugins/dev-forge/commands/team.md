@@ -21,28 +21,32 @@ Manage dev-forge teams. Team changes are saved to `devforge.yaml` and the SQLite
    ```yaml
    - name: <team-name>
      lead:
-       model: claude-sonnet-4-6
        can_contact: [orchestrator, doc-manager, release-manager, explorer, implementer-<name>, evaluator-<name>, reviewer-<name>]
      members:
        - id: implementer-<name>
          role: implementer
-         model: claude-sonnet-4-6
          can_contact: [team-<name>-lead, evaluator-<name>, reviewer-<name>]
        - id: evaluator-<name>
          role: evaluator
-         model: claude-sonnet-4-6
          can_contact: [team-<name>-lead, implementer-<name>]
        - id: reviewer-<name>
          role: reviewer
-         model: claude-sonnet-4-6
          can_contact: [team-<name>-lead, implementer-<name>]
    ```
 4. Write back to `devforge.yaml`
-5. Pre-register in SQLite:
+5. Resolve default model from active profile, then pre-register in SQLite:
    ```bash
    DB=".dev-forge/dev-forge.db"
+   ACTIVE_PROFILE=$(sqlite3 "$DB" "SELECT value FROM config WHERE key='model_profile'" 2>/dev/null || echo "balanced")
+   DEFAULT_ALIAS=$(awk "/^model_profiles:/{p=1} p && /^  $ACTIVE_PROFILE:/{q=1} q && /^    default:/{print \$2; exit}" devforge.yaml)
+   case "${DEFAULT_ALIAS:-sonnet}" in
+     opus)   DEFAULT_MODEL="claude-opus-4-6" ;;
+     sonnet) DEFAULT_MODEL="claude-sonnet-4-6" ;;
+     haiku)  DEFAULT_MODEL="claude-haiku-4-5-20251001" ;;
+     *)      DEFAULT_MODEL="${DEFAULT_ALIAS:-claude-sonnet-4-6}" ;;
+   esac
    for agent in "team-$NAME-lead" "implementer-$NAME" "evaluator-$NAME" "reviewer-$NAME"; do
-     sqlite3 "$DB" "INSERT OR IGNORE INTO agent_status (agent_name, status, model, last_active) VALUES ('$agent', 'stopped', 'claude-sonnet-4-6', datetime('now'))"
+     sqlite3 "$DB" "INSERT OR IGNORE INTO agent_status (agent_name, status, model, last_active) VALUES ('$agent', 'stopped', '$DEFAULT_MODEL', datetime('now'))"
    done
    ```
 6. Also add orchestrator -> team-lead can_contact rule:

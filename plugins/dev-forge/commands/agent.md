@@ -23,13 +23,20 @@ Available templates: `security-auditor`, `performance-analyst`, `devops-engineer
    ```yaml
    - id: <agent-id>
      role: <template-name>
-     model: claude-sonnet-4-6
      can_contact: [team-<team>-lead]
    ```
-4. Insert into SQLite:
+4. Resolve default model from active profile, then insert into SQLite:
    ```bash
    DB=".dev-forge/dev-forge.db"
-   sqlite3 "$DB" "INSERT OR REPLACE INTO agent_status (agent_name, status, model, last_active) VALUES ('$AGENT_ID', 'stopped', 'claude-sonnet-4-6', datetime('now'))"
+   ACTIVE_PROFILE=$(sqlite3 "$DB" "SELECT value FROM config WHERE key='model_profile'" 2>/dev/null || echo "balanced")
+   DEFAULT_ALIAS=$(awk "/^model_profiles:/{p=1} p && /^  $ACTIVE_PROFILE:/{q=1} q && /^    default:/{print \$2; exit}" devforge.yaml)
+   case "${DEFAULT_ALIAS:-sonnet}" in
+     opus)   DEFAULT_MODEL="claude-opus-4-6" ;;
+     sonnet) DEFAULT_MODEL="claude-sonnet-4-6" ;;
+     haiku)  DEFAULT_MODEL="claude-haiku-4-5-20251001" ;;
+     *)      DEFAULT_MODEL="${DEFAULT_ALIAS:-claude-sonnet-4-6}" ;;
+   esac
+   sqlite3 "$DB" "INSERT OR REPLACE INTO agent_status (agent_name, status, model, last_active) VALUES ('$AGENT_ID', 'stopped', '$DEFAULT_MODEL', datetime('now'))"
    sqlite3 "$DB" "INSERT OR REPLACE INTO communication_rules (from_agent, to_agent, allowed) VALUES ('$AGENT_ID', 'team-$TEAM-lead', 1)"
    sqlite3 "$DB" "INSERT OR REPLACE INTO communication_rules (from_agent, to_agent, allowed) VALUES ('team-$TEAM-lead', '$AGENT_ID', 1)"
    ```

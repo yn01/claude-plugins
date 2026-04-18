@@ -7,8 +7,8 @@ When an implementer repeatedly fails to satisfy sprint contract criteria, the Te
 | Consecutive Failures | Action |
 |---|---|
 | 0–1 | Standard retry with same model |
-| 2 | Escalate implementer model to `claude-sonnet-4-6` |
-| 4 | Escalate implementer model to `claude-opus-4-6` |
+| 2 | Escalate implementer model to `sonnet` |
+| 4 | Escalate implementer model to `opus` |
 | 6 | Trigger Bug Council |
 
 Configuration in `devforge.yaml`:
@@ -17,8 +17,8 @@ Configuration in `devforge.yaml`:
 model_escalation:
   enabled: true
   on_consecutive_failures:
-    2: claude-sonnet-4-6
-    4: claude-opus-4-6
+    2: sonnet
+    4: opus
   bug_council_trigger: 6
 ```
 
@@ -26,6 +26,8 @@ Escalation is stored in the `agent_status` table:
 ```bash
 sqlite3 .dev-forge/dev-forge.db "UPDATE agent_status SET model='claude-opus-4-6' WHERE agent_name='implementer-alpha'"
 ```
+
+Because `agent-loop.sh` reads the model from `agent_status` on every message, this change takes effect on the agent's next message — **no restart required**.
 
 ## Bug Council
 
@@ -63,3 +65,8 @@ If the Bug Council cannot produce a resolution plan, it escalates to the human w
 ## Resetting Failure Count
 
 After a successful implementation or after Bug Council resolution, the Team Lead should report success so the Orchestrator can reset the failure counter for the agent.
+
+To reset an agent's model back to the active profile's default:
+```
+/dev-forge:model reset
+```

@@ -14,11 +14,11 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v1.1.0`
+### [dev-forge](./plugins/dev-forge) `v1.2.0`
 
 SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation.
 
-Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes sprint contracts, Generator/Evaluator pattern, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture.
+Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes sprint contracts, Generator/Evaluator pattern, model profiles (economy / balanced / quality) with runtime switching, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture.
 
 ```
 /plugin install dev-forge
@@ -136,6 +136,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-19
+- Update **dev-forge** to v1.2.0 — model profiles (economy/balanced/quality), runtime model switching without restart, `/dev-forge:model` command, model aliases (opus/sonnet/haiku)
 
 ### 2026-04-17
 - Update **dev-forge** to v1.1.0 — auto-assign learning numbers, add `learn status` subcommand, add Key Concepts glossary to README

@@ -1,40 +1,50 @@
 # Agent Roles Reference
 
+Agent models are determined by the active profile in `devforge.yaml`. The defaults shown below are for the `balanced` profile. Use `/dev-forge:model profile <name>` to switch profiles.
+
 ## Core Agents
 
-| Agent ID | Model | Role | Can Contact |
+| Agent ID | Default Model (balanced) | Role | Can Contact |
 |---|---|---|---|
-| orchestrator | claude-opus-4-6 | Strategic task decomposition, sprint contract creation, escalation management | Team leads, cross-team agents |
-| doc-manager | claude-sonnet-4-6 | Documentation coordination, wiki management | Orchestrator, team leads |
-| release-manager | claude-sonnet-4-6 | Versioning, changelogs, release coordination | Orchestrator, team leads |
-| explorer | claude-haiku-4-5-* | Codebase exploration, symbol lookup (read-only) | Orchestrator, team leads |
+| orchestrator | opus | Strategic task decomposition, sprint contract creation, escalation management | Team leads, cross-team agents |
+| doc-manager | sonnet | Documentation coordination, wiki management | Orchestrator, team leads |
+| release-manager | sonnet | Versioning, changelogs, release coordination | Orchestrator, team leads |
+| explorer | haiku | Codebase exploration, symbol lookup (read-only) | Orchestrator, team leads |
 
 ## Team Agents (per team)
 
-| Role | Model | Responsibilities | Can Contact |
+| Role | Default Model (balanced) | Responsibilities | Can Contact |
 |---|---|---|---|
-| team-*-lead | claude-sonnet-4-6 | Contract ownership, delegation, escalation | Orchestrator, cross-team agents, own team |
-| implementer-* | claude-sonnet-4-6 | Feature implementation (Generator role) | Own lead, evaluator, reviewer |
-| evaluator-* | claude-sonnet-4-6 | Independent criteria verification (Evaluator role) | Own lead, implementer |
-| reviewer-* | claude-sonnet-4-6 | Code quality review (style, security surface) | Own lead, implementer |
+| team-*-lead | sonnet | Contract ownership, delegation, escalation | Orchestrator, cross-team agents, own team |
+| implementer-* | sonnet | Feature implementation (Generator role) | Own lead, evaluator, reviewer |
+| evaluator-* | sonnet | Independent criteria verification (Evaluator role) | Own lead, implementer |
+| reviewer-* | sonnet | Code quality review (style, security surface) | Own lead, implementer |
 
 ## Bug Council Agents
 
-| Agent ID | Model | Role |
+| Agent ID | Default Model (balanced) | Role |
 |---|---|---|
-| bug-council-orchestrator | claude-opus-4-6 | Coordinates 3-analyst diagnosis, synthesizes findings |
-| root-cause-analyst | claude-sonnet-4-6 | Traces failure chain from symptom to origin |
-| pattern-matcher | claude-sonnet-4-6 | Matches current failure to historical patterns in learnings |
-| adversarial-tester | claude-sonnet-4-6 | Edge case stress-testing, reproduction (read-only) |
+| bug-council-orchestrator | opus | Coordinates 3-analyst diagnosis, synthesizes findings |
+| root-cause-analyst | sonnet | Traces failure chain from symptom to origin |
+| pattern-matcher | sonnet | Matches current failure to historical patterns in learnings |
+| adversarial-tester | sonnet | Edge case stress-testing, reproduction (read-only) |
 
 ## Specialist Templates
 
-| Template | Model | Focus | Added via |
+| Template | Default Model (balanced) | Focus | Added via |
 |---|---|---|---|
-| security-auditor | claude-sonnet-4-6 | OWASP, injection, auth/authz | `/dev-forge:agent add <team> security-auditor` |
-| performance-analyst | claude-sonnet-4-6 | Algorithmic complexity, DB queries | `/dev-forge:agent add <team> performance-analyst` |
-| devops-engineer | claude-sonnet-4-6 | CI/CD, Docker, Kubernetes, IaC | `/dev-forge:agent add <team> devops-engineer` |
-| doc-writer | claude-sonnet-4-6 | Technical writing, API docs | `/dev-forge:agent add <team> doc-writer` |
+| security-auditor | sonnet | OWASP, injection, auth/authz | `/dev-forge:agent add <team> security-auditor` |
+| performance-analyst | sonnet | Algorithmic complexity, DB queries | `/dev-forge:agent add <team> performance-analyst` |
+| devops-engineer | sonnet | CI/CD, Docker, Kubernetes, IaC | `/dev-forge:agent add <team> devops-engineer` |
+| doc-writer | sonnet | Technical writing, API docs | `/dev-forge:agent add <team> doc-writer` |
+
+## Model Aliases
+
+| Alias | Full Model ID |
+|---|---|
+| `opus` | claude-opus-4-6 |
+| `sonnet` | claude-sonnet-4-6 |
+| `haiku` | claude-haiku-4-5-20251001 |
 
 ## Generator/Evaluator Pattern
 
