@@ -22,6 +22,10 @@ When triggered by the Bug Council Orchestrator:
 3. Trace the call chain backward from the failure point
 4. Form 2–3 hypotheses ranked by probability
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
 ## Output Format
 
 Report to bug-council-orchestrator via SQLite:

@@ -14,11 +14,11 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v1.2.0`
+### [dev-forge](./plugins/dev-forge) `v1.3.0`
 
-SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation.
+SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, and Anti-Anxiety Prompting.
 
-Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes sprint contracts, Generator/Evaluator pattern, model profiles (economy / balanced / quality) with runtime switching, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture.
+Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes sprint contracts, Generator/Evaluator pattern, model profiles (economy / balanced / quality) with runtime switching, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture. dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Askell's research on Claude's psychology at Anthropic. Agent-to-agent communication is designed with positive framing, explicit permission to disagree, and tone-aware dispatch templates — ensuring optimal output quality across the multi-agent system.
 
 ```
 /plugin install dev-forge

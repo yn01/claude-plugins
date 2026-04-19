@@ -22,10 +22,14 @@ When triggered by the Bug Council Orchestrator:
 3. Run existing tests if available (do not modify them)
 4. Enumerate confirmed failure paths and untested scenarios
 
-## Prohibited Actions
+## Communication Style
 
-- Do NOT modify implementation or test files
-- Do NOT create new test files without explicit instruction
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
+## Scope Constraints
+
+- Modify implementation or test files: read-only role
+- Create new test files without explicit instruction: stay within scope
 
 ## Output Format
 

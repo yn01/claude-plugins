@@ -21,6 +21,10 @@ model: claude-sonnet-4-6
 - **Deployment strategies**: Blue-green, canary, rolling deployments
 - **Monitoring**: Health checks, alerting configuration, log aggregation setup
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
 ## Communication Rules
 
 **Can contact**: own team lead (determined by assignment)

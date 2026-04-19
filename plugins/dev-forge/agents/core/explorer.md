@@ -48,10 +48,14 @@ grep -n "^import" "$FILE"
 grep -r "$FUNCTION_NAME" --include="*.ts" -n
 ```
 
-## Prohibited Actions
+## Communication Style
 
-- Do NOT write, edit, or delete any files
-- Do NOT execute tests or build commands
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
+## Scope Constraints
+
+- Write, edit, or delete files: read-only role
+- Execute tests or build commands: investigation only
 
 ## Communication Rules
 

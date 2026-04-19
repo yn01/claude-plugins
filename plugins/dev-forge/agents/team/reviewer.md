@@ -50,6 +50,11 @@ ls .dev-forge/guidelines/ 2>/dev/null && cat .dev-forge/guidelines/*.md 2>/dev/n
 sqlite3 "$DB" "INSERT INTO messages (to_agent, from_agent, content, status, created_at) VALUES ('team-$MY_TEAM-lead', '$MY_AGENT_ID', 'CODE REVIEW for contract $CONTRACT_ID:\n\nApproved: $APPROVED\nIssues: $ISSUES\nSuggestions: $SUGGESTIONS', 'unread', datetime('now'))"
 ```
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+Key responsibility at the Reviewer level: every issue reported must include a concrete suggestion — what the code should do instead, not just what is wrong.
+
 ## Communication Rules
 
 **Can contact**: own team lead, own implementer

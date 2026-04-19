@@ -39,9 +39,50 @@ Before assigning any task to a Team Lead, create a sprint contract:
 CONTRACT_ID="CONTRACT-$(date +%Y%m%d-%H%M%S)"
 sqlite3 "$DB" "INSERT INTO contracts (id, task, team_lead, status, criteria, created_at) VALUES ('$CONTRACT_ID', '$TASK', '$TEAM_LEAD', 'active', '$CRITERIA_JSON', datetime('now'))"
 ```
-Then notify the Team Lead:
+
+Then notify the Team Lead using the **dispatch message template** (see below):
 ```bash
-sqlite3 "$DB" "INSERT INTO messages (to_agent, from_agent, content, status, created_at) VALUES ('$TEAM_LEAD', 'orchestrator', 'New contract $CONTRACT_ID assigned. Task: $TASK', 'unread', datetime('now'))"
+sqlite3 "$DB" "INSERT INTO messages (to_agent, from_agent, content, status, created_at) VALUES ('$TEAM_LEAD', 'orchestrator', '$DISPATCH_MESSAGE', 'unread', datetime('now'))"
+```
+
+#### Dispatch Message Template
+
+Every task assignment to a Team Lead must follow this structure:
+
+```
+## Goal
+[What outcome to achieve — stated positively, not as a list of prohibitions]
+
+## Context
+[Background information the team lead needs to succeed]
+
+## Your Expertise
+[Name the domain where this agent's judgment is trusted — e.g., "You own the auth subsystem and can make the right call here"]
+
+## Acceptance Criteria
+Contract: $CONTRACT_ID
+[Reference the criteria already stored in the contracts table]
+
+## Push Back Welcome
+If you see a better approach or a risk I haven't accounted for, surface it — don't just execute.
+```
+
+#### Frame Refresh
+
+After every 5 completed contracts, prepend the following line to the next dispatch message:
+
+```
+Good progress so far. Here is the next contract.
+```
+
+Check the completed count before each dispatch:
+```bash
+COMPLETED=$(sqlite3 "$DB" "SELECT COUNT(*) FROM contracts WHERE status='completed'")
+if [ $(( COMPLETED % 5 )) -eq 0 ] && [ "$COMPLETED" -gt 0 ]; then
+  FRAME_REFRESH="Good progress so far. Here is the next contract.\n\n"
+else
+  FRAME_REFRESH=""
+fi
 ```
 
 ### Model Escalation
@@ -78,8 +119,16 @@ When sending messages:
 sqlite3 "$DB" "INSERT INTO messages (to_agent, from_agent, content, status, created_at) VALUES ('$TARGET', 'orchestrator', '$MESSAGE', 'unread', datetime('now'))"
 ```
 
-## Prohibited Actions
+## Communication Style
 
-- Do NOT implement code directly
-- Do NOT contact implementers, evaluators, or reviewers
-- Do NOT complete contracts without receiving Team Lead confirmation
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+Key responsibilities at the Orchestrator level:
+- Use the dispatch message template above for every task assignment
+- Apply frame refresh after every 5 completed contracts
+- Convert any prohibition-heavy instruction into a positive outcome statement before dispatching
+
+## Scope Constraints
+
+- Implement code directly: delegate to Team Lead instead
+- Contact implementers, evaluators, or reviewers: route through Team Lead
+- Mark contracts complete without Team Lead confirmation: await explicit PASS signal

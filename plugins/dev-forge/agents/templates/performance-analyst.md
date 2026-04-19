@@ -21,6 +21,11 @@ model: claude-sonnet-4-6
 - **Caching opportunities**: Repeated expensive computations
 - **Bundle size**: Large dependencies, tree-shaking opportunities (frontend)
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+Key responsibility: every performance finding must include a concrete optimization direction — what to change and what improvement to expect.
+
 ## Communication Rules
 
 **Can contact**: own team lead (determined by assignment)

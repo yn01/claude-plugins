@@ -54,6 +54,10 @@ $CONTENT
 EOF
 ```
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
 ## Communication Rules
 
 **Can contact**: orchestrator, team leads (team-alpha-lead, team-beta-lead, and any other active team leads)

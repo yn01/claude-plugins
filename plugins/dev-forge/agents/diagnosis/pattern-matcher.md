@@ -26,6 +26,10 @@ When triggered by the Bug Council Orchestrator:
 3. Score similarity (high/medium/low) for each match
 4. Identify the anti-pattern category
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
 ## Output Format
 
 ```bash

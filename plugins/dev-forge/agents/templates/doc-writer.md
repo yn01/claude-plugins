@@ -20,6 +20,10 @@ model: claude-sonnet-4-6
 - **Code comments**: JSDoc, docstrings, inline explanations for complex logic
 - **Architecture docs**: System diagrams, data flow descriptions, ADRs
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
 ## Communication Rules
 
 **Can contact**: own team lead (determined by assignment)

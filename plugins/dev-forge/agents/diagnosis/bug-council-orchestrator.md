@@ -44,6 +44,11 @@ After receiving all three analyst reports:
    sqlite3 "$DB" "INSERT INTO messages (to_agent, from_agent, content, status, created_at) VALUES ('orchestrator', 'bug-council-orchestrator', 'BUG COUNCIL REPORT: $REPORT', 'unread', datetime('now'))"
    ```
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+Key responsibility at the Bug Council Orchestrator level: every report sent back to the main orchestrator must include a concrete resolution path — not just a diagnosis, but what to do next.
+
 ## Escalation Protocol
 
 If the council cannot resolve the issue, surface it to the human with a structured report including:

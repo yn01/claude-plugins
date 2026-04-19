@@ -18,6 +18,7 @@ dev-forge assembles an AI-powered development team where an Orchestrator delegat
 - **Learnings capture**: Mistakes and patterns recorded to SQLite, queryable by future agents.
 - **Dynamic teams**: Add/remove teams and agents at runtime without full restart.
 - **Cross-platform**: macOS, Linux, and Windows (PowerShell) support.
+- **Anti-Anxiety Prompting**: Agent-to-agent communication is built on positive framing, explicit permission to disagree, and improvement-paired feedback — based on Amanda Askell's research on Claude's psychology at Anthropic.
 
 ## Prerequisites
 
@@ -254,7 +255,32 @@ dev-forge supports Windows via PowerShell equivalents for all shell hooks. When 
 - All hook scripts have `.ps1` counterparts in `hooks/`
 - Path separators use `\` in PowerShell commands
 
+## Anti-Anxiety Prompting
+
+dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Askell's research on Claude's psychology at Anthropic. Agent-to-agent communication is designed with positive framing, explicit permission to disagree, and tone-aware dispatch templates — ensuring optimal output quality across the multi-agent system.
+
+### The 6 Principles in Practice
+
+| Principle | How dev-forge applies it |
+|---|---|
+| **Positive framing** | Orchestrator dispatch messages state goals to achieve, not prohibitions to avoid |
+| **Permission to push back** | Every task assignment includes "push back if you see a better approach" |
+| **Problem + improvement direction** | Evaluator FAIL reports always pair each unmet criterion with a concrete improvement direction |
+| **No apology spirals** | Agents acknowledge shortcomings once, then move to the next action |
+| **Competence assumption** | Team Lead asks implementers for their judgment on approach, not just execution |
+| **Frame refresh** | After every 5 completed contracts, Orchestrator prepends a reset signal to the next dispatch |
+
+These principles are defined in [`agents/shared/anti-anxiety-baseline.md`](./agents/shared/anti-anxiety-baseline.md) and referenced by all agent definitions.
+
 ## Changelog
+
+### v1.3.0 — 2026-04-19
+- **Anti-Anxiety Prompting**: Added `agents/shared/anti-anxiety-baseline.md` with 6 communication principles based on Amanda Askell's research at Anthropic
+- **Dispatch message template**: Orchestrator task assignments now use Goal / Context / Your Expertise / Push Back Welcome structure
+- **Frame refresh**: Orchestrator prepends a reset signal after every 5 completed contracts
+- **Evaluator FAIL format**: Failure reports now include an improvement direction alongside each unmet criterion
+- **Team Lead feedback tone**: Team Lead relays evaluator findings with improvement directions, never bare failure lists
+- **Reviewer improvement pattern**: Reviewers include a concrete suggestion with every issue reported
 
 ### v1.2.0 — 2026-04-19
 - **Model profiles**: Replace per-agent `model:` fields with `model_profiles` in `devforge.yaml` (economy / balanced / quality)

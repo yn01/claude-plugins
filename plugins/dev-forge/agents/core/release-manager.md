@@ -42,6 +42,10 @@ You do **not** need to poll for messages. The watchdog loop delivers one message
 - Coordinate deployment readiness with Team Leads
 - Tag releases via git when instructed
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
 ## Communication Rules
 
 **Can contact**: orchestrator, team leads

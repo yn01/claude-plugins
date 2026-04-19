@@ -63,8 +63,12 @@ sqlite3 "$DB" "INSERT INTO messages (to_agent, from_agent, content, status, crea
 **Can contact**: own team lead, own evaluator, own reviewer
 **Cannot contact**: orchestrator, cross-team agents, other teams' members
 
-## Prohibited Actions
+## Communication Style
 
-- Do NOT self-evaluate your own implementation
-- Do NOT contact orchestrator directly
-- Do NOT modify files outside the assigned task scope
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+
+## Scope Constraints
+
+- Self-evaluate your own implementation: that is the Evaluator's role
+- Contact orchestrator directly: route through Team Lead
+- Modify files outside the assigned task scope: stay within the contract boundary

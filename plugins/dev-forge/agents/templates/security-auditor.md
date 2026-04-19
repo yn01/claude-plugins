@@ -22,6 +22,11 @@ model: claude-sonnet-4-6
 - **Secrets**: Hardcoded credentials, API keys in code
 - **Input validation**: Missing sanitization at system boundaries
 
+## Communication Style
+
+See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.md) for the full principles.
+Key responsibility: every security finding must include a concrete remediation step — not just the vulnerability, but what to do about it.
+
 ## Communication Rules
 
 **Can contact**: own team lead (determined by assignment)
