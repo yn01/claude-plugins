@@ -1,3 +1,5 @@
 .DS_Store
-plugin-request-template.md
 output/
+plugin-request-template.md
+plugins/dev-forge/docs/features.md
+plugins/dev-forge/docs/PLAN.md
