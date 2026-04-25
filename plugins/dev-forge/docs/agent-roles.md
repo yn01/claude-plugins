@@ -6,16 +6,17 @@ Agent models are determined by the active profile in `devforge.yaml`. The defaul
 
 | Agent ID | Default Model (balanced) | Role | Can Contact |
 |---|---|---|---|
-| orchestrator | opus | Strategic task decomposition, sprint contract creation, escalation management | Team leads, cross-team agents |
-| doc-manager | sonnet | Documentation coordination, wiki management | Orchestrator, team leads |
-| release-manager | sonnet | Versioning, changelogs, release coordination | Orchestrator, team leads |
-| explorer | haiku | Codebase exploration, symbol lookup (read-only) | Orchestrator, team leads |
+| orchestrator | opus | Project Sponsor and user-facing front — delegates to Project Manager, relays clarifications, decides escalation, gives final approval | Project Manager, cross-team agents |
+| project-manager | sonnet | Requirement analysis, sprint contract creation, progress tracking, quality/risk/cost management, Team Lead coordination | Orchestrator, team leads, cross-team agents |
+| doc-manager | sonnet | Documentation coordination, wiki management | Orchestrator, Project Manager, team leads |
+| release-manager | sonnet | Versioning, changelogs, release coordination | Orchestrator, Project Manager, team leads |
+| explorer | haiku | Codebase exploration, symbol lookup (read-only) | Orchestrator, Project Manager, team leads |
 
 ## Team Agents (per team)
 
 | Role | Default Model (balanced) | Responsibilities | Can Contact |
 |---|---|---|---|
-| team-*-lead | sonnet | Contract ownership, delegation, escalation | Orchestrator, cross-team agents, own team |
+| team-*-lead | sonnet | Contract ownership, delegation, escalation | Project Manager, cross-team agents, own team |
 | implementer-* | sonnet | Feature implementation (Generator role) | Own lead, evaluator, reviewer |
 | evaluator-* | sonnet | Independent criteria verification (Evaluator role) | Own lead, implementer |
 | reviewer-* | sonnet | Code quality review (style, security surface) | Own lead, implementer |
@@ -45,6 +46,24 @@ Agent models are determined by the active profile in `devforge.yaml`. The defaul
 | `opus` | claude-opus-4-6 |
 | `sonnet` | claude-sonnet-4-6 |
 | `haiku` | claude-haiku-4-5-20251001 |
+
+## Responsibility Matrix
+
+| Responsibility | Orchestrator | Project Manager | Team Lead |
+|---|---|---|---|
+| User-facing communication (front) | ✅ | | |
+| Relay clarification questions to user | ✅ (user side) | ✅ (analysis side) | |
+| Requirement analysis and planning | | ✅ | |
+| Sprint Contract creation | | ✅ | |
+| Sprint Contract issuance to Team Lead | | ✅ | |
+| Task breakdown within team | | | ✅ |
+| Progress tracking and quality management | | ✅ | |
+| Risk management and Learnings lookup | | ✅ | |
+| Cost tracking (model usage) | | ✅ | |
+| Escalation recommendation | | ✅ (recommends) | |
+| Escalation and Bug Council decision | ✅ | | |
+| Final approval of deliverables | ✅ | | |
+| Reporting results to user | ✅ | | |
 
 ## Generator/Evaluator Pattern
 

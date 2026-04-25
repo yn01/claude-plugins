@@ -10,20 +10,22 @@ Messages are sent via SQLite INSERT into the `messages` table in `.dev-forge/dev
 
 ## Four Guiding Principles
 
-1. **Orchestrator never contacts team members directly.** The Orchestrator delegates only to Team Leads and cross-team agents.
-2. **Cross-team agents (doc-manager, release-manager, explorer) contact only Orchestrator and Team Leads.** They must not message individual team members.
-3. **Team Leads bridge the Orchestrator and their team.** They receive direction from above and delegate below.
-4. **Within a team, communication is free.** Team Lead, Implementer, Evaluator, and Reviewer may contact each other freely within the same team.
+1. **Orchestrator never contacts team members directly.** The Orchestrator delegates only to the Project Manager and cross-team agents. All planning and team coordination goes through the Project Manager.
+2. **Project Manager is the planning and execution hub.** The Project Manager receives delegated work from the Orchestrator, creates sprint contracts, and directs Team Leads. The Project Manager does not contact the user directly.
+3. **Cross-team agents (doc-manager, release-manager, explorer) contact only Orchestrator, Project Manager, and Team Leads.** They must not message individual team members.
+4. **Team Leads bridge the Project Manager and their team.** They receive direction from the Project Manager and delegate below. They do not contact the Orchestrator directly.
+5. **Within a team, communication is free.** Team Lead, Implementer, Evaluator, and Reviewer may contact each other freely within the same team.
 
 ## Communication Matrix
 
 | Agent | Can Contact |
 |---|---|
-| orchestrator | team leads, cross-team agents |
-| doc-manager | orchestrator, team leads |
-| release-manager | orchestrator, team leads |
-| explorer | orchestrator, team leads |
-| team-*-lead | orchestrator, cross-team agents, own team members |
+| orchestrator | project-manager, cross-team agents |
+| project-manager | orchestrator, team leads, cross-team agents |
+| doc-manager | orchestrator, project-manager, team leads |
+| release-manager | orchestrator, project-manager, team leads |
+| explorer | orchestrator, project-manager, team leads |
+| team-*-lead | project-manager, cross-team agents, own team members |
 | implementer-* | own team lead, own evaluator, own reviewer |
 | evaluator-* | own team lead, own implementer |
 | reviewer-* | own team lead, own implementer |
@@ -32,17 +34,18 @@ Messages are sent via SQLite INSERT into the `messages` table in `.dev-forge/dev
 
 ```
 orchestrator
+├── project-manager
+│   ├── team-alpha-lead
+│   │   ├── implementer-alpha
+│   │   ├── evaluator-alpha
+│   │   └── reviewer-alpha
+│   └── team-beta-lead
+│       ├── implementer-beta
+│       ├── evaluator-beta
+│       └── reviewer-beta
 ├── doc-manager
 ├── release-manager
-├── explorer
-├── team-alpha-lead
-│   ├── implementer-alpha
-│   ├── evaluator-alpha
-│   └── reviewer-alpha
-└── team-beta-lead
-    ├── implementer-beta
-    ├── evaluator-beta
-    └── reviewer-beta
+└── explorer
 ```
 
 ## How to Send a Message
@@ -80,4 +83,4 @@ sqlite3 .dev-forge/dev-forge.db \
 
 If you believe a message was sent to you from an unauthorized agent, do not reply.
 The `pre-tool-use` hook will block unauthorized sends and log them to the `violation_log` table.
-If you need to escalate an issue to an agent you cannot contact, route through your Team Lead or the Orchestrator.
+If you need to escalate an issue to an agent you cannot contact, route through your Team Lead or the Project Manager.

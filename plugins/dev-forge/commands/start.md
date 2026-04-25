@@ -277,6 +277,7 @@ launch_agent() {
 
 # Resolve models from active profile
 ORC_MODEL=$(resolve_profile_model "orchestrator" "$ACTIVE_PROFILE")
+PM_MODEL=$(resolve_profile_model "project-manager" "$ACTIVE_PROFILE")
 DOC_MODEL=$(resolve_profile_model "doc-manager" "$ACTIVE_PROFILE")
 REL_MODEL=$(resolve_profile_model "release-manager" "$ACTIVE_PROFILE")
 EXP_MODEL=$(resolve_profile_model "explorer" "$ACTIVE_PROFILE")
@@ -285,6 +286,7 @@ MEMBER_MODEL=$(resolve_profile_model "implementer" "$ACTIVE_PROFILE")
 
 # Core agents
 launch_agent "orchestrator"     "$ORC_MODEL"    "$PLUGIN_DIR/agents/core/orchestrator.md"
+launch_agent "project-manager"  "$PM_MODEL"     "$PLUGIN_DIR/agents/core/project-manager.md"
 launch_agent "doc-manager"      "$DOC_MODEL"    "$PLUGIN_DIR/agents/core/doc-manager.md"
 launch_agent "release-manager"  "$REL_MODEL"    "$PLUGIN_DIR/agents/core/release-manager.md"
 launch_agent "explorer"         "$EXP_MODEL"    "$PLUGIN_DIR/agents/core/explorer.md"
@@ -329,6 +331,7 @@ dev-forge started  [profile: balanced]
 Agent                  Model     Status
 ─────────────────────────────────────────────
 orchestrator           opus      active
+project-manager        sonnet    active
 doc-manager            sonnet    active
 release-manager        sonnet    active
 explorer               haiku     active

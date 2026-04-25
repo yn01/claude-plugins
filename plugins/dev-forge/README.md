@@ -134,7 +134,7 @@ Profiles are defined in `devforge.yaml`. Model aliases (`opus`, `sonnet`, `haiku
 teams:
   - name: gamma           # Add this block
     lead:
-      can_contact: [orchestrator, doc-manager, implementer-gamma, evaluator-gamma, reviewer-gamma]
+      can_contact: [project-manager, doc-manager, implementer-gamma, evaluator-gamma, reviewer-gamma]
     members:
       - id: implementer-gamma
         role: implementer
@@ -169,17 +169,18 @@ Available templates: `security-auditor`, `performance-analyst`, `devops-engineer
 User
  │
  └── Orchestrator             (opus  — balanced profile default)
+     ├── Project Manager      (sonnet)
+     │   ├── team-alpha-lead  (sonnet)
+     │   │   ├── implementer-alpha (sonnet)   <- Generator
+     │   │   ├── evaluator-alpha   (sonnet)   <- Evaluator
+     │   │   └── reviewer-alpha    (sonnet)   <- Quality
+     │   └── team-beta-lead   (sonnet)
+     │       ├── implementer-beta  (sonnet)
+     │       ├── evaluator-beta    (sonnet)
+     │       └── reviewer-beta     (sonnet)
      ├── doc-manager          (sonnet)
      ├── release-manager      (sonnet)
-     ├── explorer             (haiku)
-     ├── team-alpha-lead      (sonnet)
-     │   ├── implementer-alpha (sonnet)   <- Generator
-     │   ├── evaluator-alpha   (sonnet)   <- Evaluator
-     │   └── reviewer-alpha    (sonnet)   <- Quality
-     └── team-beta-lead       (sonnet)
-         ├── implementer-beta  (sonnet)
-         ├── evaluator-beta    (sonnet)
-         └── reviewer-beta     (sonnet)
+     └── explorer             (haiku)
 
 All communication -> .dev-forge/dev-forge.db (SQLite)
 
@@ -189,6 +190,8 @@ Bug Council (triggered at 6+ failures):
   ├── pattern-matcher      (sonnet)
   └── adversarial-tester   (sonnet)
 ```
+
+See [docs/agent-roles.md](./docs/agent-roles.md) for detailed role definitions and responsibility matrix.
 
 ## Why SQLite Instead of File-Based Queues?
 
@@ -204,8 +207,11 @@ The predecessor `devteam` plugin uses Markdown files in inbox directories. dev-f
 
 Understanding these terms will help you use dev-forge effectively.
 
+**Project Manager**
+The planning and execution hub of the dev-forge hierarchy. The Project Manager sits between the Orchestrator and the Team Leads. It receives delegated work from the Orchestrator (Project Sponsor), performs requirement analysis, creates sprint contracts, issues them to Team Leads, tracks progress, manages quality gates and risks, and reports completion back to the Orchestrator. The Project Manager never communicates directly with the user.
+
 **Contract**
-A unit of work assigned from the Orchestrator to a team lead. Contracts include a task description and acceptance criteria that must be met before the work is considered done. Create one with `/dev-forge:contract create`.
+A unit of work assigned from the Project Manager to a team lead. Contracts include a task description and acceptance criteria that must be met before the work is considered done. Create one with `/dev-forge:contract create`.
 
 **Generator/Evaluator pattern**
 The implementer (Generator) produces code; the evaluator (Evaluator) judges it against the contract criteria. These are always separate agents to prevent self-evaluation bias. A failed evaluation triggers a retry; repeated failures escalate the model or invoke the Bug Council.
@@ -263,16 +269,25 @@ dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Ask
 
 | Principle | How dev-forge applies it |
 |---|---|
-| **Positive framing** | Orchestrator dispatch messages state goals to achieve, not prohibitions to avoid |
+| **Positive framing** | Project Manager dispatch messages state goals to achieve, not prohibitions to avoid |
 | **Permission to push back** | Every task assignment includes "push back if you see a better approach" |
 | **Problem + improvement direction** | Evaluator FAIL reports always pair each unmet criterion with a concrete improvement direction |
 | **No apology spirals** | Agents acknowledge shortcomings once, then move to the next action |
 | **Competence assumption** | Team Lead asks implementers for their judgment on approach, not just execution |
-| **Frame refresh** | After every 5 completed contracts, Orchestrator prepends a reset signal to the next dispatch |
+| **Frame refresh** | After every 5 completed contracts, Project Manager prepends a reset signal to the next dispatch |
 
 These principles are defined in [`agents/shared/anti-anxiety-baseline.md`](./agents/shared/anti-anxiety-baseline.md) and referenced by all agent definitions.
 
 ## Changelog
+
+### v1.4.0 — 2026-04-25
+- **Project Manager agent**: New core agent (`agents/core/project-manager.md`) responsible for requirement analysis, sprint contract creation, progress tracking, quality/risk/cost management, and Team Lead coordination
+- **Role redistribution**: Orchestrator is now Project Sponsor and user-facing front only — all planning and execution delegated to Project Manager
+- **Hierarchy update**: Team Leads now report to Project Manager instead of Orchestrator
+- **Communication rules updated**: Orchestrator contacts Project Manager instead of Team Leads directly; Team Leads contact Project Manager instead of Orchestrator
+- **devforge.yaml**: Added `project-manager` section and `project-manager` model entries in all three profiles (economy: haiku, balanced: sonnet, quality: opus)
+- **PMBOK 8th edition**: Project Manager behavior grounded in 7 Performance Domains and 5 Focus Areas as actionable guidelines
+- **Responsibility matrix**: Added to `docs/agent-roles.md` with clear separation between Orchestrator, Project Manager, and Team Lead responsibilities
 
 ### v1.3.0 — 2026-04-19
 - **Anti-Anxiety Prompting**: Added `agents/shared/anti-anxiety-baseline.md` with 6 communication principles based on Amanda Askell's research at Anthropic

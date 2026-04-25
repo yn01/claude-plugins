@@ -14,11 +14,11 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v1.3.0`
+### [dev-forge](./plugins/dev-forge) `v1.4.0`
 
 SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, and Anti-Anxiety Prompting.
 
-Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes sprint contracts, Generator/Evaluator pattern, model profiles (economy / balanced / quality) with runtime switching, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture. dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Askell's research on Claude's psychology at Anthropic. Agent-to-agent communication is designed with positive framing, explicit permission to disagree, and tone-aware dispatch templates — ensuring optimal output quality across the multi-agent system.
+Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes a dedicated Project Manager agent (PMBOK 8th edition practices) sitting between the Orchestrator and Team Leads — owning requirement analysis, sprint contracts, progress tracking, quality/risk/cost management. Also includes Generator/Evaluator pattern, model profiles (economy / balanced / quality) with runtime switching, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture. dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Askell's research on Claude's psychology at Anthropic.
 
 ```
 /plugin install dev-forge
@@ -136,6 +136,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-25
+- Update **dev-forge** to v1.4.0 — Project Manager agent (PMBOK 8th edition), role redistribution between Orchestrator and PM, updated communication hierarchy
 
 ### 2026-04-19
 - Update **dev-forge** to v1.2.0 — model profiles (economy/balanced/quality), runtime model switching without restart, `/dev-forge:model` command, model aliases (opus/sonnet/haiku)
