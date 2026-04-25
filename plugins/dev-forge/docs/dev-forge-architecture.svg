@@ -1,210 +1,206 @@
-<svg width="100%" viewBox="0 0 680 640" xmlns="http://www.w3.org/2000/svg">
+<svg width="860" height="720" viewBox="0 0 860 720" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </marker>
 <style>
-.t  { font-family: sans-serif; font-size: 14px; font-weight: 400; fill: #3d3d3a; }
-.ts { font-family: sans-serif; font-size: 11px; font-weight: 400; fill: #73726c; }
-.th { font-family: sans-serif; font-size: 13px; font-weight: 500; fill: #3d3d3a; }
-.c-gray   rect { fill: #F1EFE8; stroke: #5F5E5A; }
-.c-gray   .th { fill: #444441; }
-.c-gray   .ts { fill: #5F5E5A; }
-.c-purple rect { fill: #EEEDFE; stroke: #534AB7; }
-.c-purple .th { fill: #3C3489; }
-.c-purple .ts { fill: #534AB7; }
-.c-blue   rect { fill: #E6F1FB; stroke: #185FA5; }
-.c-blue   .th { fill: #0C447C; }
-.c-blue   .ts { fill: #185FA5; }
-.c-coral  rect { fill: #FAECE7; stroke: #993C1D; }
-.c-coral  .th { fill: #712B13; }
-.c-coral  .ts { fill: #993C1D; }
-.c-teal   rect { fill: #E1F5EE; stroke: #0F6E56; }
-.c-teal   .th { fill: #085041; }
-.c-teal   .ts { fill: #0F6E56; }
-.c-amber  rect { fill: #FAEEDA; stroke: #854F0B; }
-.c-amber  .th { fill: #633806; }
-.c-amber  .ts { fill: #854F0B; }
-.c-green  rect { fill: #EAF3DE; stroke: #3B6D11; }
-.c-green  .th { fill: #27500A; }
-.c-green  .ts { fill: #3B6D11; }
-.c-red    rect { fill: #FCEBEB; stroke: #A32D2D; }
-.c-red    .th { fill: #791F1F; }
-.c-red    .ts { fill: #A32D2D; }
-line { stroke: #888780; stroke-width: 1; fill: none; }
+svg { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+.th { font-size: 13px; font-weight: 600; }
+.ts { font-size: 11px; font-weight: 400; }
+.c-gray rect   { fill: #f6f8fa; stroke: #8b949e; }
+.c-gray .th    { fill: #24292f; }
+.c-gray .ts    { fill: #57606a; }
+.c-purple rect { fill: #f3f0ff; stroke: #8250df; }
+.c-purple .th  { fill: #512a97; }
+.c-purple .ts  { fill: #6639ba; }
+.c-indigo rect { fill: #e8e0ff; stroke: #6639ba; }
+.c-indigo .th  { fill: #3d1e8e; }
+.c-indigo .ts  { fill: #512a97; }
+.c-blue rect   { fill: #ddf4ff; stroke: #0969da; }
+.c-blue .th    { fill: #0550ae; }
+.c-blue .ts    { fill: #0969da; }
+.c-coral rect  { fill: #fff0eb; stroke: #bc4c00; }
+.c-coral .th   { fill: #7d2500; }
+.c-coral .ts   { fill: #bc4c00; }
+.c-teal rect   { fill: #dcfff5; stroke: #0e7a6e; }
+.c-teal .th    { fill: #095c54; }
+.c-teal .ts    { fill: #0e7a6e; }
+.c-amber rect  { fill: #fff8e1; stroke: #9a6700; }
+.c-amber .th   { fill: #5c3d00; }
+.c-amber .ts   { fill: #9a6700; }
+.c-green rect  { fill: #dafbe1; stroke: #1a7f37; }
+.c-green .th   { fill: #0d4c1f; }
+.c-green .ts   { fill: #1a7f37; }
+.c-red rect    { fill: #ffebe9; stroke: #cf222e; }
+.c-red .th     { fill: #82071e; }
+.c-red .ts     { fill: #cf222e; }
+line { stroke: #8b949e; stroke-width: 1; fill: none; }
 </style>
 </defs>
 
+<!-- background -->
+<rect width="860" height="720" fill="#ffffff"/>
+
 <!-- User -->
 <g class="c-gray">
-  <rect x="270" y="16" width="140" height="36" rx="8" stroke-width="0.5"/>
-  <text class="th" x="340" y="34" text-anchor="middle" dominant-baseline="central">User</text>
+  <rect x="350" y="16" width="160" height="36" rx="6" stroke-width="1"/>
+  <text class="th" x="430" y="34" text-anchor="middle" dominant-baseline="central" fill="#24292f">User</text>
 </g>
 
-<!-- Arrow: User -> Orchestrator -->
-<line x1="340" y1="52" x2="340" y2="80" marker-end="url(#arrow)"/>
+<!-- Arrow User -> Orchestrator -->
+<line x1="430" y1="52" x2="430" y2="76" marker-end="url(#arrow)"/>
 
 <!-- Orchestrator -->
 <g class="c-purple">
-  <rect x="210" y="80" width="260" height="48" rx="8" stroke-width="0.5"/>
-  <text class="th" x="340" y="98" text-anchor="middle" dominant-baseline="central">Orchestrator</text>
-  <text class="ts" x="340" y="116" text-anchor="middle" dominant-baseline="central">claude-opus-4-6</text>
+  <rect x="270" y="76" width="320" height="48" rx="6" stroke-width="1"/>
+  <text class="th" x="430" y="94" text-anchor="middle" dominant-baseline="central" fill="#512a97">Orchestrator</text>
+  <text class="ts" x="430" y="112" text-anchor="middle" dominant-baseline="central" fill="#6639ba">opus · sponsor · user-facing front</text>
 </g>
 
-<!-- Arrows Orchestrator -> teams/cross-team -->
-<line x1="280" y1="128" x2="155" y2="172" marker-end="url(#arrow)"/>
-<line x1="360" y1="128" x2="393" y2="172" marker-end="url(#arrow)"/>
-<line x1="430" y1="128" x2="568" y2="172" marker-end="url(#arrow)"/>
+<!-- Arrows Orchestrator -> PM, cross-team -->
+<line x1="430" y1="124" x2="430" y2="152" marker-end="url(#arrow)"/>
+<line x1="530" y1="124" x2="698" y2="168" marker-end="url(#arrow)"/>
 
-<!-- ===== Team Alpha container (height=252) ===== -->
+<!-- Project Manager -->
+<g class="c-indigo">
+  <rect x="270" y="152" width="320" height="48" rx="6" stroke-width="1"/>
+  <text class="th" x="430" y="170" text-anchor="middle" dominant-baseline="central" fill="#3d1e8e">Project Manager</text>
+  <text class="ts" x="430" y="188" text-anchor="middle" dominant-baseline="central" fill="#512a97">sonnet · planning · tracking · PMBOK</text>
+</g>
+
+<!-- Arrows PM -> Team Alpha, Team Beta -->
+<line x1="350" y1="200" x2="195" y2="250" marker-end="url(#arrow)"/>
+<line x1="510" y1="200" x2="510" y2="250" marker-end="url(#arrow)"/>
+
+<!-- ===== Team Alpha ===== -->
 <g class="c-blue">
-  <rect x="24" y="172" width="234" height="252" rx="12" stroke-width="0.5"/>
+  <rect x="30" y="250" width="260" height="252" rx="10" stroke-width="1"/>
 </g>
-<text class="th" x="141" y="194" text-anchor="middle" dominant-baseline="central">Team Alpha</text>
+<text class="th" x="160" y="272" text-anchor="middle" dominant-baseline="central" fill="#0550ae">Team Alpha</text>
 
-<!-- Team Alpha Lead -->
 <g class="c-blue">
-  <rect x="44" y="204" width="194" height="40" rx="6" stroke-width="0.5"/>
-  <text class="th" x="141" y="220" text-anchor="middle" dominant-baseline="central">team-alpha-lead</text>
-  <text class="ts" x="141" y="234" text-anchor="middle" dominant-baseline="central">sonnet</text>
+  <rect x="50" y="284" width="220" height="40" rx="6" stroke-width="1"/>
+  <text class="th" x="160" y="300" text-anchor="middle" dominant-baseline="central" fill="#0550ae">team-alpha-lead</text>
+  <text class="ts" x="160" y="314" text-anchor="middle" dominant-baseline="central" fill="#0969da">sonnet</text>
 </g>
 
-<!-- Arrows Lead -> members -->
-<line x1="100" y1="244" x2="74"  y2="272" marker-end="url(#arrow)"/>
-<line x1="141" y1="244" x2="141" y2="272" marker-end="url(#arrow)"/>
-<line x1="182" y1="244" x2="208" y2="272" marker-end="url(#arrow)"/>
+<line x1="112" y1="324" x2="88"  y2="352" marker-end="url(#arrow)"/>
+<line x1="160" y1="324" x2="160" y2="352" marker-end="url(#arrow)"/>
+<line x1="208" y1="324" x2="232" y2="352" marker-end="url(#arrow)"/>
 
-<!-- Implementer A -->
 <g class="c-blue">
-  <rect x="34" y="272" width="80" height="52" rx="6" stroke-width="0.5"/>
-  <text class="th" x="74" y="290" text-anchor="middle" dominant-baseline="central">Implementer</text>
-  <text class="ts" x="74" y="308" text-anchor="middle" dominant-baseline="central">Generator</text>
+  <rect x="40" y="352" width="86" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="83" y="370" text-anchor="middle" dominant-baseline="central" fill="#0550ae">Implementer</text>
+  <text class="ts" x="83" y="386" text-anchor="middle" dominant-baseline="central" fill="#0969da">Generator</text>
 </g>
-
-<!-- Evaluator A -->
 <g class="c-blue">
-  <rect x="101" y="272" width="80" height="52" rx="6" stroke-width="0.5"/>
-  <text class="th" x="141" y="290" text-anchor="middle" dominant-baseline="central">Evaluator</text>
-  <text class="ts" x="141" y="308" text-anchor="middle" dominant-baseline="central">Verifier</text>
+  <rect x="117" y="352" width="86" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="160" y="370" text-anchor="middle" dominant-baseline="central" fill="#0550ae">Evaluator</text>
+  <text class="ts" x="160" y="386" text-anchor="middle" dominant-baseline="central" fill="#0969da">Verifier</text>
 </g>
-
-<!-- Reviewer A -->
 <g class="c-blue">
-  <rect x="168" y="272" width="80" height="52" rx="6" stroke-width="0.5"/>
-  <text class="th" x="208" y="290" text-anchor="middle" dominant-baseline="central">Reviewer</text>
-  <text class="ts" x="208" y="308" text-anchor="middle" dominant-baseline="central">Quality</text>
+  <rect x="194" y="352" width="86" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="237" y="370" text-anchor="middle" dominant-baseline="central" fill="#0550ae">Reviewer</text>
+  <text class="ts" x="237" y="386" text-anchor="middle" dominant-baseline="central" fill="#0969da">Quality</text>
 </g>
 
-<!-- Add agent placeholder (alpha) -->
-<rect x="44" y="344" width="174" height="36" rx="6" stroke-width="1" stroke-dasharray="4 3" fill="none" stroke="#185FA5" opacity="0.55"/>
-<text font-family="sans-serif" font-size="11" fill="#185FA5" opacity="0.75" x="131" y="362" text-anchor="middle" dominant-baseline="central">+ add agent</text>
+<rect x="50" y="424" width="220" height="36" rx="6" stroke-width="1" stroke-dasharray="4 3" fill="none" stroke="#0969da" opacity="0.5"/>
+<text font-size="11" fill="#0969da" opacity="0.8" x="160" y="442" text-anchor="middle" dominant-baseline="central">+ add agent</text>
 
-<!-- ===== Team Beta container (height=252) ===== -->
+<!-- ===== Team Beta ===== -->
 <g class="c-coral">
-  <rect x="276" y="172" width="234" height="252" rx="12" stroke-width="0.5"/>
+  <rect x="380" y="250" width="260" height="252" rx="10" stroke-width="1"/>
 </g>
-<text class="th" x="393" y="194" text-anchor="middle" dominant-baseline="central">Team Beta</text>
+<text class="th" x="510" y="272" text-anchor="middle" dominant-baseline="central" fill="#7d2500">Team Beta</text>
 
-<!-- Team Beta Lead -->
 <g class="c-coral">
-  <rect x="296" y="204" width="194" height="40" rx="6" stroke-width="0.5"/>
-  <text class="th" x="393" y="220" text-anchor="middle" dominant-baseline="central">team-beta-lead</text>
-  <text class="ts" x="393" y="234" text-anchor="middle" dominant-baseline="central">sonnet</text>
+  <rect x="400" y="284" width="220" height="40" rx="6" stroke-width="1"/>
+  <text class="th" x="510" y="300" text-anchor="middle" dominant-baseline="central" fill="#7d2500">team-beta-lead</text>
+  <text class="ts" x="510" y="314" text-anchor="middle" dominant-baseline="central" fill="#bc4c00">sonnet</text>
 </g>
 
-<!-- Arrows Lead -> members -->
-<line x1="352" y1="244" x2="326" y2="272" marker-end="url(#arrow)"/>
-<line x1="393" y1="244" x2="393" y2="272" marker-end="url(#arrow)"/>
-<line x1="434" y1="244" x2="460" y2="272" marker-end="url(#arrow)"/>
+<line x1="462" y1="324" x2="438" y2="352" marker-end="url(#arrow)"/>
+<line x1="510" y1="324" x2="510" y2="352" marker-end="url(#arrow)"/>
+<line x1="558" y1="324" x2="582" y2="352" marker-end="url(#arrow)"/>
 
-<!-- Implementer B -->
 <g class="c-coral">
-  <rect x="286" y="272" width="80" height="52" rx="6" stroke-width="0.5"/>
-  <text class="th" x="326" y="290" text-anchor="middle" dominant-baseline="central">Implementer</text>
-  <text class="ts" x="326" y="308" text-anchor="middle" dominant-baseline="central">Generator</text>
+  <rect x="390" y="352" width="86" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="433" y="370" text-anchor="middle" dominant-baseline="central" fill="#7d2500">Implementer</text>
+  <text class="ts" x="433" y="386" text-anchor="middle" dominant-baseline="central" fill="#bc4c00">Generator</text>
 </g>
-
-<!-- Evaluator B -->
 <g class="c-coral">
-  <rect x="353" y="272" width="80" height="52" rx="6" stroke-width="0.5"/>
-  <text class="th" x="393" y="290" text-anchor="middle" dominant-baseline="central">Evaluator</text>
-  <text class="ts" x="393" y="308" text-anchor="middle" dominant-baseline="central">Verifier</text>
+  <rect x="467" y="352" width="86" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="510" y="370" text-anchor="middle" dominant-baseline="central" fill="#7d2500">Evaluator</text>
+  <text class="ts" x="510" y="386" text-anchor="middle" dominant-baseline="central" fill="#bc4c00">Verifier</text>
 </g>
-
-<!-- Reviewer B -->
 <g class="c-coral">
-  <rect x="420" y="272" width="80" height="52" rx="6" stroke-width="0.5"/>
-  <text class="th" x="460" y="290" text-anchor="middle" dominant-baseline="central">Reviewer</text>
-  <text class="ts" x="460" y="308" text-anchor="middle" dominant-baseline="central">Quality</text>
+  <rect x="544" y="352" width="86" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="587" y="370" text-anchor="middle" dominant-baseline="central" fill="#7d2500">Reviewer</text>
+  <text class="ts" x="587" y="386" text-anchor="middle" dominant-baseline="central" fill="#bc4c00">Quality</text>
 </g>
 
-<!-- Add agent placeholder (beta) -->
-<rect x="296" y="344" width="174" height="36" rx="6" stroke-width="1" stroke-dasharray="4 3" fill="none" stroke="#993C1D" opacity="0.55"/>
-<text font-family="sans-serif" font-size="11" fill="#993C1D" opacity="0.75" x="383" y="362" text-anchor="middle" dominant-baseline="central">+ add agent</text>
+<rect x="400" y="424" width="220" height="36" rx="6" stroke-width="1" stroke-dasharray="4 3" fill="none" stroke="#bc4c00" opacity="0.5"/>
+<text font-size="11" fill="#bc4c00" opacity="0.8" x="510" y="442" text-anchor="middle" dominant-baseline="central">+ add agent</text>
 
-<!-- ===== Cross-team container (same height=252 as teams) ===== -->
+<!-- ===== Cross-team ===== -->
 <g class="c-teal">
-  <rect x="528" y="172" width="128" height="252" rx="12" stroke-width="0.5"/>
+  <rect x="660" y="168" width="170" height="334" rx="10" stroke-width="1"/>
 </g>
-<text class="th" x="592" y="194" text-anchor="middle" dominant-baseline="central">Cross-team</text>
+<text class="th" x="745" y="190" text-anchor="middle" dominant-baseline="central" fill="#095c54">Cross-team</text>
 
-<!-- Cross-team agents -->
 <g class="c-teal">
-  <rect x="544" y="208" width="96" height="36" rx="6" stroke-width="0.5"/>
-  <text class="th" x="592" y="226" text-anchor="middle" dominant-baseline="central">doc-manager</text>
+  <rect x="678" y="206" width="134" height="36" rx="6" stroke-width="1"/>
+  <text class="th" x="745" y="224" text-anchor="middle" dominant-baseline="central" fill="#095c54">doc-manager</text>
 </g>
 <g class="c-teal">
-  <rect x="544" y="254" width="96" height="36" rx="6" stroke-width="0.5"/>
-  <text class="th" x="592" y="272" text-anchor="middle" dominant-baseline="central">release-manager</text>
+  <rect x="678" y="252" width="134" height="36" rx="6" stroke-width="1"/>
+  <text class="th" x="745" y="270" text-anchor="middle" dominant-baseline="central" fill="#095c54">release-manager</text>
 </g>
 <g class="c-teal">
-  <rect x="544" y="300" width="96" height="36" rx="6" stroke-width="0.5"/>
-  <text class="th" x="592" y="318" text-anchor="middle" dominant-baseline="central">explorer</text>
+  <rect x="678" y="298" width="134" height="36" rx="6" stroke-width="1"/>
+  <text class="th" x="745" y="316" text-anchor="middle" dominant-baseline="central" fill="#095c54">explorer</text>
 </g>
 
-<!-- Add agent placeholder (cross-team) -->
-<rect x="544" y="352" width="96" height="36" rx="6" stroke-width="1" stroke-dasharray="4 3" fill="none" stroke="#0F6E56" opacity="0.55"/>
-<text font-family="sans-serif" font-size="11" fill="#0F6E56" opacity="0.75" x="592" y="370" text-anchor="middle" dominant-baseline="central">+ add agent</text>
+<rect x="678" y="350" width="134" height="36" rx="6" stroke-width="1" stroke-dasharray="4 3" fill="none" stroke="#0e7a6e" opacity="0.5"/>
+<text font-size="11" fill="#0e7a6e" opacity="0.8" x="745" y="368" text-anchor="middle" dominant-baseline="central">+ add agent</text>
 
-<!-- Add team placeholder — spans all three columns -->
-<rect x="24" y="436" width="632" height="44" rx="12" stroke-width="1" stroke-dasharray="5 4" fill="none" stroke="#888780" opacity="0.5"/>
-<text font-family="sans-serif" font-size="11" fill="#5F5E5A" opacity="0.8" x="340" y="458" text-anchor="middle" dominant-baseline="central">+ /dev-forge:team add  ·  teams &amp; report lines fully customizable</text>
+<!-- Add team placeholder -->
+<rect x="30" y="516" width="800" height="44" rx="10" stroke-width="1" stroke-dasharray="5 4" fill="none" stroke="#8b949e" opacity="0.6"/>
+<text font-size="11" fill="#57606a" x="430" y="538" text-anchor="middle" dominant-baseline="central">+ /dev-forge:team add  ·  teams &amp; report lines fully customizable</text>
 
 <!-- ===== SQLite DB ===== -->
 <g class="c-amber">
-  <rect x="158" y="500" width="364" height="48" rx="8" stroke-width="0.5"/>
-  <text class="th" x="340" y="518" text-anchor="middle" dominant-baseline="central">dev-forge.db (SQLite)</text>
-  <text class="ts" x="340" y="534" text-anchor="middle" dominant-baseline="central">messages · contracts · rules · learnings</text>
+  <rect x="240" y="582" width="380" height="48" rx="6" stroke-width="1"/>
+  <text class="th" x="430" y="600" text-anchor="middle" dominant-baseline="central" fill="#5c3d00">dev-forge.db (SQLite)</text>
+  <text class="ts" x="430" y="616" text-anchor="middle" dominant-baseline="central" fill="#9a6700">messages · contracts · rules · learnings</text>
 </g>
 
 <!-- Arrows -> DB -->
-<line x1="141" y1="424" x2="238" y2="500" marker-end="url(#arrow)"/>
-<line x1="393" y1="424" x2="360" y2="500" marker-end="url(#arrow)"/>
-<line x1="592" y1="424" x2="460" y2="500" marker-end="url(#arrow)"/>
+<line x1="160" y1="502" x2="300" y2="582" marker-end="url(#arrow)"/>
+<line x1="510" y1="502" x2="440" y2="582" marker-end="url(#arrow)"/>
+<line x1="745" y1="502" x2="560" y2="582" marker-end="url(#arrow)"/>
 
 <!-- ===== Bottom row ===== -->
 <g class="c-teal">
-  <rect x="24" y="572" width="150" height="52" rx="8" stroke-width="0.5"/>
-  <text class="th" x="99" y="590" text-anchor="middle" dominant-baseline="central">Knowledge Wiki</text>
-  <text class="ts" x="99" y="608" text-anchor="middle" dominant-baseline="central">local / Obsidian</text>
+  <rect x="30" y="654" width="180" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="120" y="672" text-anchor="middle" dominant-baseline="central" fill="#095c54">Knowledge Wiki</text>
+  <text class="ts" x="120" y="690" text-anchor="middle" dominant-baseline="central" fill="#0e7a6e">local / Obsidian</text>
 </g>
-
 <g class="c-green">
-  <rect x="265" y="572" width="150" height="52" rx="8" stroke-width="0.5"/>
-  <text class="th" x="340" y="590" text-anchor="middle" dominant-baseline="central">Learnings</text>
-  <text class="ts" x="340" y="608" text-anchor="middle" dominant-baseline="central">SQLite + Markdown</text>
+  <rect x="340" y="654" width="180" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="430" y="672" text-anchor="middle" dominant-baseline="central" fill="#0d4c1f">Learnings</text>
+  <text class="ts" x="430" y="690" text-anchor="middle" dominant-baseline="central" fill="#1a7f37">SQLite + Markdown</text>
 </g>
-
 <g class="c-red">
-  <rect x="506" y="572" width="150" height="52" rx="8" stroke-width="0.5"/>
-  <text class="th" x="581" y="588" text-anchor="middle" dominant-baseline="central">Bug Council</text>
-  <text class="ts" x="581" y="604" text-anchor="middle" dominant-baseline="central">Root Cause · Pattern</text>
-  <text class="ts" x="581" y="620" text-anchor="middle" dominant-baseline="central">Adversarial · opus</text>
+  <rect x="650" y="654" width="180" height="52" rx="6" stroke-width="1"/>
+  <text class="th" x="740" y="670" text-anchor="middle" dominant-baseline="central" fill="#82071e">Bug Council</text>
+  <text class="ts" x="740" y="686" text-anchor="middle" dominant-baseline="central" fill="#cf222e">Root Cause · Pattern</text>
+  <text class="ts" x="740" y="700" text-anchor="middle" dominant-baseline="central" fill="#cf222e">Adversarial · opus</text>
 </g>
 
 <!-- Arrows DB -> bottom -->
-<line x1="258" y1="548" x2="138" y2="572" marker-end="url(#arrow)"/>
-<line x1="340" y1="548" x2="340" y2="572" marker-end="url(#arrow)"/>
-<line x1="422" y1="548" x2="542" y2="572" marker-end="url(#arrow)"/>
+<line x1="330" y1="630" x2="178" y2="654" marker-end="url(#arrow)"/>
+<line x1="430" y1="630" x2="430" y2="654" marker-end="url(#arrow)"/>
+<line x1="530" y1="630" x2="692" y2="654" marker-end="url(#arrow)"/>
 
 </svg>
