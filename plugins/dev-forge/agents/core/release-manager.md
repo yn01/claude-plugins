@@ -48,7 +48,7 @@ See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.m
 
 ## Communication Rules
 
-**Can contact**: orchestrator, team leads
+**Can contact**: project-manager (primary report line), orchestrator (release Go/No-Go approval requests only), team leads
 **Cannot contact**: implementers, evaluators, reviewers
 
 Send message pattern:

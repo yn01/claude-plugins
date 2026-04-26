@@ -30,9 +30,7 @@ model_profiles:
 orchestrator:
   can_contact:
     - project-manager
-    - doc-manager
-    - release-manager
-    - explorer
+    - explorer               # direct exploration requests allowed
 
 project-manager:
   model: claude-sonnet-4-6
@@ -40,17 +38,31 @@ project-manager:
     - orchestrator
     - team-alpha-lead
     - team-beta-lead
-    - doc-manager
-    - release-manager
+    - doc-manager            # PM manages doc-manager
+    - release-manager        # PM manages release-manager
     - explorer
 
 cross_team_agents:
   doc-manager:
-    can_contact: [orchestrator, project-manager, team-alpha-lead, team-beta-lead]
+    model: claude-sonnet-4-6
+    can_contact:
+      - project-manager      # primary report line
+      - team-alpha-lead      # cross-team coordination
+      - team-beta-lead
   release-manager:
-    can_contact: [orchestrator, project-manager, team-alpha-lead, team-beta-lead]
+    model: claude-sonnet-4-6
+    can_contact:
+      - project-manager      # primary report line
+      - orchestrator         # Go/No-Go release approval requests only
+      - team-alpha-lead
+      - team-beta-lead
   explorer:
-    can_contact: [orchestrator, project-manager, team-alpha-lead, team-beta-lead]
+    model: claude-haiku-4-5-20251001
+    can_contact:
+      - orchestrator         # return exploration results
+      - project-manager      # return exploration results
+      - team-alpha-lead      # return exploration results
+      - team-beta-lead       # return exploration results
 
 teams:
   - name: alpha

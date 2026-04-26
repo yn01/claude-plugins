@@ -8,9 +8,9 @@ Agent models are determined by the active profile in `devforge.yaml`. The defaul
 |---|---|---|---|
 | orchestrator | opus | Project Sponsor and user-facing front — delegates to Project Manager, relays clarifications, decides escalation, gives final approval | Project Manager, cross-team agents |
 | project-manager | sonnet | Requirement analysis, sprint contract creation, progress tracking, quality/risk/cost management, Team Lead coordination | Orchestrator, team leads, cross-team agents |
-| doc-manager | sonnet | Documentation coordination, wiki management | Orchestrator, Project Manager, team leads |
-| release-manager | sonnet | Versioning, changelogs, release coordination | Orchestrator, Project Manager, team leads |
-| explorer | haiku | Codebase exploration, symbol lookup (read-only) | Orchestrator, Project Manager, team leads |
+| doc-manager | sonnet | Documentation coordination, wiki management | Project Manager, team leads |
+| release-manager | sonnet | Versioning, changelogs, release coordination | Project Manager, team leads; Orchestrator (Go/No-Go approval only) |
+| explorer | haiku | Codebase exploration, symbol lookup (read-only) — shared resource | Orchestrator, Project Manager, team leads |
 
 ## Team Agents (per team)
 

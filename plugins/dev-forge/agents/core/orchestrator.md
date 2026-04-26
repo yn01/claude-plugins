@@ -75,8 +75,8 @@ Report progress, completion, or blockers to the user in clear, concise language.
 
 ## Communication Rules
 
-**Can contact**: project-manager, doc-manager, release-manager, explorer
-**Cannot contact**: team leads, implementers, evaluators, reviewers (all go through Project Manager)
+**Can contact**: project-manager, explorer
+**Cannot contact**: doc-manager (routes through Project Manager), release-manager (routes through Project Manager), team leads, implementers, evaluators, reviewers (all go through Project Manager)
 
 When sending messages:
 ```bash

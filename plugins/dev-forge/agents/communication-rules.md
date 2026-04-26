@@ -10,20 +10,21 @@ Messages are sent via SQLite INSERT into the `messages` table in `.dev-forge/dev
 
 ## Four Guiding Principles
 
-1. **Orchestrator never contacts team members directly.** The Orchestrator delegates only to the Project Manager and cross-team agents. All planning and team coordination goes through the Project Manager.
-2. **Project Manager is the planning and execution hub.** The Project Manager receives delegated work from the Orchestrator, creates sprint contracts, and directs Team Leads. The Project Manager does not contact the user directly.
-3. **Cross-team agents (doc-manager, release-manager, explorer) contact only Orchestrator, Project Manager, and Team Leads.** They must not message individual team members.
+1. **Orchestrator never contacts team members, doc-manager, or release-manager directly.** The Orchestrator delegates only to the Project Manager and explorer. All planning, documentation, and release coordination go through the Project Manager.
+2. **Project Manager is the planning and execution hub.** The Project Manager receives delegated work from the Orchestrator, creates sprint contracts, directs Team Leads, and manages doc-manager and release-manager. The Project Manager does not contact the user directly.
+3. **doc-manager and release-manager report to Project Manager.** They do not report to the Orchestrator. Exception: release-manager may contact Orchestrator directly to request Go/No-Go approval on a release.
 4. **Team Leads bridge the Project Manager and their team.** They receive direction from the Project Manager and delegate below. They do not contact the Orchestrator directly.
-5. **Within a team, communication is free.** Team Lead, Implementer, Evaluator, and Reviewer may contact each other freely within the same team.
+5. **explorer is a shared resource.** Orchestrator, Project Manager, and Team Leads may all request exploration tasks from explorer. Explorer returns results to whoever made the request.
+6. **Within a team, communication is free.** Team Lead, Implementer, Evaluator, and Reviewer may contact each other freely within the same team.
 
 ## Communication Matrix
 
 | Agent | Can Contact |
 |---|---|
-| orchestrator | project-manager, cross-team agents |
-| project-manager | orchestrator, team leads, cross-team agents |
-| doc-manager | orchestrator, project-manager, team leads |
-| release-manager | orchestrator, project-manager, team leads |
+| orchestrator | project-manager, explorer |
+| project-manager | orchestrator, team leads, doc-manager, release-manager, explorer |
+| doc-manager | project-manager, team leads |
+| release-manager | project-manager, orchestrator (Go/No-Go approval only), team leads |
 | explorer | orchestrator, project-manager, team leads |
 | team-*-lead | project-manager, cross-team agents, own team members |
 | implementer-* | own team lead, own evaluator, own reviewer |
@@ -34,18 +35,19 @@ Messages are sent via SQLite INSERT into the `messages` table in `.dev-forge/dev
 
 ```
 orchestrator
-├── project-manager
-│   ├── team-alpha-lead
-│   │   ├── implementer-alpha
-│   │   ├── evaluator-alpha
-│   │   └── reviewer-alpha
-│   └── team-beta-lead
-│       ├── implementer-beta
-│       ├── evaluator-beta
-│       └── reviewer-beta
-├── doc-manager
-├── release-manager
-└── explorer
+└── project-manager
+    ├── team-alpha-lead
+    │   ├── implementer-alpha
+    │   ├── evaluator-alpha
+    │   └── reviewer-alpha
+    ├── team-beta-lead
+    │   ├── implementer-beta
+    │   ├── evaluator-beta
+    │   └── reviewer-beta
+    ├── doc-manager
+    └── release-manager
+
+explorer — shared resource (accessible by orchestrator, project-manager, and team leads)
 ```
 
 ## How to Send a Message

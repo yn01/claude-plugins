@@ -169,18 +169,19 @@ Available templates: `security-auditor`, `performance-analyst`, `devops-engineer
 User
  │
  └── Orchestrator             (opus  — balanced profile default)
-     ├── Project Manager      (sonnet)
-     │   ├── team-alpha-lead  (sonnet)
-     │   │   ├── implementer-alpha (sonnet)   <- Generator
-     │   │   ├── evaluator-alpha   (sonnet)   <- Evaluator
-     │   │   └── reviewer-alpha    (sonnet)   <- Quality
-     │   └── team-beta-lead   (sonnet)
-     │       ├── implementer-beta  (sonnet)
-     │       ├── evaluator-beta    (sonnet)
-     │       └── reviewer-beta     (sonnet)
-     ├── doc-manager          (sonnet)
-     ├── release-manager      (sonnet)
-     └── explorer             (haiku)
+     └── Project Manager      (sonnet)
+         ├── team-alpha-lead  (sonnet)
+         │   ├── implementer-alpha (sonnet)   <- Generator
+         │   ├── evaluator-alpha   (sonnet)   <- Evaluator
+         │   └── reviewer-alpha    (sonnet)   <- Quality
+         ├── team-beta-lead   (sonnet)
+         │   ├── implementer-beta  (sonnet)
+         │   ├── evaluator-beta    (sonnet)
+         │   └── reviewer-beta     (sonnet)
+         ├── doc-manager      (sonnet)
+         └── release-manager  (sonnet)  <- can escalate to Orchestrator for Go/No-Go
+
+explorer (haiku) — shared resource; accessible by Orchestrator, Project Manager, and Team Leads
 
 All communication -> .dev-forge/dev-forge.db (SQLite)
 
@@ -279,6 +280,13 @@ dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Ask
 These principles are defined in [`agents/shared/anti-anxiety-baseline.md`](./agents/shared/anti-anxiety-baseline.md) and referenced by all agent definitions.
 
 ## Changelog
+
+### v1.5.0 — 2026-04-26
+- **Cross-team agent re-routing**: doc-manager and release-manager now report to Project Manager instead of Orchestrator
+- **Orchestrator scope tightened**: Orchestrator can only contact project-manager and explorer — doc-manager and release-manager routes removed
+- **release-manager escalation path**: release-manager retains the ability to contact Orchestrator directly for Go/No-Go release approval
+- **explorer re-classified**: explorer is now a shared resource accessible by Orchestrator, Project Manager, and Team Leads
+- **Communication rules updated**: `agents/communication-rules.md`, `templates/devforge.yaml`, and all affected agent definitions reflect the new routing
 
 ### v1.4.0 — 2026-04-25
 - **Project Manager agent**: New core agent (`agents/core/project-manager.md`) responsible for requirement analysis, sprint contract creation, progress tracking, quality/risk/cost management, and Team Lead coordination

@@ -60,8 +60,8 @@ See [`agents/shared/anti-anxiety-baseline.md`](../shared/anti-anxiety-baseline.m
 
 ## Communication Rules
 
-**Can contact**: orchestrator, team leads (team-alpha-lead, team-beta-lead, and any other active team leads)
-**Cannot contact**: implementers, evaluators, reviewers
+**Can contact**: project-manager (primary report line), team leads (team-alpha-lead, team-beta-lead, and any other active team leads)
+**Cannot contact**: orchestrator (all doc-manager reports go through Project Manager), implementers, evaluators, reviewers
 
 Send message pattern:
 ```bash
