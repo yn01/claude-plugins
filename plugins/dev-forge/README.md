@@ -4,7 +4,7 @@ A Claude Code plugin for SQLite-backed multi-agent development team orchestratio
 
 ## What is dev-forge?
 
-dev-forge assembles an AI-powered development team where an Orchestrator delegates tasks to specialized agents — implementers, reviewers, evaluators, doc managers, and release managers — all coordinated via sprint contracts and a strict chain of command. Unlike its predecessor `devteam`, dev-forge uses **SQLite as the single message bus**, eliminating file-based message queues in favor of atomic, concurrent-safe database writes.
+dev-forge assembles an AI-powered development team where an Orchestrator delegates tasks to specialized agents — implementers, reviewers, evaluators, doc managers, and release managers — all coordinated via sprint contracts and a strict chain of command. dev-forge uses **SQLite as the single message bus**, eliminating file-based message queues in favor of atomic, concurrent-safe database writes.
 
 ## Key Features
 
@@ -196,7 +196,7 @@ See [docs/agent-roles.md](./docs/agent-roles.md) for detailed role definitions a
 
 ## Why SQLite Instead of File-Based Queues?
 
-The predecessor `devteam` plugin uses Markdown files in inbox directories. dev-forge replaces this with SQLite for several reasons:
+dev-forge uses SQLite instead of file-based message queues for several reasons:
 
 1. **Atomic writes**: SQLite's WAL mode prevents race conditions when multiple agents write simultaneously.
 2. **Queryability**: `SELECT`, `WHERE`, `GROUP BY` — no need to parse filenames or scan directories.
