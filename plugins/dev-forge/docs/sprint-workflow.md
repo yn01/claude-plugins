@@ -4,8 +4,8 @@ This document describes the full sprint lifecycle in dev-forge.
 
 ## Overview
 
-A sprint begins when the Orchestrator creates a Sprint Contract and assigns it to a Team Lead.
-The Team Lead owns the contract, delegates to team members, and reports completion.
+A sprint begins when the user issues a request to the Orchestrator. The Orchestrator delegates all planning and execution to the Project Manager, which creates Sprint Contracts and assigns them to Team Leads.
+The Team Lead owns the contract, delegates to team members, and reports completion back to the Project Manager.
 
 ## Sequence
 
@@ -15,6 +15,11 @@ User
  ├─ /dev-forge:contract create team-alpha-lead "Implement user authentication"
  │
 Orchestrator
+ ├─ Receives user request
+ ├─ Delegates to project-manager: "Plan and execute: <task>"
+ │
+project-manager
+ ├─ Performs requirement analysis
  ├─ Creates CONTRACT-YYYYMMDD-HHMMSS in contracts table
  ├─ Sends message to team-alpha-lead: "New contract assigned"
  │
@@ -38,19 +43,24 @@ evaluator-alpha
  │
 team-alpha-lead (on PASS)
  ├─ Updates contract status to 'completed' in SQLite
- ├─ Messages orchestrator: "Contract CONTRACT-ID completed"
+ ├─ Messages project-manager: "Contract CONTRACT-ID completed"
+ │
+project-manager
+ ├─ Tracks completion, updates progress
+ ├─ Reports to orchestrator: "Task complete"
  │
 Orchestrator
- └─ Notes completion, moves to next task or sprint
+ └─ Notes completion, relays result to user
 ```
 
 ## Model Escalation During Sprint
 
 If the evaluator reports FAIL:
 1. Team Lead tracks consecutive failure count
-2. At 2 failures: Team Lead requests model escalation from Orchestrator
-3. At 4 failures: Orchestrator escalates to Opus model
-4. At 6 failures: Orchestrator triggers Bug Council
+2. At 2 failures: Team Lead reports to Project Manager, recommends model escalation
+3. Project Manager forwards escalation recommendation to Orchestrator
+4. At 4 failures: Orchestrator approves escalation to Opus model, notifies Project Manager
+5. At 6 failures: Orchestrator triggers Bug Council
 
 ## Sprint Contract Format
 

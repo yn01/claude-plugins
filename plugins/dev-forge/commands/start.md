@@ -158,7 +158,11 @@ resolve_profile_model() {
 
 ### 5. Parse devforge.yaml and populate agent_status + communication_rules
 
-Read `devforge.yaml` and for each agent (orchestrator, each cross_team_agent, each team member):
+Read `devforge.yaml` and for each agent (orchestrator, project-manager, each cross_team_agent, each team member):
+
+- `orchestrator` and `project-manager` are top-level keys in devforge.yaml
+- `cross_team_agents` entries (doc-manager, release-manager, explorer) are nested under `cross_team_agents:`
+- Team members (lead + implementer/evaluator/reviewer per team) are nested under `teams:`
 
 ```bash
 # Resolve model for each agent using active profile

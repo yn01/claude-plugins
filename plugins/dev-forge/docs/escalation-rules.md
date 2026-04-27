@@ -2,7 +2,7 @@
 
 ## Model Escalation Ladder
 
-When an implementer repeatedly fails to satisfy sprint contract criteria, the Team Lead tracks consecutive failures and reports to the Orchestrator:
+When an implementer repeatedly fails to satisfy sprint contract criteria, the Team Lead tracks consecutive failures and reports to the Project Manager, who evaluates and forwards escalation recommendations to the Orchestrator:
 
 | Consecutive Failures | Action |
 |---|---|
@@ -64,7 +64,7 @@ If the Bug Council cannot produce a resolution plan, it escalates to the human w
 
 ## Resetting Failure Count
 
-After a successful implementation or after Bug Council resolution, the Team Lead should report success so the Orchestrator can reset the failure counter for the agent.
+After a successful implementation or after Bug Council resolution, the Team Lead should report success to the Project Manager, who in turn notifies the Orchestrator to reset the failure counter for the agent.
 
 To reset an agent's model back to the active profile's default:
 ```
