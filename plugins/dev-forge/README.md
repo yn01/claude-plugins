@@ -281,6 +281,11 @@ These principles are defined in [`agents/shared/anti-anxiety-baseline.md`](./age
 
 ## Changelog
 
+### v1.5.1 — 2026-04-27
+- **Bug fix**: project-manager was missing from bulk agent operations in `/dev-forge:start` — now correctly registered in `agent_status` and `communication_rules` on startup
+- **Docs**: `docs/sprint-workflow.md` updated to reflect Orchestrator → Project Manager → Team Lead hierarchy
+- **Docs**: `docs/escalation-rules.md` updated to route escalation through Project Manager before Orchestrator
+
 ### v1.5.0 — 2026-04-26
 - **Cross-team agent re-routing**: doc-manager and release-manager now report to Project Manager instead of Orchestrator
 - **Orchestrator scope tightened**: Orchestrator can only contact project-manager and explorer — doc-manager and release-manager routes removed
