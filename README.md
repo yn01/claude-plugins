@@ -14,7 +14,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v1.4.0`
+### [dev-forge](./plugins/dev-forge) `v1.5.1`
 
 SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, and Anti-Anxiety Prompting.
 
@@ -136,6 +136,12 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-04-27
+- Update **dev-forge** to v1.5.1 — fix project-manager missing from bulk agent operations; update sprint-workflow and escalation-rules docs
+
+### 2026-04-26
+- Update **dev-forge** to v1.5.0 — cross-team agent re-routing to Project Manager, Orchestrator scope tightened, explorer re-classified as shared resource
 
 ### 2026-04-25
 - Update **dev-forge** to v1.4.0 — Project Manager agent (PMBOK 8th edition), role redistribution between Orchestrator and PM, updated communication hierarchy
