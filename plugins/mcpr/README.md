@@ -99,3 +99,8 @@ Args   : {"owner":"yn01","repo":"test","title":"hello"}
 }
 ══════════════════════════════════════
 ```
+
+## Changelog
+
+### v1.0.0 — 2026-04-02
+- Initial release

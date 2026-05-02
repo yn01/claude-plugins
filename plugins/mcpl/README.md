@@ -120,3 +120,8 @@ Claude CodeのMCPサーバーログは以下の2箇所に出力される:
 | ⚠️ | `WARN`、`warning` を含む行 |
 | ℹ️ | `INFO`、`info` を含む行 |
 | （なし） | その他 |
+
+## Changelog
+
+### v1.0.0 — 2026-04-03
+- Initial release

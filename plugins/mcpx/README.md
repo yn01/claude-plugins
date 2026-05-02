@@ -121,3 +121,8 @@ b to go back / q to quit:
 | number | Select item |
 | `b` | Go back one level |
 | `q` | Quit |
+
+## Changelog
+
+### v1.0.0 — 2026-04-02
+- Initial release

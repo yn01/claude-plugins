@@ -101,3 +101,8 @@ claude mcp add --scope <scope> <name> <command> [args...] [-e KEY=VALUE ...]
 ```
 
 After adding, run `/mcpd:doctor` to verify the server is configured correctly and connected.
+
+## Changelog
+
+### v1.0.0 — 2026-04-02
+- Initial release

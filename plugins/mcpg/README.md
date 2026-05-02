@@ -120,3 +120,8 @@ Add to Claude Code:
 ```bash
 claude mcp add <server-name> python server.py
 ```
+
+## Changelog
+
+### v1.0.0 — 2026-04-02
+- Initial release

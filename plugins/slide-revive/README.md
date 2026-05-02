@@ -119,6 +119,12 @@ generate.mjs      →  presentation.pptx + presentation.html
 - Complex diagrams and decorative icons are reconstructed as text; pixel-perfect shape reproduction is not possible
 - Reconstruction quality depends on Vision AI analysis accuracy; highly complex layouts may be simplified
 
+## Changelog
+
+### v1.0.0 — 2026-04-05
+- Initial release
+- PPTX generation engine bundled within plugin (no dependency on genpptx)
+
 ## License
 
 MIT
