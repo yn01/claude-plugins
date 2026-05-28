@@ -14,6 +14,16 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
+### [dev-guide](./plugins/dev-guide) `v1.0.0`
+
+Human-authored knowledge base for Claude Code — store guidelines, design decisions, and concepts; inject relevant context automatically at session start.
+
+Acts as an extended CLAUDE.md: split knowledge into topic-focused pages and inject only the catalogue at session start. The agent fetches individual pages on demand, keeping the context window lean.
+
+```
+/plugin install dev-guide
+```
+
 ### [dev-forge](./plugins/dev-forge) `v1.5.1`
 
 SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, and Anti-Anxiety Prompting.
@@ -136,6 +146,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-05-29
+- Add **dev-guide** v1.0.0 — human-authored knowledge base with automatic session-start injection; commands: add, list, query, inject
 
 ### 2026-04-27
 - Update **dev-forge** to v1.5.1 — fix project-manager missing from bulk agent operations; update sprint-workflow and escalation-rules docs
