@@ -14,6 +14,16 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
+### [dev-gate](./plugins/dev-gate) `v1.0.0`
+
+Define machine-verifiable completion criteria for tasks and automatically run verification commands to determine pass/fail.
+
+Eliminates the ambiguity of "done" — every completion criterion must include an executable verification command. Pass/fail is determined by exit code or stdout match, not by the agent's self-assessment. Archived gates accumulate into a reusable library of proven criteria.
+
+```
+/plugin install dev-gate
+```
+
 ### [dev-guide](./plugins/dev-guide) `v1.0.0`
 
 Human-authored knowledge base for Claude Code — store guidelines, design decisions, and concepts; inject relevant context automatically at session start.
@@ -148,6 +158,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-05-29
+- Add **dev-gate** v1.0.0 — machine-verifiable completion criteria with automatic pass/fail verification; commands: define, verify, list, template
 - Add **dev-guide** v1.0.0 — human-authored knowledge base with automatic session-start injection; commands: add, list, query, inject
 
 ### 2026-04-27
