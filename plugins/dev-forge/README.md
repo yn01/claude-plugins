@@ -1,337 +1,230 @@
 # dev-forge
 
-A Claude Code plugin for SQLite-backed multi-agent development team orchestration with wiki knowledge management, learnings capture, and automatic bug council escalation.
+A Claude Code plugin that serves as the entry point and starter kit for AI-assisted development. It sets up the Human As The Architect workflow: installs sister plugins, initializes their project directories, and places a ready-to-use agent team in `.claude/agents/`.
 
-## What is dev-forge?
+## The Problem
 
-dev-forge assembles an AI-powered development team where an Orchestrator delegates tasks to specialized agents — implementers, reviewers, evaluators, doc managers, and release managers — all coordinated via sprint contracts and a strict chain of command. dev-forge uses **SQLite as the single message bus**, eliminating file-based message queues in favor of atomic, concurrent-safe database writes.
+Starting an AI-assisted development workflow from scratch involves several decisions: which agents to use, how to split their responsibilities, what tools to allow, what constraints to enforce. Without structure, each project reinvents these answers — inconsistently.
 
-## Key Features
+dev-forge answers them with opinionated defaults. Run `/dev-forge:init`, pick a team preset, and you have a coherent multi-agent setup in under a minute.
 
-- **SQLite message bus**: All inter-agent communication goes through `.dev-forge/dev-forge.db`. No scattered inbox files.
-- **Sprint Contracts**: Pre-agreed acceptance criteria before implementation begins. Eliminates ambiguous handoffs.
-- **Generator/Evaluator pattern**: Implementer and Evaluator are always separate agents — no self-evaluation bias.
-- **Model Profiles**: Switch all agents between `economy`, `balanced`, and `quality` profiles in one command. Override individual agents at runtime — no restart needed.
-- **Model Escalation**: Automatically upgrades agent models on repeated failures (sonnet → opus → Bug Council).
-- **Bug Council**: 3-analyst multi-perspective diagnosis triggered at 6 consecutive failures or critical bugs.
-- **Knowledge Wiki**: Karpathy-style LLM wiki for project knowledge accumulation.
-- **Learnings capture**: Mistakes and patterns recorded to SQLite, queryable by future agents.
-- **Dynamic teams**: Add/remove teams and agents at runtime without full restart.
-- **Cross-platform**: macOS, Linux, and Windows (PowerShell) support.
-- **Anti-Anxiety Prompting**: Agent-to-agent communication is built on positive framing, explicit permission to disagree, and improvement-paired feedback — based on Amanda Askell's research on Claude's psychology at Anthropic.
+## Human As The Architect
 
-## Prerequisites
+dev-forge is built on a single organizing principle: **the human is the Architect**.
 
-| Requirement | macOS/Linux | Windows |
-|---|---|---|
-| `sqlite3` CLI | `brew install sqlite3` | `winget install SQLite.SQLite` |
-| `tmux` | `brew install tmux` | Use Windows Terminal (`wt`) |
-| `claude` CLI | [Claude Code](https://claude.ai/code) | Same |
+The Architect's responsibilities:
+
+| Responsibility | How |
+|----------------|-----|
+| **Direction** | Decide what to build and why. Provide the task brief. |
+| **System design** | Define guidelines, conventions, and quality standards (with dev-guide) |
+| **Quality criteria** | Define what "done" means for each task (with dev-gate) |
+| **Direct intervention** | Step in when agents reach a decision that requires human judgment |
+| **Feedback loop** | Reflect learnings back into guidelines and criteria after each cycle |
+
+The AI's responsibilities:
+
+- Execute the task as specified
+- Read and apply the Architect's guidelines (from dev-guide)
+- Verify output against the Architect's criteria (via dev-gate)
+- Surface ambiguities rather than guessing
+
+Agents in dev-forge are deliberately constrained — read-only agents cannot write code, builders are scoped to their layer, validators only report gaps. The human retains authority at every approval gate.
+
+## Relationship to dev-guide and dev-gate
+
+dev-forge is a sister plugin to [dev-guide](../dev-guide/) and [dev-gate](../dev-gate/). They share the same design philosophy but serve different roles:
+
+| Plugin | Role |
+|--------|------|
+| **dev-forge** | Entry point — set up the workflow, place agent teams |
+| **dev-guide** | Knowledge delivery — store guidelines and decisions; inject them at session start |
+| **dev-gate** | Quality verification — define completion criteria; run verification commands |
+
+All three are fully independent — no plugin depends on another. dev-forge recommends installing the others and can initialize their directories, but they work without dev-forge.
+
+## What changed from v1
+
+v1 of dev-forge was a heavy-weight plugin: tmux-managed agent sessions, SQLite message queues, a Project Manager agent, Communication Rules, Model Escalation, a Wiki, Agent Learnings, and a Bug Council. It did a lot.
+
+v2 removes all of that.
+
+- **Agent execution** is handled by Claude Code's native features: `claude agents`, forked subagents, `--bg`
+- **Knowledge management** is handled by dev-guide
+- **Quality verification** is handled by dev-gate
+- **dev-forge** is now just the entry point and the agent team templates
+
+The result is a plugin that does one thing well: get you started.
 
 ## Installation
 
-```bash
+```
 /plugin marketplace add yn01/claude-plugins
 /plugin install dev-forge
 ```
 
+Recommended: also install the sister plugins.
+
+```
+/plugin install dev-guide
+/plugin install dev-gate
+```
+
 ## Quick Start
 
-1. Copy the configuration template to your project root:
-   ```bash
-   cp $(claude plugin path dev-forge)/templates/devforge.yaml ./devforge.yaml
-   ```
-   > **If the path is unclear, specify it directly.** Example on macOS:
-   > ```bash
-   > cp /Users/your-username/.claude/plugins/dev-forge/templates/devforge.yaml ./devforge.yaml
-   > ```
-   > Replace `your-username` with your actual username.
+```bash
+# 1. Run init in your project
+/dev-forge:init
 
-2. (Optional) Edit `devforge.yaml` to customize team names and model profiles.
+# 2. Follow the prompts:
+#    - dev-guide and dev-gate status is shown
+#    - Select a team preset (fullstack / backend-only / minimal / skip)
+#    - Agent files are placed in .claude/agents/
 
-3. Start the dev-forge team:
-   ```
-   /dev-forge:start
-   ```
+# 3. Review and adjust the agent definitions
+#    Open .claude/agents/*.md and tailor constraints to your project
 
-4. Create your first sprint contract:
-   ```
-   /dev-forge:contract create orchestrator "Implement user authentication with JWT"
-   ```
-
-5. Monitor progress:
-   ```
-   /dev-forge:status
-   ```
-
-6. When done, stop all agents:
-   ```
-   /dev-forge:stop
-   ```
-
-## Command Reference
-
-| Command | Description |
-|---|---|
-| `/dev-forge:start` | Initialize SQLite DB and launch all agent sessions |
-| `/dev-forge:stop` | Stop all agents, archive unread messages |
-| `/dev-forge:status` | Dashboard: agent status, message queue, contracts |
-| `/dev-forge:send <agent> <msg>` | Send a message to a specific agent |
-| `/dev-forge:export [--section <s>]` | Export DB contents to Markdown files |
-| `/dev-forge:contract create <lead> "<task>"` | Create a sprint contract |
-| `/dev-forge:contract list [filter]` | List contracts with optional status filter |
-| `/dev-forge:contract complete <id>` | Mark a contract as completed |
-| `/dev-forge:contract report` | Sprint summary report |
-| `/dev-forge:team add <name>` | Add a new team |
-| `/dev-forge:team remove <name>` | Remove a team |
-| `/dev-forge:team list` | List all teams |
-| `/dev-forge:agent add <team> <template>` | Add a specialist agent to a team |
-| `/dev-forge:agent remove <team> <id>` | Remove an agent from a team |
-| `/dev-forge:route add <from> <to>` | Add a communication route |
-| `/dev-forge:route remove <from> <to>` | Remove a communication route |
-| `/dev-forge:route list` | List all communication routes |
-| `/dev-forge:route save` | Sync routes back to `devforge.yaml` |
-| `/dev-forge:wiki ingest <file-or-url>` | Add a source to the wiki |
-| `/dev-forge:wiki query <terms>` | Search the wiki |
-| `/dev-forge:wiki lint` | Check wiki for issues |
-| `/dev-forge:guideline add "<title>" "<content>"` | Add a coding guideline |
-| `/dev-forge:guideline list` | List all guidelines |
-| `/dev-forge:model profile <name>` | Switch all agents to a named model profile |
-| `/dev-forge:model set <agent> <model>` | Override a specific agent's model (accepts alias or full ID) |
-| `/dev-forge:model reset` | Re-apply active profile, clearing individual overrides |
-| `/dev-forge:learn` | Record a learning (learning number auto-assigned) |
-| `/dev-forge:learn status` | Show next learning number and recent entries |
-| `/dev-forge:learn review` | Browse accumulated learnings |
-| `/dev-forge:learn export` | Export all learnings to Markdown |
-
-## Customizing devforge.yaml
-
-### Model profiles
-
-`devforge.yaml` ships with three built-in profiles. Switch at runtime — no restart needed:
-
-```
-/dev-forge:model profile economy    # cost-optimized
-/dev-forge:model profile balanced   # default
-/dev-forge:model profile quality    # maximum capability
+# 4. Start a task
+#    Invoke the researcher agent with your task brief
+#    Follow the pipeline: research → stories → spec → build → test → validate
 ```
 
-To override a single agent:
-```
-/dev-forge:model set implementer-alpha opus
-```
+## Commands
 
-To restore all agents to the active profile's defaults:
-```
-/dev-forge:model reset
-```
+### `/dev-forge:init`
 
-Profiles are defined in `devforge.yaml`. Model aliases (`opus`, `sonnet`, `haiku`) and full model IDs are both accepted.
+One-time project setup:
 
-### Adding a team
+1. Checks dev-guide and dev-gate installation status; prints install commands for any missing
+2. Creates `.dev-guide/` and `.dev-gate/` directories if the plugins are installed
+3. Presents the team preset menu and places selected agent definitions in `.claude/agents/`
 
-```yaml
-teams:
-  - name: gamma           # Add this block
-    lead:
-      can_contact: [project-manager, doc-manager, implementer-gamma, evaluator-gamma, reviewer-gamma]
-    members:
-      - id: implementer-gamma
-        role: implementer
-        can_contact: [team-gamma-lead, evaluator-gamma, reviewer-gamma]
+### `/dev-forge:team <preset>`
+
+Place (or replace) agent definition files for a preset. Use this when you want to change your team configuration after init, or when you want to add agent files to a project that already has some.
+
+```bash
+/dev-forge:team fullstack
+/dev-forge:team backend-only
+/dev-forge:team minimal
 ```
 
-Or dynamically:
-```
-/dev-forge:team add gamma
-```
+Existing agent files are skipped by default; you are asked to confirm before any overwrite.
 
-### Adding a specialist agent
+## Team Presets
 
-```
-/dev-forge:agent add alpha security-auditor
-```
+### fullstack — 7 agents
 
-Available templates: `security-auditor`, `performance-analyst`, `devops-engineer`, `doc-writer`
+| Agent | Read-only | Model | Responsibility |
+|-------|-----------|-------|----------------|
+| researcher | yes | haiku | Map relevant files, patterns, and risks before work begins |
+| story-writer | yes | sonnet | Write user stories and acceptance criteria |
+| spec-writer | yes | sonnet | Convert stories to technical specification |
+| backend-builder | no | sonnet | Implement backend: APIs, data models, business logic |
+| frontend-builder | no | sonnet | Implement frontend against backend API summary |
+| test-verifier | test files only | sonnet | Write and run acceptance tests |
+| validator | yes | sonnet | Audit implementation against spec; report gaps by severity |
 
-### Changing communication routes
+Pipeline: `researcher → story-writer → spec-writer → backend-builder → frontend-builder → test-verifier → validator`
 
-```
-/dev-forge:route add doc-manager team-gamma-lead
-/dev-forge:route save
-```
+Approval gates (human reviews and approves before the next stage proceeds):
+- After story-writer: approve user stories
+- After spec-writer: approve technical specification
+- After validator: review gap report and decide to ship
 
-## Architecture
+### backend-only — 5 agents
 
-![dev-forge architecture](docs/dev-forge-architecture.svg)
+researcher, story-writer, spec-writer, backend-builder, validator.
 
-```
-User
- │
- └── Orchestrator             (opus  — balanced profile default)
-     └── Project Manager      (sonnet)
-         ├── team-alpha-lead  (sonnet)
-         │   ├── implementer-alpha (sonnet)   <- Generator
-         │   ├── evaluator-alpha   (sonnet)   <- Evaluator
-         │   └── reviewer-alpha    (sonnet)   <- Quality
-         ├── team-beta-lead   (sonnet)
-         │   ├── implementer-beta  (sonnet)
-         │   ├── evaluator-beta    (sonnet)
-         │   └── reviewer-beta     (sonnet)
-         ├── doc-manager      (sonnet)
-         └── release-manager  (sonnet)  <- can escalate to Orchestrator for Go/No-Go
+Use when the task has no frontend component: REST API, background job, CLI, data migration.
 
-explorer (haiku) — shared resource; accessible by Orchestrator, Project Manager, and Team Leads
+Pipeline: `researcher → story-writer → spec-writer → backend-builder → validator`
 
-All communication -> .dev-forge/dev-forge.db (SQLite)
+### minimal — 3 agents
 
-Bug Council (triggered at 6+ failures):
-  bug-council-orchestrator (opus  — balanced profile default)
-  ├── root-cause-analyst   (sonnet)
-  ├── pattern-matcher      (sonnet)
-  └── adversarial-tester   (sonnet)
-```
+researcher, builder (full stack), validator.
 
-See [docs/agent-roles.md](./docs/agent-roles.md) for detailed role definitions and responsibility matrix.
+Use for small, well-understood tasks where speed matters more than process rigor.
 
-## Why SQLite Instead of File-Based Queues?
-
-dev-forge uses SQLite instead of file-based message queues for several reasons:
-
-1. **Atomic writes**: SQLite's WAL mode prevents race conditions when multiple agents write simultaneously.
-2. **Queryability**: `SELECT`, `WHERE`, `GROUP BY` — no need to parse filenames or scan directories.
-3. **Audit trail**: `violation_log`, `learnings`, and `agent_status` tables give a full audit trail in one place.
-4. **Human-readable export**: `/dev-forge:export` converts the DB to Markdown when human review is needed.
-5. **Single file**: One `.dev-forge/dev-forge.db` file to back up, restore, or share.
-
-## Key Concepts
-
-Understanding these terms will help you use dev-forge effectively.
-
-**Project Manager**
-The planning and execution hub of the dev-forge hierarchy. The Project Manager sits between the Orchestrator and the Team Leads. It receives delegated work from the Orchestrator (Project Sponsor), performs requirement analysis, creates sprint contracts, issues them to Team Leads, tracks progress, manages quality gates and risks, and reports completion back to the Orchestrator. The Project Manager never communicates directly with the user.
-
-**Contract**
-A unit of work assigned from the Project Manager to a team lead. Contracts include a task description and acceptance criteria that must be met before the work is considered done. Create one with `/dev-forge:contract create`.
-
-**Generator/Evaluator pattern**
-The implementer (Generator) produces code; the evaluator (Evaluator) judges it against the contract criteria. These are always separate agents to prevent self-evaluation bias. A failed evaluation triggers a retry; repeated failures escalate the model or invoke the Bug Council.
-
-**Bug Council**
-A panel of three specialist agents (root-cause analyst, pattern-matcher, adversarial tester) convened automatically when an agent fails six or more times consecutively, or when a critical bug is detected. The Bug Council diagnoses the root cause and recommends a fix.
-
-**Learning number**
-A sequential integer assigned to each learning record in the `learnings` table. It is simply a unique identifier — it does not represent a sprint cycle or any particular unit of time. When you run `/dev-forge:learn record`, the number is auto-assigned as `MAX + 1`. Use `/dev-forge:learn status` to see the next available number and recent entries.
-
-**Model escalation**
-When an agent fails repeatedly, dev-forge automatically upgrades its model: haiku → sonnet at 2 failures, sonnet → opus at 4, opus → Bug Council at 6. Because the model is read from the database on every message, escalation takes effect immediately without restarting the agent.
-
-**Wiki**
-A collection of Markdown files in `.dev-forge/wiki/` that agents consult before starting tasks. Humans add content via `/dev-forge:wiki ingest`; the `doc-manager` agent maintains it during a session.
-
-## Wiki and Learnings
-
-### Wiki
-
-The wiki stores project knowledge as Markdown files in `.dev-forge/wiki/`. Agents can reference it before starting tasks. Humans manage it via `/dev-forge:wiki ingest`.
-
-For Obsidian users, set `wiki.storage: obsidian` and `wiki.obsidian_vault: /path/to/vault` in `devforge.yaml`.
-
-### Learnings
-
-After each completed evaluation (PASS event), the `post-tool-use` hook suggests recording a learning. The learning number is auto-assigned — you do not need to track it manually. Use `/dev-forge:learn status` to see the current state. Learnings are stored in SQLite and mirrored to `.dev-forge/learnings/LEARNINGS.md`. The `pattern-matcher` Bug Council agent queries learnings when diagnosing failures.
+Pipeline: `researcher → builder → validator`
 
 ## Directory Structure
 
+### Plugin directory
+
 ```
-.dev-forge/                    <- Created in your project root by /dev-forge:start
-├── dev-forge.db               <- SQLite database (messages, contracts, agents, rules, learnings)
-├── wiki/                      <- Knowledge wiki (Markdown files)
-├── learnings/                 <- Iteration learnings (Markdown + mirrored from SQLite)
-├── guidelines/                <- Coding guidelines (human-managed zone)
-├── archive/                   <- Archived messages from /dev-forge:stop
-└── export/                    <- Exports from /dev-forge:export
+dev-forge/
+├── .claude-plugin/
+│   └── plugin.json
+├── commands/
+│   ├── init.md             # /dev-forge:init
+│   └── team.md             # /dev-forge:team
+├── templates/
+│   └── teams/
+│       ├── default.md      # Overview of all presets and agents
+│       ├── agents/         # Agent definition files
+│       │   ├── researcher.md
+│       │   ├── story-writer.md
+│       │   ├── spec-writer.md
+│       │   ├── backend-builder.md
+│       │   ├── frontend-builder.md
+│       │   ├── test-verifier.md
+│       │   ├── builder.md
+│       │   └── validator.md
+│       └── presets/        # Preset descriptions
+│           ├── fullstack.md
+│           ├── backend-only.md
+│           └── minimal.md
+├── LICENSE
+└── README.md
 ```
 
-## Windows Support
+### Project directories (created by `/dev-forge:init`)
 
-dev-forge supports Windows via PowerShell equivalents for all shell hooks. When running on Windows:
+```
+.claude/
+└── agents/         # Agent definitions active in this project
 
-- Use `sqlite3.exe` (install via `winget install SQLite.SQLite`)
-- Agent sessions use Windows Terminal (`wt`) instead of tmux
-- All hook scripts have `.ps1` counterparts in `hooks/`
-- Path separators use `\` in PowerShell commands
+.dev-guide/         # Created if dev-guide is installed
+├── guidelines/
+├── decisions/
+├── concepts/
+└── index.md
 
-## Anti-Anxiety Prompting
+.dev-gate/          # Created if dev-gate is installed
+├── active/
+├── archive/
+└── index.md
+```
 
-dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Askell's research on Claude's psychology at Anthropic. Agent-to-agent communication is designed with positive framing, explicit permission to disagree, and tone-aware dispatch templates — ensuring optimal output quality across the multi-agent system.
+## Customizing Agent Definitions
 
-### The 6 Principles in Practice
+After `/dev-forge:init` or `/dev-forge:team`, the agent files in `.claude/agents/` are yours to edit. Consider:
 
-| Principle | How dev-forge applies it |
-|---|---|
-| **Positive framing** | Project Manager dispatch messages state goals to achieve, not prohibitions to avoid |
-| **Permission to push back** | Every task assignment includes "push back if you see a better approach" |
-| **Problem + improvement direction** | Evaluator FAIL reports always pair each unmet criterion with a concrete improvement direction |
-| **No apology spirals** | Agents acknowledge shortcomings once, then move to the next action |
-| **Competence assumption** | Team Lead asks implementers for their judgment on approach, not just execution |
-| **Frame refresh** | After every 5 completed contracts, Project Manager prepends a reset signal to the next dispatch |
+- **Tool permissions** — tighten the `tools` list to match your stack
+- **Model** — upgrade to `claude-opus-4-7` for complex reasoning agents, downgrade to `claude-haiku-4-5-20251001` for fast read-only ones
+- **Scope constraints** — add specific folder restrictions (e.g. "only modify files in `src/api/`")
+- **Output format** — adjust report templates to match your team's conventions
 
-These principles are defined in [`agents/shared/anti-anxiety-baseline.md`](./agents/shared/anti-anxiety-baseline.md) and referenced by all agent definitions.
+The templates are starting points, not requirements.
 
 ## Changelog
 
+### v2.0.0 — 2026-05-29
+- Complete rewrite. All v1 infrastructure (tmux, SQLite, PM agent, Communication Rules, Model Escalation, Wiki, Learnings, Bug Council) removed
+- New commands: `init`, `team`
+- New agent templates: researcher, story-writer, spec-writer, backend-builder, frontend-builder, test-verifier, builder, validator
+- Three team presets: fullstack, backend-only, minimal
+- Integrates with sister plugins dev-guide and dev-gate
+
 ### v1.5.1 — 2026-04-27
-- **Bug fix**: project-manager was missing from bulk agent operations in `/dev-forge:start` — now correctly registered in `agent_status` and `communication_rules` on startup
-- **Docs**: `docs/sprint-workflow.md` updated to reflect Orchestrator → Project Manager → Team Lead hierarchy
-- **Docs**: `docs/escalation-rules.md` updated to route escalation through Project Manager before Orchestrator
+- Fix project-manager missing from bulk agent operations; update sprint-workflow and escalation-rules docs
 
 ### v1.5.0 — 2026-04-26
-- **Cross-team agent re-routing**: doc-manager and release-manager now report to Project Manager instead of Orchestrator
-- **Orchestrator scope tightened**: Orchestrator can only contact project-manager and explorer — doc-manager and release-manager routes removed
-- **release-manager escalation path**: release-manager retains the ability to contact Orchestrator directly for Go/No-Go release approval
-- **explorer re-classified**: explorer is now a shared resource accessible by Orchestrator, Project Manager, and Team Leads
-- **Communication rules updated**: `agents/communication-rules.md`, `templates/devforge.yaml`, and all affected agent definitions reflect the new routing
+- Cross-team agent re-routing to Project Manager, Orchestrator scope tightened, explorer re-classified as shared resource
 
 ### v1.4.0 — 2026-04-25
-- **Project Manager agent**: New core agent (`agents/core/project-manager.md`) responsible for requirement analysis, sprint contract creation, progress tracking, quality/risk/cost management, and Team Lead coordination
-- **Role redistribution**: Orchestrator is now Project Sponsor and user-facing front only — all planning and execution delegated to Project Manager
-- **Hierarchy update**: Team Leads now report to Project Manager instead of Orchestrator
-- **Communication rules updated**: Orchestrator contacts Project Manager instead of Team Leads directly; Team Leads contact Project Manager instead of Orchestrator
-- **devforge.yaml**: Added `project-manager` section and `project-manager` model entries in all three profiles (economy: haiku, balanced: sonnet, quality: opus)
-- **PMBOK 8th edition**: Project Manager behavior grounded in 7 Performance Domains and 5 Focus Areas as actionable guidelines
-- **Responsibility matrix**: Added to `docs/agent-roles.md` with clear separation between Orchestrator, Project Manager, and Team Lead responsibilities
-
-### v1.3.0 — 2026-04-19
-- **Anti-Anxiety Prompting**: Added `agents/shared/anti-anxiety-baseline.md` with 6 communication principles based on Amanda Askell's research at Anthropic
-- **Dispatch message template**: Orchestrator task assignments now use Goal / Context / Your Expertise / Push Back Welcome structure
-- **Frame refresh**: Orchestrator prepends a reset signal after every 5 completed contracts
-- **Evaluator FAIL format**: Failure reports now include an improvement direction alongside each unmet criterion
-- **Team Lead feedback tone**: Team Lead relays evaluator findings with improvement directions, never bare failure lists
-- **Reviewer improvement pattern**: Reviewers include a concrete suggestion with every issue reported
-
-### v1.2.0 — 2026-04-19
-- **Model profiles**: Replace per-agent `model:` fields with `model_profiles` in `devforge.yaml` (economy / balanced / quality)
-- **Runtime model changes**: `agent-loop.sh` now reads the model from the database on every message — no agent restart needed
-- **`/dev-forge:model` command**: `profile`, `set`, and `reset` subcommands for model management
-- **Model aliases**: `opus`, `sonnet`, `haiku` accepted everywhere instead of full model IDs
-- **`/dev-forge:status`** now shows active profile name, short model aliases, and `*` marker for overridden agents
-- **`configテーブル`**: New `config` table in SQLite stores active profile name
-
-### v1.1.0 — 2026-04-17
-- Auto-assign learning numbers
-- Add `learn status` subcommand
-- Add Key Concepts glossary to README
+- Project Manager agent (PMBOK 8th edition), role redistribution between Orchestrator and PM, updated communication hierarchy
 
 ### v1.0.0 — 2026-04-07
-- Initial release
-- SQLite-backed message bus replacing file-based queues
-- Multi-team orchestration with dynamic team/agent management
-- Sprint Contracts with acceptance criteria
-- Generator/Evaluator pattern
-- Model escalation (2 → 4 → 6 failure thresholds)
-- Bug Council with 3-analyst diagnosis
-- Knowledge Wiki with local and Obsidian storage backends
-- Agent Learnings with SQLite storage and Markdown export
-- Lifecycle hooks (SessionStart, Stop, PreToolUse, PostToolUse, PreCompact) with macOS/Linux and Windows support
-- Communication rules enforcement with violation logging
+- Initial release: SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation

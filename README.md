@@ -34,11 +34,11 @@ Acts as an extended CLAUDE.md: split knowledge into topic-focused pages and inje
 /plugin install dev-guide
 ```
 
-### [dev-forge](./plugins/dev-forge) `v1.5.1`
+### [dev-forge](./plugins/dev-forge) `v2.0.0`
 
-SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, and Anti-Anxiety Prompting.
+Starter kit for the Human As The Architect workflow — set up sister plugins, pick an agent team preset, and start building with AI in under a minute.
 
-Orchestrates an AI-powered team where agents communicate via a single SQLite database — no scattered inbox files. Includes a dedicated Project Manager agent (PMBOK 8th edition practices) sitting between the Orchestrator and Team Leads — owning requirement analysis, sprint contracts, progress tracking, quality/risk/cost management. Also includes Generator/Evaluator pattern, model profiles (economy / balanced / quality) with runtime switching, automatic model escalation, a 3-analyst Bug Council for critical failures, project wiki, and learnings capture. dev-forge incorporates Anti-Anxiety Prompting principles, inspired by Amanda Askell's research on Claude's psychology at Anthropic.
+Run `/dev-forge:init` to check dev-guide and dev-gate installation, initialize their project directories, and place a ready-to-use agent team (fullstack / backend-only / minimal) in `.claude/agents/`. Use `/dev-forge:team` to switch presets later.
 
 ```
 /plugin install dev-forge
@@ -158,6 +158,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-05-29
+- Update **dev-forge** to v2.0.0 — complete rewrite as Human As The Architect starter kit; removes tmux/SQLite/PM/Bug Council infrastructure; adds init + team commands with fullstack/backend-only/minimal presets
 - Add **dev-gate** v1.0.0 — machine-verifiable completion criteria with automatic pass/fail verification; commands: define, verify, list, template
 - Add **dev-guide** v1.0.0 — human-authored knowledge base with automatic session-start injection; commands: add, list, query, inject
 

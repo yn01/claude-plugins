@@ -1,4 +1,0 @@
-{
-  "description": "Required MCP servers for dev-forge. dev-forge uses sqlite3 CLI directly — no MCP server is required.",
-  "servers": []
-}

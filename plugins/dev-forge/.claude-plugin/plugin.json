@@ -1,7 +1,7 @@
 {
   "name": "dev-forge",
-  "version": "1.3.0",
-  "description": "SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, and Anti-Anxiety Prompting",
+  "version": "2.0.0",
+  "description": "Starter kit for AI-assisted development — set up sister plugins, generate agent team templates, and establish the Human As The Architect workflow",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"
 }

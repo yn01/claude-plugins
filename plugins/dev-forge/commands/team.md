@@ -1,80 +1,88 @@
 ---
-description: Manage dev-forge teams dynamically (add, remove, list)
-allowed-tools: Read, Write, Bash
-argument-hint: "<subcommand> [args]"
+description: Place agent team definition files for a selected preset into .claude/agents/
+allowed-tools: Read, Write, Bash, Glob
+argument-hint: "<preset>"
 ---
 # /dev-forge:team
 
-Manage dev-forge teams. Team changes are saved to `devforge.yaml` and the SQLite database. A restart (`/dev-forge:stop && /dev-forge:start`) is required to launch new agents.
+Place agent definition files for a team preset into `.claude/agents/`.
 
-## Subcommands
+**Usage:** `/dev-forge:team <preset>`
 
-### add
+- `preset`: `fullstack`, `backend-only`, or `minimal`
 
-```
-/dev-forge:team add <team-name>
-```
+Use this command to set up or switch your agent team configuration after the initial `/dev-forge:init`. Unlike `init`, this command focuses solely on the agent files.
 
-1. Read `devforge.yaml`
-2. Check team name doesn't already exist
-3. Append new team entry with default members (lead, implementer, evaluator, reviewer):
-   ```yaml
-   - name: <team-name>
-     lead:
-       can_contact: [orchestrator, doc-manager, release-manager, explorer, implementer-<name>, evaluator-<name>, reviewer-<name>]
-     members:
-       - id: implementer-<name>
-         role: implementer
-         can_contact: [team-<name>-lead, evaluator-<name>, reviewer-<name>]
-       - id: evaluator-<name>
-         role: evaluator
-         can_contact: [team-<name>-lead, implementer-<name>]
-       - id: reviewer-<name>
-         role: reviewer
-         can_contact: [team-<name>-lead, implementer-<name>]
-   ```
-4. Write back to `devforge.yaml`
-5. Resolve default model from active profile, then pre-register in SQLite:
-   ```bash
-   DB=".dev-forge/dev-forge.db"
-   ACTIVE_PROFILE=$(sqlite3 "$DB" "SELECT value FROM config WHERE key='model_profile'" 2>/dev/null || echo "balanced")
-   DEFAULT_ALIAS=$(awk "/^model_profiles:/{p=1} p && /^  $ACTIVE_PROFILE:/{q=1} q && /^    default:/{print \$2; exit}" devforge.yaml)
-   case "${DEFAULT_ALIAS:-sonnet}" in
-     opus)   DEFAULT_MODEL="claude-opus-4-6" ;;
-     sonnet) DEFAULT_MODEL="claude-sonnet-4-6" ;;
-     haiku)  DEFAULT_MODEL="claude-haiku-4-5-20251001" ;;
-     *)      DEFAULT_MODEL="${DEFAULT_ALIAS:-claude-sonnet-4-6}" ;;
-   esac
-   for agent in "team-$NAME-lead" "implementer-$NAME" "evaluator-$NAME" "reviewer-$NAME"; do
-     sqlite3 "$DB" "INSERT OR IGNORE INTO agent_status (agent_name, status, model, last_active) VALUES ('$agent', 'stopped', '$DEFAULT_MODEL', datetime('now'))"
-   done
-   ```
-6. Also add orchestrator -> team-lead can_contact rule:
-   ```bash
-   sqlite3 "$DB" "INSERT OR REPLACE INTO communication_rules (from_agent, to_agent, allowed) VALUES ('orchestrator', 'team-$NAME-lead', 1)"
-   ```
-7. Output: `Team '$NAME' added to devforge.yaml. Run /dev-forge:stop && /dev-forge:start to launch agents.`
+## Steps
 
-### remove
+### 1. Validate arguments
+
+If `<preset>` is not provided or is not one of `fullstack`, `backend-only`, `minimal`, print usage and stop:
 
 ```
-/dev-forge:team remove <team-name>
+Usage: /dev-forge:team <preset>
+
+Available presets:
+  fullstack     — 7 agents: researcher, story-writer, spec-writer, backend-builder,
+                  frontend-builder, test-verifier, validator
+  backend-only  — 5 agents: researcher, story-writer, spec-writer, backend-builder,
+                  validator
+  minimal       — 3 agents: researcher, builder, validator
+
+Example:
+  /dev-forge:team fullstack
 ```
 
-1. Check for active contracts assigned to this team's lead:
-   ```bash
-   active=$(sqlite3 "$DB" "SELECT COUNT(*) FROM contracts WHERE team_lead='team-$NAME-lead' AND status='active'")
-   ```
-   If >0, abort with warning.
-2. Kill tmux sessions for the team (if running)
-3. Remove team from `devforge.yaml`
-4. Update `agent_status` to `stopped` for all team agents
-5. Remove `communication_rules` rows
+### 2. Check for existing agent files
 
-### list
+Locate the plugin directory:
 
-```
-/dev-forge:team list
+```bash
+PLUGIN_DIR="$(claude plugin path dev-forge)"
 ```
 
-Parse `devforge.yaml` teams section and cross-reference with `agent_status` for live state. Display formatted team summary.
+Determine the agent files for the selected preset:
+
+| Preset | Agent files |
+|--------|-------------|
+| `fullstack` | researcher.md, story-writer.md, spec-writer.md, backend-builder.md, frontend-builder.md, test-verifier.md, validator.md |
+| `backend-only` | researcher.md, story-writer.md, spec-writer.md, backend-builder.md, validator.md |
+| `minimal` | researcher.md, builder.md, validator.md |
+
+Check which of these files already exist in `.claude/agents/`. If any exist, ask the user:
+
+```
+The following agent files already exist in .claude/agents/:
+  researcher.md
+  validator.md
+
+Overwrite them? [y/N]:
+```
+
+If the user answers `n` or presses Enter (default No), skip those files and copy only the missing ones. If the user answers `y`, overwrite all.
+
+### 3. Place agent files
+
+Ensure `.claude/agents/` exists:
+
+```bash
+mkdir -p .claude/agents
+```
+
+Copy (or overwrite) the appropriate agent files from `$PLUGIN_DIR/templates/teams/agents/` to `.claude/agents/`.
+
+### 4. Print confirmation
+
+```
+Team preset: fullstack
+
+  Created:  .claude/agents/story-writer.md
+  Created:  .claude/agents/spec-writer.md
+  Created:  .claude/agents/frontend-builder.md
+  Created:  .claude/agents/test-verifier.md
+  Skipped:  .claude/agents/researcher.md  (already exists)
+  Skipped:  .claude/agents/validator.md   (already exists)
+
+Review the agent definitions in .claude/agents/ and adjust tool permissions
+or model assignments as needed for your project.
+```
