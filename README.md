@@ -4,7 +4,7 @@ A collection of Claude Code plugins by Yohei Nakanishi. New plugins are added ov
 
 ## Plugins
 
-### [devteam](./devteam) `v1.1.0`
+### [devteam](./plugins/devteam) `v1.1.0`
 
 Multi-agent development team orchestration with file-based message queues.
 

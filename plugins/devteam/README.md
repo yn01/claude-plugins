@@ -16,7 +16,7 @@ A Claude Code plugin that assembles an AI-powered development team with multi-ag
 ## Installation
 
 ```
-/plugin marketplace add yn01/devteam
+/plugin marketplace add yn01/claude-plugins
 ```
 
 After adding the marketplace, install the plugin:
