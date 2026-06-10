@@ -157,6 +157,36 @@
         "learnings",
         "bug-council"
       ]
+    },
+    {
+      "name": "dev-gate",
+      "source": "./plugins/dev-gate",
+      "description": "Define machine-verifiable completion criteria for tasks and automatically run verification commands to determine pass/fail",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "completion-criteria",
+        "verification",
+        "pass-fail",
+        "done-definition",
+        "automation"
+      ]
+    },
+    {
+      "name": "dev-guide",
+      "source": "./plugins/dev-guide",
+      "description": "Store human-authored technical guidelines and design decisions, and automatically inject relevant knowledge into the agent's context",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "guidelines",
+        "knowledge-base",
+        "context-injection",
+        "design-decisions",
+        "documentation"
+      ]
     }
   ]
 }
