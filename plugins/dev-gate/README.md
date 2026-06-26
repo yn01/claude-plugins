@@ -226,6 +226,9 @@ The commit is not blocked — this is advisory only.
 
 ## Changelog
 
+### v1.0.1 — 2026-06-27
+- Fix hooks.json script path to point to plugin cache directory instead of source directory
+
 ### v1.0.0 — 2026-05-29
 - Initial release
 - Commands: `define`, `verify`, `list`, `template`

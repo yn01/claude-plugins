@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-gate/hooks/pre-commit.sh"
+            "command": "bash /Users/yoheinakanishi/.claude/plugins/cache/yn01-claude-plugins-marketplace/dev-gate/1.0.0/hooks/pre-commit.sh"
           }
         ],
         "description": "Warn about open gates before git commit"

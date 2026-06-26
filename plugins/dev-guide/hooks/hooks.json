@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash /Users/yoheinakanishi/Dev/claude-plugins/plugins/dev-guide/hooks/session-start.sh"
+            "command": "bash /Users/yoheinakanishi/.claude/plugins/cache/yn01-claude-plugins-marketplace/dev-guide/1.0.0/hooks/session-start.sh"
           }
         ],
         "description": "Inject dev-guide index into context at session start"

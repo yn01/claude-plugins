@@ -14,7 +14,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-gate](./plugins/dev-gate) `v1.0.0`
+### [dev-gate](./plugins/dev-gate) `v1.0.1`
 
 Define machine-verifiable completion criteria for tasks and automatically run verification commands to determine pass/fail.
 
@@ -24,7 +24,7 @@ Eliminates the ambiguity of "done" — every completion criterion must include a
 /plugin install dev-gate
 ```
 
-### [dev-guide](./plugins/dev-guide) `v1.0.0`
+### [dev-guide](./plugins/dev-guide) `v1.0.1`
 
 Human-authored knowledge base for Claude Code — store guidelines, design decisions, and concepts; inject relevant context automatically at session start.
 
@@ -156,6 +156,10 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-06-27
+- Fix **dev-gate** to v1.0.1 — hooks.json script path updated to plugin cache directory
+- Fix **dev-guide** to v1.0.1 — hooks.json script path updated to plugin cache directory
 
 ### 2026-05-29
 - Update **dev-forge** to v2.0.0 — complete rewrite as Human As The Architect starter kit; removes tmux/SQLite/PM/Bug Council infrastructure; adds init + team commands with fullstack/backend-only/minimal presets
