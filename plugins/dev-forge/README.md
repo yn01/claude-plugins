@@ -210,6 +210,9 @@ The templates are starting points, not requirements.
 
 ## Changelog
 
+### v2.0.1 — 2026-06-27
+- Add hooks.json with script paths pointing to plugin cache directory
+
 ### v2.0.0 — 2026-05-29
 - Complete rewrite. All v1 infrastructure (tmux, SQLite, PM agent, Communication Rules, Model Escalation, Wiki, Learnings, Bug Council) removed
 - New commands: `init`, `team`

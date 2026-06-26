@@ -34,7 +34,7 @@ Acts as an extended CLAUDE.md: split knowledge into topic-focused pages and inje
 /plugin install dev-guide
 ```
 
-### [dev-forge](./plugins/dev-forge) `v2.0.0`
+### [dev-forge](./plugins/dev-forge) `v2.0.1`
 
 Starter kit for the Human As The Architect workflow — set up sister plugins, pick an agent team preset, and start building with AI in under a minute.
 
@@ -160,6 +160,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ### 2026-06-27
 - Fix **dev-gate** to v1.0.1 — hooks.json script path updated to plugin cache directory
 - Fix **dev-guide** to v1.0.1 — hooks.json script path updated to plugin cache directory
+- Fix **dev-forge** to v2.0.1 — add hooks.json with script paths pointing to plugin cache directory
 
 ### 2026-05-29
 - Update **dev-forge** to v2.0.0 — complete rewrite as Human As The Architect starter kit; removes tmux/SQLite/PM/Bug Council infrastructure; adds init + team commands with fullstack/backend-only/minimal presets
