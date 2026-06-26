@@ -210,6 +210,9 @@ The templates are starting points, not requirements.
 
 ## Changelog
 
+### v2.0.2 — 2026-06-27
+- Bump plugin.json version to match README and hooks.json (missed in v2.0.1)
+
 ### v2.0.1 — 2026-06-27
 - Add hooks.json with script paths pointing to plugin cache directory
 
