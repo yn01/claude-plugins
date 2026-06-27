@@ -17,8 +17,19 @@ errors=0
 for plugin in $CHANGED_PLUGINS; do
   plugin_readme="plugins/$plugin/README.md"
 
-  # ── 1. Plugin README must be staged ──────────────────────────────────────
+  # ── 1. Plugin README must be staged (unless plugin.json is already synced to HEAD README version) ──
+  PLUGIN_JSON="plugins/$plugin/.claude-plugin/plugin.json"
+  HEAD_README_VER=$(git show "HEAD:${plugin_readme}" 2>/dev/null \
+    | grep -oE '### v[0-9]+\.[0-9]+\.[0-9]+' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  STAGED_PLUGIN_JSON_VER=$(git show ":${PLUGIN_JSON}" 2>/dev/null \
+    | grep -oE '"version"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+
   if ! echo "$STAGED" | grep -q "^${plugin_readme}$"; then
+    # Allow if plugin.json is being synced to a version already reflected in the committed README
+    if [ -n "$HEAD_README_VER" ] && [ "$STAGED_PLUGIN_JSON_VER" = "$HEAD_README_VER" ]; then
+      echo "✅  $plugin v$STAGED_PLUGIN_JSON_VER — plugin.json synced to pre-bumped README version."
+      continue
+    fi
     echo "❌  $plugin: $plugin_readme is not staged."
     echo "    Bump the version and stage $plugin_readme before committing."
     errors=$((errors + 1))
@@ -28,8 +39,7 @@ for plugin in $CHANGED_PLUGINS; do
   # ── 2. Plugin README version must have changed ───────────────────────────
   NEW_VER=$(git show ":${plugin_readme}" 2>/dev/null \
     | grep -oE '### v[0-9]+\.[0-9]+\.[0-9]+' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  OLD_VER=$(git show "HEAD:${plugin_readme}" 2>/dev/null \
-    | grep -oE '### v[0-9]+\.[0-9]+\.[0-9]+' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+  OLD_VER="$HEAD_README_VER"
 
   if [ -z "$NEW_VER" ]; then
     echo "❌  $plugin: could not detect version in staged $plugin_readme."

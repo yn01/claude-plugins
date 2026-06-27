@@ -1,6 +1,6 @@
 {
   "name": "dev-guide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Human-authored knowledge base for Claude Code — store guidelines, decisions, and concepts; inject relevant context automatically at session start",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"

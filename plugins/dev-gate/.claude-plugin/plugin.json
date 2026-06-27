@@ -1,6 +1,6 @@
 {
   "name": "dev-gate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Define machine-verifiable completion criteria for tasks and automatically run verification commands to determine pass/fail",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"
