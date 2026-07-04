@@ -7,62 +7,23 @@ argument-hint: ""
 
 Set up the Human As The Architect development workflow in the current project. This command:
 
-1. Checks whether the sister plugins dev-guide and dev-gate are installed and guides you to install them if not
-2. Creates their initial project directories if needed
-3. Walks you through selecting an agent team preset and places the agent definitions in `.claude/agents/`
+1. Creates `.dev-forge/guide/` and `.dev-forge/gate/` directory structures
+2. Walks you through selecting an agent team preset and places the agent definitions in `.claude/agents/`
+3. Prints a completion summary with next steps
 
 ## Steps
 
-### 1. Check for sister plugins
-
-Check whether dev-guide is installed:
+### 1. Create .dev-forge directory structure
 
 ```bash
-claude plugin list 2>/dev/null | grep -q "dev-guide"
+mkdir -p .dev-forge/guide/guidelines .dev-forge/guide/decisions .dev-forge/guide/concepts
+mkdir -p .dev-forge/gate/active .dev-forge/gate/archive
 ```
 
-Check whether dev-gate is installed:
-
-```bash
-claude plugin list 2>/dev/null | grep -q "dev-gate"
-```
-
-Print status for each plugin:
-
-**If dev-guide is NOT installed:**
-```
-dev-guide is not installed. To manage project guidelines and decisions:
-  /plugin install dev-guide
-```
-
-**If dev-guide IS installed:**
-```
-✓ dev-guide is installed
-```
-
-**If dev-gate is NOT installed:**
-```
-dev-gate is not installed. To define and verify completion criteria:
-  /plugin install dev-gate
-```
-
-**If dev-gate IS installed:**
-```
-✓ dev-gate is installed
-```
-
-### 2. Create initial directories for installed sister plugins
-
-If dev-guide is installed and `.dev-guide/` does not exist:
-
-```bash
-mkdir -p .dev-guide/guidelines .dev-guide/decisions .dev-guide/concepts
-```
-
-Create `.dev-guide/index.md` with the initial content:
+If `.dev-forge/guide/index.md` does not exist, create it:
 
 ```markdown
-# dev-guide Index
+# Guide Index
 
 ## Guidelines
 
@@ -71,18 +32,10 @@ Create `.dev-guide/index.md` with the initial content:
 ## Concepts
 ```
 
-Print: `Created .dev-guide/ — add your first guideline with /dev-guide:add guideline "<title>"`
-
-If dev-gate is installed and `.dev-gate/` does not exist:
-
-```bash
-mkdir -p .dev-gate/active .dev-gate/archive
-```
-
-Create `.dev-gate/index.md` with the initial content:
+If `.dev-forge/gate/index.md` does not exist, create it:
 
 ```markdown
-# dev-gate Index
+# Gate Index
 
 ## Open
 
@@ -91,28 +44,34 @@ Create `.dev-gate/index.md` with the initial content:
 ## Failed
 ```
 
-Print: `Created .dev-gate/ — define your first gate with /dev-gate:define "<task title>"`
+Print:
+```
+Created .dev-forge/guide/  — add your first guideline with /dev-forge:guide add guideline "<title>"
+Created .dev-forge/gate/   — define your first gate with /dev-forge:gate define "<task title>"
+```
 
-### 3. Select a team preset
+(Skip the print line for any directory that already existed.)
+
+### 2. Select a team preset
 
 Present the following menu to the user:
 
 ```
 Select a team preset to place agent definitions in .claude/agents/:
 
-  1. fullstack     — 7 agents: researcher, story-writer, spec-writer, backend-builder,
-                     frontend-builder, test-verifier, validator
-  2. backend-only  — 5 agents: researcher, story-writer, spec-writer, backend-builder,
-                     validator
-  3. minimal       — 3 agents: researcher, builder, validator
+  1. fullstack     — 7 agents (researcher, story-writer, spec-writer, backend-builder,
+                     frontend-builder, test-verifier, validator)
+  2. backend-only  — 5 agents (researcher, story-writer, spec-writer, backend-builder,
+                     validator)
+  3. minimal       — 3 agents (researcher, builder, validator)
   4. skip          — I'll set up agents manually
 
 Enter 1–4:
 ```
 
-Wait for the user to choose. If the user chooses 4 (skip), jump to step 5.
+Wait for the user to choose. If the user chooses 4 (skip), jump to step 4.
 
-### 4. Place agent definitions
+### 3. Place agent definitions
 
 Locate the plugin directory:
 
@@ -139,23 +98,23 @@ Agent files per preset:
 | `backend-only` | researcher.md, story-writer.md, spec-writer.md, backend-builder.md, validator.md |
 | `minimal` | researcher.md, builder.md, validator.md |
 
-### 5. Print completion summary
+### 4. Print completion summary
 
 ```
 ─────────────────────────────────────────────
 dev-forge init complete
 ─────────────────────────────────────────────
 
-Sister plugins:
-  ✓ dev-guide    (or: not installed — run /plugin install dev-guide)
-  ✓ dev-gate     (or: not installed — run /plugin install dev-gate)
+Directories:
+  ✓ .dev-forge/guide/   (guidelines, decisions, concepts)
+  ✓ .dev-forge/gate/    (active, archive)
 
-Agent team:
-  <list of created/skipped agent files, or "skipped">
+Agent team: <preset name, or "skipped">
+  <list of Created/Skipped agent files>
 
 Next steps:
-  • Add your first guideline:   /dev-guide:add guideline "<title>"
-  • Define your first gate:     /dev-gate:define "<task title>"
-  • Start a task with agents:   open .claude/agents/<agent>.md to review roles
+  • Add your first guideline:   /dev-forge:guide add guideline "<title>"
+  • Define your first gate:     /dev-forge:gate define "<task title>"
+  • Review agent definitions:   open .claude/agents/<agent>.md
 ─────────────────────────────────────────────
 ```

@@ -20,7 +20,7 @@ Each criterion must have a verification command that returns exit code 0 on succ
 
 ```bash
 # Verification command
-npm test -- --grep "auth"
+npm test -- --grep "feature name"
 ```
 
 Expected: exit code 0
@@ -38,14 +38,14 @@ Expected: exit code 0
 
 ```bash
 # Verification command
-curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/auth/login
+curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/health
 ```
 
 Expected: stdout contains "200"
 
 ## Verification Results
 
-(Auto-filled by /dev-gate:verify)
+(Auto-filled by /dev-forge:gate verify)
 
 | Criterion | Result | Output |
 |---|---|---|

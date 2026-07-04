@@ -17,6 +17,13 @@ errors=0
 for plugin in $CHANGED_PLUGINS; do
   plugin_readme="plugins/$plugin/README.md"
 
+  # ── 0. Skip if the entire plugin is being removed ────────────────────────
+  DELETED=$(git diff --cached --diff-filter=D --name-only)
+  if echo "$DELETED" | grep -q "^${plugin_readme}$"; then
+    echo "✅  $plugin — removed from repository (version check skipped)."
+    continue
+  fi
+
   # ── 1. Plugin README must be staged (unless plugin.json is already synced to HEAD README version) ──
   PLUGIN_JSON="plugins/$plugin/.claude-plugin/plugin.json"
   HEAD_README_VER=$(git show "HEAD:${plugin_readme}" 2>/dev/null \

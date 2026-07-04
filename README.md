@@ -14,31 +14,11 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-gate](./plugins/dev-gate) `v1.0.1`
+### [dev-forge](./plugins/dev-forge) `v3.0.0`
 
-Define machine-verifiable completion criteria for tasks and automatically run verification commands to determine pass/fail.
+Human As The Architect — integrated setup, knowledge base, and completion criteria for AI-assisted development.
 
-Eliminates the ambiguity of "done" — every completion criterion must include an executable verification command. Pass/fail is determined by exit code or stdout match, not by the agent's self-assessment. Archived gates accumulate into a reusable library of proven criteria.
-
-```
-/plugin install dev-gate
-```
-
-### [dev-guide](./plugins/dev-guide) `v1.0.1`
-
-Human-authored knowledge base for Claude Code — store guidelines, design decisions, and concepts; inject relevant context automatically at session start.
-
-Acts as an extended CLAUDE.md: split knowledge into topic-focused pages and inject only the catalogue at session start. The agent fetches individual pages on demand, keeping the context window lean.
-
-```
-/plugin install dev-guide
-```
-
-### [dev-forge](./plugins/dev-forge) `v2.0.2`
-
-Starter kit for the Human As The Architect workflow — set up sister plugins, pick an agent team preset, and start building with AI in under a minute.
-
-Run `/dev-forge:init` to check dev-guide and dev-gate installation, initialize their project directories, and place a ready-to-use agent team (fullstack / backend-only / minimal) in `.claude/agents/`. Use `/dev-forge:team` to switch presets later.
+Three capabilities in one plugin: **Setup** places agent team templates so the pipeline is ready in under a minute; **Guide** stores your guidelines, decisions, and domain concepts and injects the catalogue at every session start; **Gate** turns your completion criteria into machine-verifiable pass/fail checks with executable commands.
 
 ```
 /plugin install dev-forge
@@ -156,6 +136,11 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-07-04
+- Update **dev-forge** to v3.0.0 — integrated release; absorbs dev-guide and dev-gate into a single plugin; adds `/dev-forge:guide` and `/dev-forge:gate` commands; removes dependency on sister plugins; project files moved to `.dev-forge/guide/` and `.dev-forge/gate/`
+- Remove **dev-gate** — functionality integrated into dev-forge v3.0.0
+- Remove **dev-guide** — functionality integrated into dev-forge v3.0.0
 
 ### 2026-06-27
 - Fix **dev-gate** to v1.0.1 — hooks.json script path updated to plugin cache directory

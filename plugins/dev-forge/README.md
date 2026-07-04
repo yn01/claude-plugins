@@ -1,60 +1,52 @@
 # dev-forge
 
-A Claude Code plugin that serves as the entry point and starter kit for AI-assisted development. It sets up the Human As The Architect workflow: installs sister plugins, initializes their project directories, and places a ready-to-use agent team in `.claude/agents/`.
+**Human As The Architect** — an integrated Claude Code plugin that gives humans the systems they need to stay in the designer's seat while AI agents build.
 
-## The Problem
+dev-forge bundles three capabilities in one plugin:
 
-Starting an AI-assisted development workflow from scratch involves several decisions: which agents to use, how to split their responsibilities, what tools to allow, what constraints to enforce. Without structure, each project reinvents these answers — inconsistently.
+| Capability | What it does |
+|------------|-------------|
+| **Setup** | Places agent team templates in `.claude/agents/` so the development pipeline is ready in under a minute |
+| **Guide** | Stores your guidelines, design decisions, and domain concepts; injects the catalogue automatically at every session start |
+| **Gate** | Turns your completion criteria into machine-verifiable pass/fail checks with executable commands |
 
-dev-forge answers them with opinionated defaults. Run `/dev-forge:init`, pick a team preset, and you have a coherent multi-agent setup in under a minute.
+---
 
 ## Human As The Architect
 
-dev-forge is built on a single organizing principle: **the human is the Architect**.
+AI agents are good at execution. Humans are good at direction. dev-forge structures the relationship so each side does what it is good at.
 
-The Architect's responsibilities:
+| Human (Architect) | AI (Agents) |
+|-------------------|-------------|
+| Decide what to build and why | Execute each stage of the development pipeline |
+| Define guidelines and process (Guide) | Reference the human's policies at session start |
+| Set quality criteria (Gate) | Run the verification commands the human defined |
+| Intervene when AI cannot decide | Ask when a decision exceeds their mandate |
+| Reflect learnings back into guidelines | Operate within the boundaries the human set |
 
-| Responsibility | How |
-|----------------|-----|
-| **Direction** | Decide what to build and why. Provide the task brief. |
-| **System design** | Define guidelines, conventions, and quality standards (with dev-guide) |
-| **Quality criteria** | Define what "done" means for each task (with dev-gate) |
-| **Direct intervention** | Step in when agents reach a decision that requires human judgment |
-| **Feedback loop** | Reflect learnings back into guidelines and criteria after each cycle |
+---
 
-The AI's responsibilities:
+## Why not just use CLAUDE.md / Skills / /goal?
 
-- Execute the task as specified
-- Read and apply the Architect's guidelines (from dev-guide)
-- Verify output against the Architect's criteria (via dev-gate)
-- Surface ambiguities rather than guessing
+### Guide vs CLAUDE.md
 
-Agents in dev-forge are deliberately constrained — read-only agents cannot write code, builders are scoped to their layer, validators only report gaps. The human retains authority at every approval gate.
+`CLAUDE.md` is read in full at every session start. It works well for short, universal instructions (50–150 lines) but becomes unwieldy as a project grows.
 
-## Relationship to dev-guide and dev-gate
+Guide is a structured extension: knowledge is split into topic-focused pages, only the index (a short catalogue) is injected at session start, and individual pages are fetched on demand. This keeps the context window lean while preserving the full knowledge base.
 
-dev-forge is a sister plugin to [dev-guide](../dev-guide/) and [dev-gate](../dev-gate/). They share the same design philosophy but serve different roles:
+### Guide vs Skills
 
-| Plugin | Role |
-|--------|------|
-| **dev-forge** | Entry point — set up the workflow, place agent teams |
-| **dev-guide** | Knowledge delivery — store guidelines and decisions; inject them at session start |
-| **dev-gate** | Quality verification — define completion criteria; run verification commands |
+Skills define reusable workflows and procedures — how to run tests, how to deploy, how to format a PR. They are generic across projects.
 
-All three are fully independent — no plugin depends on another. dev-forge recommends installing the others and can initialize their directories, but they work without dev-forge.
+Guide stores project-specific knowledge: *this project's* API design rules, *this project's* decision to use JWT, *this project's* definition of "Tenant". It is human-authored and project-scoped, not a reusable skill.
 
-## What changed from v1
+### Gate vs /goal
 
-v1 of dev-forge was a heavy-weight plugin: tmux-managed agent sessions, SQLite message queues, a Project Manager agent, Communication Rules, Model Escalation, a Wiki, Agent Learnings, and a Bug Council. It did a lot.
+`/goal` sets a completion target for the current session. It lives in the conversation and disappears when the session ends.
 
-v2 removes all of that.
+Gate definitions are Markdown files: they persist across sessions, accumulate into a searchable library of reusable criteria, and can be committed to the repository so the whole team shares the same definition of done.
 
-- **Agent execution** is handled by Claude Code's native features: `claude agents`, forked subagents, `--bg`
-- **Knowledge management** is handled by dev-guide
-- **Quality verification** is handled by dev-gate
-- **dev-forge** is now just the entry point and the agent team templates
-
-The result is a plugin that does one thing well: get you started.
+---
 
 ## Installation
 
@@ -63,174 +55,177 @@ The result is a plugin that does one thing well: get you started.
 /plugin install dev-forge
 ```
 
-Recommended: also install the sister plugins.
-
-```
-/plugin install dev-guide
-/plugin install dev-gate
-```
+---
 
 ## Quick Start
 
-```bash
-# 1. Run init in your project
+```
+# 1. Initialize project structure and place agent team
 /dev-forge:init
 
-# 2. Follow the prompts:
-#    - dev-guide and dev-gate status is shown
-#    - Select a team preset (fullstack / backend-only / minimal / skip)
-#    - Agent files are placed in .claude/agents/
+# 2. Add your first guideline
+/dev-forge:guide add guideline "API Design Rules"
+# → opens .dev-forge/guide/guidelines/api-design-rules.md
+# → fill in the rules, rationale, and examples
 
-# 3. Review and adjust the agent definitions
-#    Open .claude/agents/*.md and tailor constraints to your project
+# 3. Define completion criteria for your next task
+/dev-forge:gate define "Implement User Authentication"
+# → opens .dev-forge/gate/active/GATE-<id>-implement-user-authentication.md
+# → fill in criteria with verification commands
 
-# 4. Start a task
-#    Invoke the researcher agent with your task brief
-#    Follow the pipeline: research → stories → spec → build → test → validate
+# 4. Develop with agents
+# Agents read .dev-forge/guide/index.md at session start
+# Agents reference gate criteria as their definition of done
+
+# 5. Verify completion
+/dev-forge:gate verify
+# → runs all verification commands, archives passed gates
 ```
 
-## Commands
+---
 
-### `/dev-forge:init`
+## Command Reference
 
-One-time project setup:
+### Setup
 
-1. Checks dev-guide and dev-gate installation status; prints install commands for any missing
-2. Creates `.dev-guide/` and `.dev-gate/` directories if the plugins are installed
-3. Presents the team preset menu and places selected agent definitions in `.claude/agents/`
+| Command | Description |
+|---------|-------------|
+| `/dev-forge:init` | Initialize `.dev-forge/` directories and place agent team templates |
+| `/dev-forge:team <preset>` | Place or replace agent team templates; presets: `fullstack`, `backend-only`, `minimal` |
 
-### `/dev-forge:team <preset>`
+### Guide
 
-Place (or replace) agent definition files for a preset. Use this when you want to change your team configuration after init, or when you want to add agent files to a project that already has some.
+| Command | Description |
+|---------|-------------|
+| `/dev-forge:guide add <category> "<title>"` | Create a new knowledge page (`guideline` / `decision` / `concept`) |
+| `/dev-forge:guide list [category]` | List registered knowledge pages |
+| `/dev-forge:guide query <question>` | Search the knowledge base with a natural language question |
+| `/dev-forge:guide inject <topic>` | Load topic-specific pages into the current context |
 
-```bash
-/dev-forge:team fullstack
-/dev-forge:team backend-only
-/dev-forge:team minimal
-```
+### Gate
 
-Existing agent files are skipped by default; you are asked to confirm before any overwrite.
+| Command | Description |
+|---------|-------------|
+| `/dev-forge:gate define "<task title>"` | Create a new gate definition file |
+| `/dev-forge:gate verify [gate-id]` | Run verification commands; archive on full pass |
+| `/dev-forge:gate list [status]` | List gates (`open` / `passed` / `failed` / `all`; default: `open`) |
+| `/dev-forge:gate template [keyword]` | Search archived gates for reusable criteria |
+
+---
 
 ## Team Presets
 
 ### fullstack — 7 agents
 
-| Agent | Read-only | Model | Responsibility |
-|-------|-----------|-------|----------------|
-| researcher | yes | haiku | Map relevant files, patterns, and risks before work begins |
-| story-writer | yes | sonnet | Write user stories and acceptance criteria |
-| spec-writer | yes | sonnet | Convert stories to technical specification |
-| backend-builder | no | sonnet | Implement backend: APIs, data models, business logic |
-| frontend-builder | no | sonnet | Implement frontend against backend API summary |
-| test-verifier | test files only | sonnet | Write and run acceptance tests |
-| validator | yes | sonnet | Audit implementation against spec; report gaps by severity |
+Full pipeline for projects with distinct frontend and backend layers.
 
-Pipeline: `researcher → story-writer → spec-writer → backend-builder → frontend-builder → test-verifier → validator`
-
-Approval gates (human reviews and approves before the next stage proceeds):
-- After story-writer: approve user stories
-- After spec-writer: approve technical specification
-- After validator: review gap report and decide to ship
+| Agent | Role | Tools | Model |
+|-------|------|-------|-------|
+| researcher | Codebase investigation; maps files, patterns, risks | Read, Grep, Glob | claude-haiku-4-5-20251001 |
+| story-writer | User stories + acceptance criteria | Read | claude-sonnet-4-6 |
+| spec-writer | Technical specification from stories | Read, Grep, Glob | claude-sonnet-4-6 |
+| backend-builder | API + business logic; backend folders only | Read, Write, Edit, Bash, Grep, Glob | claude-sonnet-4-6 |
+| frontend-builder | UI; consumes backend APIs as-is | Read, Write, Edit, Bash, Grep, Glob | claude-sonnet-4-6 |
+| test-verifier | Acceptance tests; no production code changes | Read, Write, Edit, Bash | claude-sonnet-4-6 |
+| validator | Audits impl vs stories/spec; reports gaps by severity | Read, Grep, Glob | claude-sonnet-4-6 |
 
 ### backend-only — 5 agents
 
-researcher, story-writer, spec-writer, backend-builder, validator.
-
-Use when the task has no frontend component: REST API, background job, CLI, data migration.
-
-Pipeline: `researcher → story-writer → spec-writer → backend-builder → validator`
+researcher · story-writer · spec-writer · backend-builder · validator
 
 ### minimal — 3 agents
 
-researcher, builder (full stack), validator.
+researcher · builder (backend + frontend) · validator
 
-Use for small, well-understood tasks where speed matters more than process rigor.
+Each agent reads `.dev-forge/guide/index.md` before starting work and consults gate criteria as the definition of done.
 
-Pipeline: `researcher → builder → validator`
+---
 
-## Directory Structure
+## Gate Definition Format
 
-### Plugin directory
+```markdown
+# Implement User Authentication
+
+## Gate ID
+
+GATE-20260601-120000
+
+## Status
+
+open
+
+## Task Description
+
+Add JWT-based login and logout to the API.
+
+## Completion Criteria
+
+### Criterion 1: Unit tests pass
+
+\`\`\`bash
+npm test -- --grep "auth"
+\`\`\`
+
+Expected: exit code 0
+
+### Criterion 2: Coverage meets threshold
+
+\`\`\`bash
+npx c8 report --check-coverage --lines 85
+\`\`\`
+
+Expected: exit code 0
+
+## Verification Results
+
+| Criterion | Result | Output |
+|---|---|---|
+| 1 | - | - |
+| 2 | - | - |
+```
+
+Every criterion must include a verification command. A criterion without a command cannot be defined — this structurally eliminates ambiguous "done" definitions.
+
+---
+
+## Project Directory Structure
+
+After running `/dev-forge:init`, your project will contain:
 
 ```
-dev-forge/
-├── .claude-plugin/
-│   └── plugin.json
-├── commands/
-│   ├── init.md             # /dev-forge:init
-│   └── team.md             # /dev-forge:team
-├── templates/
-│   └── teams/
-│       ├── default.md      # Overview of all presets and agents
-│       ├── agents/         # Agent definition files
-│       │   ├── researcher.md
-│       │   ├── story-writer.md
-│       │   ├── spec-writer.md
-│       │   ├── backend-builder.md
-│       │   ├── frontend-builder.md
-│       │   ├── test-verifier.md
-│       │   ├── builder.md
-│       │   └── validator.md
-│       └── presets/        # Preset descriptions
-│           ├── fullstack.md
-│           ├── backend-only.md
-│           └── minimal.md
-├── LICENSE
-└── README.md
-```
+.dev-forge/
+├── guide/
+│   ├── guidelines/      # Coding standards, technical policies
+│   ├── decisions/       # Design decisions (ADR format)
+│   ├── concepts/        # Project-specific terms and domain concepts
+│   └── index.md         # Catalogue — injected at session start
+└── gate/
+    ├── active/          # Gates currently in progress
+    ├── archive/         # Passed gates (searchable as templates)
+    └── index.md         # Gate catalogue
 
-### Project directories (created by `/dev-forge:init`)
-
-```
 .claude/
-└── agents/         # Agent definitions active in this project
-
-.dev-guide/         # Created if dev-guide is installed
-├── guidelines/
-├── decisions/
-├── concepts/
-└── index.md
-
-.dev-gate/          # Created if dev-gate is installed
-├── active/
-├── archive/
-└── index.md
+└── agents/              # Agent definition files (placed by init/team)
 ```
 
-## Customizing Agent Definitions
-
-After `/dev-forge:init` or `/dev-forge:team`, the agent files in `.claude/agents/` are yours to edit. Consider:
-
-- **Tool permissions** — tighten the `tools` list to match your stack
-- **Model** — upgrade to `claude-opus-4-7` for complex reasoning agents, downgrade to `claude-haiku-4-5-20251001` for fast read-only ones
-- **Scope constraints** — add specific folder restrictions (e.g. "only modify files in `src/api/`")
-- **Output format** — adjust report templates to match your team's conventions
-
-The templates are starting points, not requirements.
+---
 
 ## Changelog
 
-### v2.0.2 — 2026-06-27
-- Bump plugin.json version to match README and hooks.json (missed in v2.0.1)
+### v3.0.0
 
-### v2.0.1 — 2026-06-27
-- Add hooks.json with script paths pointing to plugin cache directory
+**Integrated release.** dev-forge, dev-guide, and dev-gate are now a single plugin.
 
-### v2.0.0 — 2026-05-29
-- Complete rewrite. All v1 infrastructure (tmux, SQLite, PM agent, Communication Rules, Model Escalation, Wiki, Learnings, Bug Council) removed
-- New commands: `init`, `team`
-- New agent templates: researcher, story-writer, spec-writer, backend-builder, frontend-builder, test-verifier, builder, validator
-- Three team presets: fullstack, backend-only, minimal
-- Integrates with sister plugins dev-guide and dev-gate
+- **Setup**: unchanged from v2 — `init` and `team` commands with fullstack/backend-only/minimal presets
+- **Guide** (formerly `dev-guide` v1.0.x): `add`, `list`, `query`, `inject` — knowledge base moved to `.dev-forge/guide/`
+- **Gate** (formerly `dev-gate` v1.0.x): `define`, `verify`, `list`, `template` — gate files moved to `.dev-forge/gate/`
+- Removed: dependency on sister plugins; all functionality self-contained
+- Removed: tmux session management, SQLite message queue, Project Manager agent, Bug Council, communication rules, violation logs, devforge.yaml, model escalation, learnings — these were carried from v1 and are now handled by Claude Code's native agent infrastructure
 
-### v1.5.1 — 2026-04-27
-- Fix project-manager missing from bulk agent operations; update sprint-workflow and escalation-rules docs
+### v2.0.2
 
-### v1.5.0 — 2026-04-26
-- Cross-team agent re-routing to Project Manager, Orchestrator scope tightened, explorer re-classified as shared resource
+Starter kit for the Human As The Architect workflow — checked dev-guide and dev-gate installation, initialized their project directories, placed agent team presets.
 
-### v1.4.0 — 2026-04-25
-- Project Manager agent (PMBOK 8th edition), role redistribution between Orchestrator and PM, updated communication hierarchy
+### v1.x
 
-### v1.0.0 — 2026-04-07
-- Initial release: SQLite-backed multi-agent development team with wiki, learnings, and bug council escalation
+SQLite-backed multi-agent development team with wiki, learnings, bug council escalation, tmux session management, and communication rules.

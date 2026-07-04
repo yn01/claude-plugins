@@ -11,7 +11,7 @@ Place agent definition files for a team preset into `.claude/agents/`.
 
 - `preset`: `fullstack`, `backend-only`, or `minimal`
 
-Use this command to set up or switch your agent team configuration after the initial `/dev-forge:init`. Unlike `init`, this command focuses solely on the agent files.
+Use this command to set up or switch your agent team configuration after the initial `/dev-forge:init`.
 
 ## Steps
 

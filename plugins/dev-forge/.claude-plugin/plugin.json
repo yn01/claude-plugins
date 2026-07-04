@@ -1,7 +1,7 @@
 {
   "name": "dev-forge",
-  "version": "2.0.2",
-  "description": "Starter kit for AI-assisted development — set up sister plugins, generate agent team templates, and establish the Human As The Architect workflow",
+  "version": "3.0.0",
+  "description": "Human As The Architect — integrated setup, knowledge base, and completion criteria for AI-assisted development",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"
 }
