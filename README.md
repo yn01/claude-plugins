@@ -14,7 +14,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v3.0.1`
+### [dev-forge](./plugins/dev-forge) `v3.0.2`
 
 Human As The Architect — integrated setup, knowledge base, and completion criteria for AI-assisted development.
 
@@ -136,6 +136,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-07-05
+- Fix **dev-forge** to v3.0.2 — use version-independent `${CLAUDE_PLUGIN_ROOT}` for hook paths; the SessionStart guide auto-injection and PreToolUse(Bash) gate warning were broken by a hardcoded `3.0.0/` cache path
 
 ### 2026-07-04
 - Fix **dev-forge** to v3.0.1 — add architecture diagram to README

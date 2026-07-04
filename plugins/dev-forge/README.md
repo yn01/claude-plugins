@@ -216,6 +216,10 @@ After running `/dev-forge:init`, your project will contain:
 
 ## Changelog
 
+### v3.0.2
+
+- Fix hardcoded hook paths — `SessionStart` and `PreToolUse(Bash)` hooks referenced a fixed `3.0.0/` cache directory, so the guide auto-injection and pre-commit gate warning silently stopped working after any version bump. Paths now use the version-independent `${CLAUDE_PLUGIN_ROOT}` variable.
+
 ### v3.0.1
 
 - Add architecture diagram to README
