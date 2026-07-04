@@ -14,7 +14,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v3.0.0`
+### [dev-forge](./plugins/dev-forge) `v3.0.1`
 
 Human As The Architect — integrated setup, knowledge base, and completion criteria for AI-assisted development.
 
@@ -138,6 +138,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-07-04
+- Fix **dev-forge** to v3.0.1 — add architecture diagram to README
 - Update **dev-forge** to v3.0.0 — integrated release; absorbs dev-guide and dev-gate into a single plugin; adds `/dev-forge:guide` and `/dev-forge:gate` commands; removes dependency on sister plugins; project files moved to `.dev-forge/guide/` and `.dev-forge/gate/`
 - Remove **dev-gate** — functionality integrated into dev-forge v3.0.0
 - Remove **dev-guide** — functionality integrated into dev-forge v3.0.0

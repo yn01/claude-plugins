@@ -2,6 +2,10 @@
 
 **Human As The Architect** — an integrated Claude Code plugin that gives humans the systems they need to stay in the designer's seat while AI agents build.
 
+<p align="center">
+  <img src="assets/architecture.svg" alt="dev-forge architecture" width="880">
+</p>
+
 dev-forge bundles three capabilities in one plugin:
 
 | Capability | What it does |
@@ -211,6 +215,10 @@ After running `/dev-forge:init`, your project will contain:
 ---
 
 ## Changelog
+
+### v3.0.1
+
+- Add architecture diagram to README
 
 ### v3.0.0
 

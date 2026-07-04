@@ -1,6 +1,6 @@
 {
   "name": "dev-forge",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Human As The Architect — integrated setup, knowledge base, and completion criteria for AI-assisted development",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"
