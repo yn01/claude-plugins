@@ -188,6 +188,21 @@
         "notebooklm",
         "vision"
       ]
+    },
+    {
+      "name": "ci-forge",
+      "source": "./plugins/ci-forge",
+      "description": "Self-contained GitHub Actions CI templates — marketplace validation and repo hygiene — installed into any repo with one command",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "ci",
+        "github-actions",
+        "workflows",
+        "shellcheck",
+        "ci-forge"
+      ]
     }
   ]
 }
