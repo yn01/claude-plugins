@@ -1,0 +1,7 @@
+{
+  "name": "git-flow",
+  "version": "1.0.0",
+  "description": "Git workflow guardrails — branch-first guard, review-gated PR creation, and GitHub noreply identity setup",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}
