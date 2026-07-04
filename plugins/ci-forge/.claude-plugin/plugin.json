@@ -1,0 +1,7 @@
+{
+  "name": "ci-forge",
+  "version": "1.0.0",
+  "description": "Self-contained GitHub Actions CI templates — marketplace validation and repo hygiene — installed into any repo with one command",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}

@@ -4,6 +4,16 @@ A collection of Claude Code plugins by Yohei Nakanishi. New plugins are added ov
 
 ## Plugins
 
+### [ci-forge](./plugins/ci-forge) `v1.0.0`
+
+Install self-contained GitHub Actions CI into any repository with one command.
+
+`/ci-forge:init` detects whether the repo is a Claude plugin marketplace, asks which CI profile to enable (marketplace validation, repo hygiene, or both), and writes complete workflow files — no reusable-workflow references, no secrets, zero runtime dependency on this repository.
+
+```
+/plugin install ci-forge
+```
+
 ### [devteam](./plugins/devteam) `v1.1.0`
 
 Multi-agent development team orchestration with file-based message queues.
@@ -148,6 +158,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-07-05
+- Add **ci-forge** v1.0.0 — `/ci-forge:init` installs self-contained GitHub Actions CI (marketplace-validate, repo-hygiene) into any repo
 - Add **git-flow** v1.0.0 — branch-first guard hook, review-gated /git-flow:pr, and /git-flow:setup-git-identity
 - Fix **dev-forge** to v3.0.2 — use version-independent `${CLAUDE_PLUGIN_ROOT}` for hook paths; the SessionStart guide auto-injection and PreToolUse(Bash) gate warning were broken by a hardcoded `3.0.0/` cache path
 
