@@ -1,0 +1,166 @@
+# marketplace-validate — CI for Claude Code plugin marketplace repositories.
+#
+# Jobs:
+#   plugin-validate     : `claude plugin validate .` (official validator, no API key needed)
+#   json-syntax         : jq syntax check on marketplace.json / plugin.json / hooks.json
+#   completeness        : every plugins/<dir>/ must have a marketplace.json entry
+#   version-consistency : on PRs, plugin changes must bump the version in BOTH the
+#                         plugin README (### vX.Y.Z) and the root README ([name] `vX.Y.Z`)
+#
+# Distributed by the ci-forge plugin (/ci-forge:init). Self-contained — no external
+# workflow references, no secrets required.
+name: marketplace-validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Validate marketplace
+        run: claude plugin validate .
+
+  json-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JSON syntax
+        run: |
+          fail=0
+          for f in .claude-plugin/marketplace.json \
+                   plugins/*/.claude-plugin/plugin.json \
+                   plugins/*/hooks/hooks.json; do
+            [ -e "$f" ] || continue
+            if jq empty "$f" 2>/dev/null; then
+              echo "OK   $f"
+            else
+              echo "::error file=$f::invalid JSON"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+  completeness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every plugins/<dir> has a marketplace entry
+        run: |
+          fail=0
+          sources=$(jq -r '.plugins[].source' .claude-plugin/marketplace.json)
+          names=$(jq -r '.plugins[].name' .claude-plugin/marketplace.json)
+          for d in plugins/*/; do
+            p=$(basename "$d")
+            if echo "$sources" | grep -qx "./plugins/$p"; then
+              echo "OK   $p (matched by source)"
+              continue
+            fi
+            if echo "$names" | grep -qx "$p"; then
+              echo "OK   $p (matched by name)"
+              continue
+            fi
+            echo "::error::plugins/$p has no entry in .claude-plugin/marketplace.json"
+            fail=1
+          done
+          exit "$fail"
+
+  version-consistency:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Version bump check vs base branch
+        run: |
+          BASE="origin/$GITHUB_BASE_REF"
+          git fetch -q origin "$GITHUB_BASE_REF"
+
+          CHANGED=$(git diff --name-only "$BASE"...HEAD)
+          CHANGED_PLUGINS=$(echo "$CHANGED" \
+            | grep '^plugins/' \
+            | grep -v '^plugins/[^/]*/README\.md$' \
+            | sed 's|^plugins/\([^/]*\)/.*|\1|' \
+            | sort -u || true)
+
+          errors=0
+          for plugin in $CHANGED_PLUGINS; do
+            plugin_readme="plugins/$plugin/README.md"
+
+            # 0. Skip if the entire plugin is being removed
+            DELETED=$(git diff --diff-filter=D --name-only "$BASE"...HEAD)
+            if echo "$DELETED" | grep -q "^${plugin_readme}$"; then
+              echo "OK   $plugin — removed from repository (version check skipped)."
+              continue
+            fi
+
+            # 1. Plugin README must be changed too (unless plugin.json is being
+            #    synced to a version already present in the base README)
+            PLUGIN_JSON="plugins/$plugin/.claude-plugin/plugin.json"
+            BASE_README_VER=$(git show "$BASE:${plugin_readme}" 2>/dev/null \
+              | grep -oE '### v[0-9]+\.[0-9]+\.[0-9]+' | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+            HEAD_PLUGIN_JSON_VER=$(grep -oE '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_JSON" 2>/dev/null \
+              | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+
+            if ! echo "$CHANGED" | grep -q "^${plugin_readme}$"; then
+              if [ -n "$BASE_README_VER" ] && [ "$HEAD_PLUGIN_JSON_VER" = "$BASE_README_VER" ]; then
+                echo "OK   $plugin v$HEAD_PLUGIN_JSON_VER — plugin.json synced to pre-bumped README version."
+                continue
+              fi
+              echo "::error::$plugin: $plugin_readme is not updated in this PR. Bump the version and update it."
+              errors=$((errors + 1))
+              continue
+            fi
+
+            # 2. Plugin README version must have changed vs base
+            NEW_VER=$(grep -oE '### v[0-9]+\.[0-9]+\.[0-9]+' "$plugin_readme" 2>/dev/null \
+              | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+            OLD_VER="$BASE_README_VER"
+
+            if [ -z "$NEW_VER" ]; then
+              echo "::error::$plugin: could not detect a '### vX.Y.Z' heading in $plugin_readme."
+              errors=$((errors + 1))
+              continue
+            fi
+            if [ "$NEW_VER" = "$OLD_VER" ]; then
+              echo "::error::$plugin: version is still v$OLD_VER in $plugin_readme — bump it."
+              errors=$((errors + 1))
+              continue
+            fi
+
+            # 3. Root README must be changed too
+            if ! echo "$CHANGED" | grep -q '^README\.md$'; then
+              echo "::error::$plugin: bumped to v$NEW_VER but root README.md is not updated."
+              errors=$((errors + 1))
+              continue
+            fi
+
+            # 4. Root README must show the new version
+            ROOT_VER=$(grep -oE "\[${plugin}\].*\`v[0-9]+\.[0-9]+\.[0-9]+\`" README.md \
+              | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            if [ "$ROOT_VER" != "$NEW_VER" ]; then
+              echo "::error::$plugin: root README.md shows v${ROOT_VER:-?}, expected v$NEW_VER."
+              errors=$((errors + 1))
+              continue
+            fi
+
+            echo "OK   $plugin v$NEW_VER — both READMEs updated."
+          done
+
+          if [ "$errors" -gt 0 ]; then
+            exit 1
+          fi
+          echo "version-consistency: all checks passed."

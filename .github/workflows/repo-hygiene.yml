@@ -1,0 +1,60 @@
+# repo-hygiene — generic repository hygiene CI.
+#
+# Jobs:
+#   shellcheck : lint all tracked shell scripts (*.sh plus extensionless scripts
+#                detected by a first-line bash/sh shebang), excluding archive/
+#   pr-title   : on PRs, the title must follow Conventional Commits
+#                (<type>: <subject> with type feat|fix|docs|chore|refactor|ci)
+#
+# Distributed by the ci-forge plugin (/ci-forge:init). Self-contained — no external
+# workflow references, no secrets required.
+name: repo-hygiene
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shellcheck shell scripts
+        run: |
+          targets=$(
+            {
+              git ls-files '*.sh' | grep -Ev '^archive/' || true
+              # extensionless scripts: detect by first-line shebang only
+              # (grepping whole files would false-positive on code samples in .md)
+              git ls-files | grep -v '\.sh$' | grep -Ev '^archive/' \
+                | xargs -r awk 'FNR==1 && /^#!.*(bash|sh)/ {print FILENAME}'
+            } | sort -u
+          )
+          if [ -z "$targets" ]; then
+            echo "No shell scripts found."
+            exit 0
+          fi
+          echo "Checking:"
+          echo "$targets"
+          echo "$targets" | xargs shellcheck
+
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Conventional Commits PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if echo "$TITLE" | grep -qE '^(feat|fix|docs|chore|refactor|ci): .+'; then
+            echo "OK: $TITLE"
+          else
+            echo "::error::PR title must match '<type>: <subject>' with type feat|fix|docs|chore|refactor|ci"
+            echo "Got: $TITLE"
+            exit 1
+          fi
