@@ -24,6 +24,16 @@ Three capabilities in one plugin: **Setup** places agent team templates so the p
 /plugin install dev-forge
 ```
 
+### [git-flow](./plugins/git-flow) `v1.0.0`
+
+Git workflow guardrails: warns on main-branch commits, creates PRs gated by /code-review, and sets up your GitHub noreply git identity.
+
+Keep commits off `main` with an advisory branch-first hook, gate every pull request behind a `/code-review` pass before it is opened, and configure a privacy-preserving `<id>+<login>@users.noreply.github.com` commit identity — all in one plugin.
+
+```
+/plugin install git-flow
+```
+
 ### [genpptx](./plugins/genpptx) `v1.4.4`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
@@ -138,6 +148,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-07-05
+- Add **git-flow** v1.0.0 — branch-first guard hook, review-gated /git-flow:pr, and /git-flow:setup-git-identity
 - Fix **dev-forge** to v3.0.2 — use version-independent `${CLAUDE_PLUGIN_ROOT}` for hook paths; the SessionStart guide auto-injection and PreToolUse(Bash) gate warning were broken by a hardcoded `3.0.0/` cache path
 
 ### 2026-07-04

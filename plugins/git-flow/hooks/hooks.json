@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/main-branch-guard.sh\""
+          }
+        ],
+        "description": "Warn (advisory) when committing directly on main/master — branch first"
+      }
+    ]
+  }
+}

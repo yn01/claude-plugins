@@ -157,6 +157,22 @@
         "gate",
         "guide"
       ]
+    },
+    {
+      "name": "git-flow",
+      "source": "./plugins/git-flow",
+      "description": "Git workflow guardrails — branch-first guard, review-gated PR creation, and GitHub noreply identity setup",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "git",
+        "branch",
+        "pull-request",
+        "code-review",
+        "identity",
+        "workflow"
+      ]
     }
   ]
 }
