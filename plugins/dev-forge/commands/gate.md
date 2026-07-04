@@ -70,11 +70,24 @@ If the target file already exists, print an error and stop — do not overwrite.
 
 #### 5. Copy the template
 
-Locate the plugin directory:
+Locate the plugin directory (the enabled dev-forge entry's `installPath`):
 
 ```bash
-PLUGIN_DIR="$(claude plugin path dev-forge)"
+PLUGIN_DIR=$(claude plugin list --json | python3 -c '
+import json, sys
+def ver_key(e):
+    try:
+        return [int(x) for x in e["version"].split(".")]
+    except ValueError:
+        return [0]
+entries = [e for e in json.load(sys.stdin) if e["id"].startswith("dev-forge@")]
+enabled = [e for e in entries if e.get("enabled")]
+pick = sorted(enabled or entries, key=ver_key)[-1] if entries else None
+print(pick["installPath"] if pick else "")
+')
 ```
+
+If `PLUGIN_DIR` is empty, print an error telling the user to reinstall with `/plugin install dev-forge`, then stop.
 
 Copy `$PLUGIN_DIR/templates/gate/gate.md` to the target path. Replace:
 - `[Task Title]` → the provided task title

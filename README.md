@@ -24,7 +24,7 @@ Assemble an AI-powered team where an Orchestrator delegates tasks to specialized
 /plugin install devteam
 ```
 
-### [dev-forge](./plugins/dev-forge) `v3.0.2`
+### [dev-forge](./plugins/dev-forge) `v3.0.3`
 
 Human As The Architect — integrated setup, knowledge base, and completion criteria for AI-assisted development.
 
@@ -158,6 +158,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-07-05
+- Fix **dev-forge** to v3.0.3 — plugin directory resolution in init/team/gate/guide commands used the nonexistent `claude plugin path`; now resolved via `claude plugin list --json` installPath
 - Add **ci-forge** v1.0.0 — `/ci-forge:init` installs self-contained GitHub Actions CI (marketplace-validate, repo-hygiene) into any repo
 - Add **git-flow** v1.0.0 — branch-first guard hook, review-gated /git-flow:pr, and /git-flow:setup-git-identity
 - Fix **dev-forge** to v3.0.2 — use version-independent `${CLAUDE_PLUGIN_ROOT}` for hook paths; the SessionStart guide auto-injection and PreToolUse(Bash) gate warning were broken by a hardcoded `3.0.0/` cache path

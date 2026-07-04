@@ -216,6 +216,10 @@ After running `/dev-forge:init`, your project will contain:
 
 ## Changelog
 
+### v3.0.3
+
+- Fix plugin directory resolution in all four commands (`init`, `team`, `gate`, `guide`) — they invoked `claude plugin path dev-forge`, a CLI command that does not exist, breaking template copying. Now resolved via `claude plugin list --json` (`installPath` of the enabled entry, falling back to the highest installed version).
+
 ### v3.0.2
 
 - Fix hardcoded hook paths — `SessionStart` and `PreToolUse(Bash)` hooks referenced a fixed `3.0.0/` cache directory, so the guide auto-injection and pre-commit gate warning silently stopped working after any version bump. Paths now use the version-independent `${CLAUDE_PLUGIN_ROOT}` variable.
