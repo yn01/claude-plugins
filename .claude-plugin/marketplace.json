@@ -173,6 +173,21 @@
         "identity",
         "workflow"
       ]
+    },
+    {
+      "name": "slide-revive",
+      "source": "./plugins/slide-revive",
+      "description": "Rebuild NotebookLM slide PDFs as editable PPTX using Vision AI and genpptx",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "powerpoint",
+        "slides",
+        "pdf",
+        "notebooklm",
+        "vision"
+      ]
     }
   ]
 }
