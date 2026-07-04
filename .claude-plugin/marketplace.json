@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "devteam",
-      "source": "./devteam",
+      "source": "./plugins/devteam",
       "description": "Multi-agent development team orchestration with file-based message queues",
       "author": {
         "name": "Yohei Nakanishi"
