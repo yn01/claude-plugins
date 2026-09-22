@@ -1,0 +1,7 @@
+{
+  "name": "jev-gate",
+  "version": "0.1.0",
+  "description": "Evidence gate for Claude Code — asks Jev (TypeSafe System One) whether a completion claim is backed by an actual verification run, and records every verdict for threshold tuning",
+  "author": {"name": "Yohei Nakanishi"},
+  "commands": "./commands"
+}

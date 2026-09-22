@@ -203,6 +203,22 @@
         "shellcheck",
         "ci-forge"
       ]
+    },
+    {
+      "name": "jev-gate",
+      "source": "./plugins/jev-gate",
+      "description": "Evidence gate for Claude Code — asks Jev (TypeSafe System One) whether a completion claim is backed by an actual verification run, and records every verdict for threshold tuning",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "jev",
+        "typesafe",
+        "hook",
+        "completion-gate",
+        "evidence",
+        "shadow-mode"
+      ]
     }
   ]
 }

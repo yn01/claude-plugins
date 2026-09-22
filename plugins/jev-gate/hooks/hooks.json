@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/gates/completion.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "description": "Evidence gate — check a completed task's claim against the verification runs in the session"
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/gates/completion.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "description": "Evidence gate — same check when a subagent stops"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/gates/completion.mjs\"",
+            "timeout": 10
+          }
+        ],
+        "description": "Evidence gate — same check when the main session stops"
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "mode": "shadow",
+  "model": "jev-1.13.0",
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "timeoutMs": 2000,
+  "journal": "~/.claude/jev-gate/journal.jsonl",
+  "gates": {
+    "completion": {
+      "enabled": true,
+      "thresholds": {
+        "claimsDone": 0.5,
+        "evidencePass": 0.7,
+        "evidenceBlock": 0.3
+      },
+      "maxBlocksPerSession": 2,
+      "stateBudget": {
+        "finalMessageChars": 4000,
+        "commandLogChars": 12000,
+        "maxCommands": 8,
+        "perCommandOutputChars": 1500
+      }
+    }
+  }
+}
