@@ -191,6 +191,10 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 
 ## Changelog
 
+### v0.2.3
+
+- Revise the status-line sketch and reframe gate 5 in the implementation plan, drawing on a published Jev harness: show connection state and model continuously, show probabilities rather than tallies, and treat "not measured yet" as distinct from zero.
+
 ### v0.2.2
 
 - Verify the request and response shapes, latency, cost, and question quality against the live API rather than a mock; record the numbers in the README and the implementation plan.

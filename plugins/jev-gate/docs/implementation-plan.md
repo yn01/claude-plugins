@@ -159,36 +159,59 @@ Code supplies the exit code, the command, and the stderr tail. The classificatio
 ## Gate 5 — Approach advice · not built, and possibly not here
 
 **Event:** `UserPromptSubmit`
-**Question:** which execution vessel suits this request — single session, subagent, team, or workflow?
+**Original question:** which execution vessel suits this request — single session, subagent, team, or workflow?
 
-This is not a gate. It injects advice and never stops anything, so it does not belong under the name `jev-gate`. If it is built, it should be a separate plugin (`jev-advisor`), sharing `lib/` by copy.
+**Reframed by the @fladdict reference.** Its "アクションの適合度" asks a better question than mine: not *which vessel*, but *what should happen next with this work* — carry on, step back, investigate the cause, refactor, re-plan, ask a human, finish. Seven candidates, each asked as its own Noul so they do not compete for one probability mass, and the result **displayed** rather than injected into the prompt.
 
-**Deferred until** gates 1–4 have produced enough journal data to say whether Jev's judgement is worth surfacing to the user unprompted at every single prompt.
+Displaying beats injecting for a judgement this soft. Injected advice spends context on every prompt and is easy to be wrong about loudly; a readout the user can ignore costs nothing when it misses.
 
----
+This is not a gate. It stops nothing, and it does not belong under the name `jev-gate`. If built, it should be a separate plugin (`jev-advisor`), sharing `lib/` by copy, and it should probably render into gate 6's status line rather than the prompt.
+
+**Deferred until** gates 1–4 have produced enough journal data to say whether Jev's judgement is worth surfacing unprompted at all.
 
 ## Gate 6 — Status line · not built, design sketched
 
-**Not a gate.** A one-line readout of what jev-gate is doing, in the bar under the Claude Code input box, so Shadow Mode is visible while it runs instead of only when `/jev-gate:status` is called.
+**Not a gate.** A readout of what jev-gate is doing, in the bar under the Claude Code input box, so Shadow Mode is visible while it runs rather than only when `/jev-gate:status` is called.
 
 Confirmed present in Claude Code 2.1.267: a `statusLine` setting, a `/statusline` command to configure it, and an `executeStatusLineCommand` path that runs it. A separate `subagentStatusLine` exists, reads JSON lines against a schema, and is a different mechanism — check which one fits before building.
 
-**The constraint that shapes the design: `statusLine` is singular.** There is one setting, and the user very likely wants their own branch, model and context readout in it. A plugin that claims the whole line takes it away from them. So jev-gate should ship a **composable fragment** — a command printing one short segment — and document how to splice it into an existing status line, never write `statusLine` itself.
+### Reference: @fladdict's Jev harness
+
+A published harness that watches Codex with Jev (2026-09-22) shows a dashboard of the same idea, and four of its choices are worth taking:
+
+- **Connection state and model are always on screen** — *"Jev接続確認済み · jev-latest"*. A fail-open judge that is quietly dead looks exactly like a judge that had nothing to say. This is the direct remedy, and it settles an open question below: the no-key case must be *visible*, not silent.
+- **Probabilities are shown, not just verdicts.** Its per-action bars total about 163%, so they are independent Nouls rather than one Choice — each candidate action is asked about separately. Shadow Mode exists to read a distribution, so showing the numbers beats showing a tally.
+- **"未取得" is a first-class state.** Its left-hand card shows `—` for every row rather than zeros. "Not measured yet" and "measured at zero" are different facts and must look different.
+- **It is continuous, not event-triggered.** The state is on screen between decisions, not only at one.
+
+### The compression problem
+
+The reference is a dashboard with seven bars per project. The target is **one line**. Most of that cannot survive, so decide deliberately what does:
 
 ```
-jev-gate ● shadow  3 pass · 1 unclear · 1 early  189ms
+jev-gate ● shadow · jev-1.13.0 · last: block ev 0.05 · 12↑ 3? 1▲ · 189ms
+jev-gate ○ inert — no TYPESAFE_API_KEY          ← the case that must not be silent
+jev-gate ● shadow · jev-1.13.0 · last: —        ← nothing judged yet this session
 ```
 
-**Cost of rendering.** A status line command runs on every render, far more often than a hook. Reading and parsing the whole journal each time is wasteful and gets slower the longer the journal grows. The gate should therefore maintain a small counter file per session — written on the same path that already writes the block budget — and the fragment should read only that. Rendering must never touch the network and never call Jev.
+The full distribution stays in `/jev-gate:status`, which already renders histograms. The line carries what changes: live-or-inert, the mode, the last verdict *with the probability behind it*, session counts, and latency.
 
-**Open questions for the design pass:**
+### The constraint that shapes it: `statusLine` is singular
 
-- Session-scoped counters, or a rolling window across projects? Session is more honest about *what just happened*; rolling shows whether thresholds are working.
-- What does it show when no key is set? "inert" is more useful than silence — an inactive gate that looks absent is how a fail-open plugin goes unnoticed for weeks.
-- Colour or symbols only? The bar is one line and shared; loud output is antisocial.
-- Does it hide entirely when the mode is `off`? Probably yes.
+There is one setting, and the user very likely wants their own branch, model and context readout in it. A plugin that claims the whole line takes it away from them. So jev-gate ships a **composable fragment** — a command printing one short segment — and documents how to splice it into an existing status line. It never writes `statusLine` itself.
 
-**Prerequisite:** the exact `statusLine` input payload and output contract, verified against the current documentation rather than inferred from strings in the binary. The same rule that applied to the Jev API applies here.
+### Cost of rendering
+
+A status line command runs on every render, far more often than a hook. Reading and parsing the whole journal each time is wasteful and degrades as the journal grows. The gate should maintain a small per-session summary file, written on the same path that already writes the block budget, and the fragment reads only that. Rendering must never touch the network and never call Jev.
+
+### Open questions for the design pass
+
+- Session-scoped counters, or a rolling window across projects? Session is more honest about what just happened; rolling shows whether the thresholds are working.
+- Colour, or symbols only? The bar is one line and shared; loud output is antisocial.
+- Hide entirely when the mode is `off`, or keep one dim character so the plugin is not invisible?
+- Does the fragment report a stale journal — the last verdict from hours ago — differently from a fresh one?
+
+**Prerequisite:** the exact `statusLine` input payload and output contract, verified against current documentation rather than inferred from strings in the binary. The rule that applied to the Jev API applies here.
 
 ## Deliberately out of scope
 
