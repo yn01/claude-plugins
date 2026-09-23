@@ -3,7 +3,6 @@
   "model": "jev-1.13.0",
   "endpoint": "https://api.typesafe.ai/v1/systemone",
   "timeoutMs": 2000,
-  "journal": "~/.claude/jev-gate/journal.jsonl",
   "gates": {
     "completion": {
       "enabled": true,

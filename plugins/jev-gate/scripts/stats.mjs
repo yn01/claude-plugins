@@ -9,20 +9,33 @@ import { readFileSync } from 'node:fs';
 import { loadConfig } from '../lib/config.mjs';
 
 const cfg = loadConfig();
-let lines;
-try {
-  lines = readFileSync(cfg.journalPath, 'utf8').split('\n').filter((l) => l.trim());
-} catch {
+
+const read = (p) => {
+  try {
+    return readFileSync(p, 'utf8').split('\n').filter((l) => l.trim());
+  } catch {
+    return [];
+  }
+};
+
+// Read the pre-0.3.0 location too. Nothing is moved on the user's behalf, and
+// a sample lost to a path change is a sample that never informs a threshold.
+const lines = [...read(cfg.legacyJournalPath), ...read(cfg.journalPath)];
+if (!lines.length) {
   console.log(`No journal yet at ${cfg.journalPath}.`);
   console.log('Run some sessions with jev-gate installed, then try again.');
   process.exit(0);
 }
 
 const entries = lines.map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+entries.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
 const gateArg = process.argv[2];
 const rows = gateArg ? entries.filter((e) => e.gate === gateArg) : entries;
 
 console.log(`journal: ${cfg.journalPath}`);
+if (cfg.legacyJournalPath && read(cfg.legacyJournalPath).length) {
+  console.log(`         + ${read(cfg.legacyJournalPath).length} entries from the pre-0.3.0 path ${cfg.legacyJournalPath}`);
+}
 console.log(`mode:    ${cfg.mode}`);
 console.log(`entries: ${rows.length}${gateArg ? ` (gate=${gateArg})` : ''}\n`);
 

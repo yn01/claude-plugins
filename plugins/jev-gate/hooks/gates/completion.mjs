@@ -25,7 +25,6 @@
 // every one of those exits 0.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { loadConfig, gateSettings } from '../../lib/config.mjs';
 import { ask, noul } from '../../lib/jev.mjs';
@@ -46,23 +45,22 @@ function readStdin() {
 // A gate that can block the same session forever is worse than no gate. Once
 // the budget is spent the gate goes quiet and the human decides.
 
-function budgetPath(sessionId) {
-  return join(homedir(), '.claude', 'jev-gate', 'sessions', `${sessionId || 'unknown'}.json`);
+function budgetPath(dir, sessionId) {
+  return join(dir, `${sessionId || 'unknown'}.json`);
 }
 
-function blocksSoFar(sessionId) {
+function blocksSoFar(dir, sessionId) {
   try {
-    return JSON.parse(readFileSync(budgetPath(sessionId), 'utf8'))?.blocks ?? 0;
+    return JSON.parse(readFileSync(budgetPath(dir, sessionId), 'utf8'))?.blocks ?? 0;
   } catch {
     return 0;
   }
 }
 
-function noteBlock(sessionId) {
-  const p = budgetPath(sessionId);
+function noteBlock(dir, sessionId) {
   try {
-    mkdirSync(join(homedir(), '.claude', 'jev-gate', 'sessions'), { recursive: true });
-    writeFileSync(p, JSON.stringify({ blocks: blocksSoFar(sessionId) + 1 }), 'utf8');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(budgetPath(dir, sessionId), JSON.stringify({ blocks: blocksSoFar(dir, sessionId) + 1 }), 'utf8');
   } catch {
     // ignored
   }
@@ -99,7 +97,7 @@ async function main() {
   if (input.stop_hook_active === true) pass();
 
   const budget = gate.maxBlocksPerSession ?? 2;
-  const spent = blocksSoFar(input.session_id);
+  const spent = blocksSoFar(cfg.sessionsPath, input.session_id);
 
   const sb = gate.stateBudget ?? {};
   const facts = readTranscript(input.transcript_path, {
@@ -116,6 +114,7 @@ async function main() {
     event: input.hook_event_name,
     session: input.session_id,
     cwd,
+    pluginData: Boolean(process.env.CLAUDE_PLUGIN_DATA),
   };
 
   // --- 1. facts the code can settle on its own ------------------------------
@@ -126,7 +125,7 @@ async function main() {
       `Fix the failure and run it again before reporting this task as complete.`;
     record(cfg.journalPath, { ...base, verdict: 'block', decidedBy: 'code', reason: 'recorded_failure', command: facts.lastFailed.command });
     if (gate.mode === 'enforce' && spent < budget) {
-      noteBlock(input.session_id);
+      noteBlock(cfg.sessionsPath, input.session_id);
       block(msg);
     }
     pass();
@@ -271,7 +270,7 @@ async function main() {
     // CLAUDE.md rule, not a hard stop, and a wrong block here interrupts a
     // legitimate check-in — so pushing an agent onward is opt-in.
     if (earlyStop.action !== 'block' || spent >= budget) notify(msg);
-    noteBlock(input.session_id);
+    noteBlock(cfg.sessionsPath, input.session_id);
     block(msg);
   }
 
@@ -289,7 +288,7 @@ async function main() {
     );
   }
 
-  noteBlock(input.session_id);
+  noteBlock(cfg.sessionsPath, input.session_id);
   block(
     `jev-gate: this task is being reported as complete, but no test, build, lint, or type-check ` +
       `run appears in this session (evidence_present=${evidencePresent.toFixed(2)}).\n` +

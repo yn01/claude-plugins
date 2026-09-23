@@ -25,7 +25,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs"
 
 ### 2. With no argument, stop here
 
-Report the mode and the config layer it came from. The layers, later winning: the plugin default, `~/.claude/jev-gate/config.json`, `<project>/.jev-gate/config.json`, then the `JEV_GATE_MODE` environment variable.
+Report the mode and the config layer it came from. The layers, later winning: the plugin default, `<plugin data dir>/config.json` (the directory `CLAUDE_PLUGIN_DATA` points at), `<project>/.jev-gate/config.json`, then the `JEV_GATE_MODE` environment variable.
 
 ### 3. With an argument, write it to the project layer
 

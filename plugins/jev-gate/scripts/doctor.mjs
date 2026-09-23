@@ -3,6 +3,8 @@
 // Sends ONE tiny real request so "installed" and "actually working" stay
 // separate facts. The API key is never printed.
 
+import { existsSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { loadConfig, gateSettings } from '../lib/config.mjs';
 import { ask, noul } from '../lib/jev.mjs';
 
@@ -13,8 +15,17 @@ console.log(`mode              ${cfg.mode}`);
 console.log(`model             ${cfg.model}`);
 console.log(`endpoint          ${cfg.endpoint}`);
 console.log(`timeout           ${cfg.timeoutMs} ms`);
+console.log(`data dir          ${cfg.dataDir}`);
+console.log(`  from            ${process.env.CLAUDE_PLUGIN_DATA ? 'CLAUDE_PLUGIN_DATA' : 'discovered under ~/.claude/plugins/data'}`);
 console.log(`journal           ${cfg.journalPath}`);
 console.log(`completion gate   ${gate.active ? 'active' : 'inactive'}`);
+if (cfg.legacyJournalPath && existsSync(cfg.legacyJournalPath)) {
+  const legacyRoot = dirname(cfg.legacyJournalPath);
+  console.log('');
+  console.log(`A journal from before v0.3.0 is still at ${cfg.legacyJournalPath}.`);
+  console.log('/jev-gate:status reads it as well, so nothing is lost. To finish the move:');
+  console.log(`  cat "${cfg.legacyJournalPath}" >> "${cfg.journalPath}" && rm -rf "${legacyRoot}"`);
+}
 console.log(`TYPESAFE_API_KEY  ${cfg.apiKey ? 'set' : 'NOT SET — the gate will fail open on every event'}`);
 console.log('');
 
