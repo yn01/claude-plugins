@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="936" viewBox="0 0 880 936" role="img" aria-label="jev-gate overview: the division of labour, the implemented stop gate, and the five planned gates">
+<style>
+  .t   { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .h1  { font-size: 21px; font-weight: 700; fill: #24292f; }
+  .h2  { font-size: 12px; fill: #57606a; }
+  .h3  { font-size: 11px; fill: #8b949e; }
+  .sec { font-size: 10.5px; font-weight: 700; fill: #57606a; letter-spacing: .09em; }
+  .th  { font-size: 12px; font-weight: 600; }
+  .ts  { font-size: 10.5px; }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10px; }
+  .c-gray   rect { fill: #f6f8fa; stroke: #8b949e; }  .c-gray   .th { fill: #24292f; } .c-gray   .ts { fill: #57606a; }
+  .c-purple rect { fill: #f3f0ff; stroke: #8250df; }  .c-purple .th { fill: #512a97; } .c-purple .ts { fill: #6639ba; }
+  .c-blue   rect { fill: #ddf4ff; stroke: #0969da; }  .c-blue   .th { fill: #0550ae; } .c-blue   .ts { fill: #0969da; }
+  .c-green  rect { fill: #dafbe1; stroke: #1a7f37; }  .c-green  .th { fill: #0d4c1f; } .c-green  .ts { fill: #1a7f37; }
+  .c-amber  rect { fill: #fff8e1; stroke: #9a6700; }  .c-amber  .th { fill: #5c3d00; } .c-amber  .ts { fill: #9a6700; }
+  .c-red    rect { fill: #ffebe9; stroke: #cf222e; }  .c-red    .th { fill: #82071e; } .c-red    .ts { fill: #cf222e; }
+  .c-teal   rect { fill: #dcfff5; stroke: #0e7a6e; }  .c-teal   .th { fill: #095c54; } .c-teal   .ts { fill: #0e7a6e; }
+  line.l { stroke: #8b949e; stroke-width: 1; }
+  path.a { stroke: #8b949e; stroke-width: 1; fill: none; }
+  rect.card { rx: 6; }
+</style>
+<!-- opaque ground: GitHub renders READMEs on a dark page too, and text outside a
+     card would otherwise sit on that dark background and vanish -->
+<rect x="0" y="0" width="880" height="936" fill="#ffffff"/>
+<g class="t">
+
+  <text x="32" y="40" class="h1">jev-gate</text>
+  <text x="32" y="61" class="h2">An evidence gate for Claude Code stop events, judged by Jev — TypeSafe's System One model.</text>
+  <text x="32" y="79" class="h3">Ships in Shadow Mode: every verdict recorded to a JSONL journal, nothing ever blocked. Thresholds come from that record.</text>
+  <line x1="32" y1="94" x2="848" y2="94" class="l"/>
+
+  <!-- ============ the division ============ -->
+  <text x="32" y="118" class="sec">THE DIVISION — NEVER BLURRED</text>
+  <g class="c-gray">
+    <rect class="card" x="32" y="128" width="262" height="62"/>
+    <text x="46" y="149" class="th">Code decides facts</text>
+    <text x="46" y="166" class="ts">Which commands ran, did any fail,</text>
+    <text x="46" y="180" class="ts">what changed, was there work this turn.</text>
+  </g>
+  <g class="c-purple">
+    <rect class="card" x="309" y="128" width="262" height="62"/>
+    <text x="323" y="149" class="th">Jev decides meaning</text>
+    <text x="323" y="166" class="ts">Is completion claimed? Is there a real</text>
+    <text x="323" y="180" class="ts">run? Does this pause need the user?</text>
+  </g>
+  <g class="c-gray">
+    <rect class="card" x="586" y="128" width="262" height="62"/>
+    <text x="600" y="149" class="th">Code decides consequences</text>
+    <text x="600" y="166" class="ts">Thresholds, block budget, exit code —</text>
+    <text x="600" y="180" class="ts">never the model's to choose.</text>
+  </g>
+
+  <!-- ============ gate 1 ============ -->
+  <text x="32" y="226" class="sec">GATE 1 — STOP GATE</text>
+  <g class="c-green"><rect class="card" x="186" y="215" width="86" height="15"/><text x="194" y="226" class="ts">IMPLEMENTED</text></g>
+  <text x="284" y="226" class="h3">Shadow only · TaskCompleted · SubagentStop · Stop</text>
+
+  <g class="c-gray">
+    <rect class="card" x="32" y="240" width="192" height="98"/>
+    <text x="44" y="260" class="th">1 · Collect the facts</text>
+    <text x="44" y="279" class="ts">Verification runs in the</text>
+    <text x="44" y="293" class="ts">transcript, their exit codes,</text>
+    <text x="44" y="307" class="ts">the diff, and whether work</text>
+    <text x="44" y="321" class="ts">happened since the user spoke.</text>
+  </g>
+  <g class="c-purple">
+    <rect class="card" x="240" y="240" width="192" height="98"/>
+    <text x="252" y="260" class="th">2 · Ask Jev</text>
+    <text x="252" y="279" class="ts">Three nouls, one request:</text>
+    <text x="252" y="294" class="mono">claims_done</text>
+    <text x="252" y="308" class="mono">evidence_present</text>
+    <text x="252" y="322" class="mono">blocked_on_user</text>
+  </g>
+  <g class="c-blue">
+    <rect class="card" x="448" y="240" width="192" height="98"/>
+    <text x="460" y="260" class="th">3 · Apply thresholds</text>
+    <text x="460" y="279" class="ts">Claiming done? Walk the</text>
+    <text x="460" y="293" class="ts">evidence ladder. Not claiming?</text>
+    <text x="460" y="307" class="ts">Check whether the pause was</text>
+    <text x="460" y="321" class="ts">really waiting on anyone.</text>
+  </g>
+  <g class="c-gray">
+    <rect class="card" x="656" y="240" width="192" height="98"/>
+    <text x="668" y="260" class="th">4 · Reply by mode</text>
+    <text x="668" y="279" class="ts">Shadow records and exits 0.</text>
+    <text x="668" y="293" class="ts">Enforce may send the work</text>
+    <text x="668" y="307" class="ts">back — at most twice per</text>
+    <text x="668" y="321" class="ts">session, then it stands down.</text>
+  </g>
+  <path class="a" d="M224 289 h16"/><path class="a" d="M432 289 h16"/><path class="a" d="M640 289 h16"/>
+
+  <g class="c-red">
+    <rect class="card" x="32" y="350" width="400" height="34"/>
+    <text x="44" y="364" class="th">Short circuit — the latest verification run failed</text>
+    <text x="44" y="377" class="ts">Settled in code. No request is sent: exit codes are not Jev's to read.</text>
+  </g>
+  <g class="c-amber">
+    <rect class="card" x="448" y="350" width="400" height="34"/>
+    <text x="460" y="364" class="th">Fail open — no key, no network, timeout, bad body</text>
+    <text x="460" y="377" class="ts">Every one of them exits 0. A judge that is down must never stop work.</text>
+  </g>
+
+  <text x="32" y="410" class="sec">FOUR VERDICTS</text>
+  <g class="c-green">
+    <rect class="card" x="32" y="420" width="192" height="52"/>
+    <text x="44" y="439" class="th">pass</text>
+    <text x="44" y="457" class="ts">Evidence is there, or nothing</text>
+    <text x="44" y="468" class="ts">was claimed and nothing stalled.</text>
+  </g>
+  <g class="c-amber">
+    <rect class="card" x="240" y="420" width="192" height="52"/>
+    <text x="252" y="439" class="th">unclear</text>
+    <text x="252" y="457" class="ts">Completion claimed, evidence</text>
+    <text x="252" y="468" class="ts">ambiguous. Flagged, not blocked.</text>
+  </g>
+  <g class="c-red">
+    <rect class="card" x="448" y="420" width="192" height="52"/>
+    <text x="460" y="439" class="th">block</text>
+    <text x="460" y="457" class="ts">Completion claimed with no run</text>
+    <text x="460" y="468" class="ts">behind it. Exit 2 under Enforce.</text>
+  </g>
+  <g class="c-amber">
+    <rect class="card" x="656" y="420" width="192" height="52"/>
+    <text x="668" y="439" class="th">stopped_early</text>
+    <text x="668" y="457" class="ts">Paused to report, nothing was</text>
+    <text x="668" y="468" class="ts">waiting. Advisory by default.</text>
+  </g>
+
+  <g class="c-teal">
+    <rect class="card" x="32" y="486" width="816" height="62"/>
+    <text x="44" y="504" class="th">Measured against the live API, not assumed — 2026-09-23</text>
+    <text x="44" y="522" class="ts">p50 189 ms against a 2000 ms timeout  ·  ~$0.000024 per call  ·  Japanese state moves an answer by ≤ 0.11, never across a threshold</text>
+    <text x="44" y="537" class="ts">claims_done and evidence_present separate cleanly  ·  blocked_on_user scores 6 of 8, and both misses are false negatives — it under-reports</text>
+  </g>
+
+  <!-- ============ roadmap ============ -->
+  <line x1="32" y1="576" x2="848" y2="576" class="l"/>
+  <text x="32" y="600" class="sec">WHAT COMES NEXT — SPECIFIED IN docs/implementation-plan.md, DELIBERATELY NOT BUILT</text>
+  <text x="32" y="617" class="h3">Each one waits for the gate before it to earn its thresholds. Adding a second gate first would make both sets of verdicts unreadable.</text>
+
+  <g class="c-gray">
+    <rect class="card" x="32" y="630" width="816" height="44"/>
+    <text x="46" y="649" class="th">2 · Idle teammate</text>
+    <text x="46" y="666" class="ts">A teammate goes idle while the shared task list still has work assigned to them. Needs agent teams before there is anything to trial against.</text>
+    <text x="700" y="649" class="mono" fill="#57606a">TeammateIdle</text>
+  </g>
+  <g class="c-gray">
+    <rect class="card" x="32" y="682" width="816" height="44"/>
+    <text x="46" y="701" class="th">3 · Task quality</text>
+    <text x="46" y="718" class="ts">Too broad or too vague to start. A Choice, not a Noul — the point is its confidence value. Likely advisory forever.</text>
+    <text x="712" y="701" class="mono" fill="#57606a">TaskCreated</text>
+  </g>
+  <g class="c-gray">
+    <rect class="card" x="32" y="734" width="816" height="44"/>
+    <text x="46" y="753" class="th">4 · Failure classification</text>
+    <text x="46" y="770" class="ts">Transient, missing dependency, wrong invocation, genuine defect. Never blocks — returns context so the agent stops thrashing. Fires often.</text>
+    <text x="668" y="753" class="mono" fill="#57606a">PostToolUseFailure</text>
+  </g>
+  <g class="c-gray">
+    <rect class="card" x="32" y="786" width="816" height="44"/>
+    <text x="46" y="805" class="th">5 · Action fitness</text>
+    <text x="46" y="822" class="ts">What happens next with this work — carry on, step back, investigate, refactor, re-plan, ask a human, finish. Displayed, not injected.</text>
+    <text x="722" y="805" class="mono" fill="#57606a">jev-advisor</text>
+  </g>
+  <g class="c-gray">
+    <rect class="card" x="32" y="838" width="816" height="44"/>
+    <text x="46" y="857" class="th">6 · Making the gate visible</text>
+    <text x="46" y="874" class="ts">Shadow runs for days before anyone reads it. Live-or-inert comes first: a dead fail-open judge looks like one with nothing to say.</text>
+    <text x="700" y="857" class="mono" fill="#57606a">surface TBD</text>
+  </g>
+
+  <text x="32" y="906" class="h3">Out of scope on purpose — danger classification (auto-mode classifier) · messaging and task lists (agent teams) · skill pruning (/skill-doctor)</text>
+  <text x="32" y="922" class="h3">workflow branching (agent() with a schema, so scripts stay deterministic) · teaching an agent to write Jev code (the official TypeSafe skill)</text>
+</g>
+</svg>

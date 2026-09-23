@@ -8,6 +8,10 @@ A stop-event gate for Claude Code. When an agent stops, jev-gate asks what kind 
 
 It ships in **Shadow Mode**: every verdict is recorded, nothing is ever blocked. Thresholds are meant to be chosen from that record, not guessed up front.
 
+<p align="center">
+  <img src="assets/jev-gate-overview.svg" alt="jev-gate overview: the division of labour between code and Jev, the implemented stop gate and its four verdicts, and the five gates specified but not built" width="880">
+</p>
+
 ## The two stops worth catching
 
 Anthropic's Opus 5.5 playbook names both failure modes, and they are not the same shape:
@@ -190,6 +194,10 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.2.5
+
+- Add an overview diagram to the README: the division of labour, the implemented stop gate and its four verdicts, the measured numbers, and the five gates that are specified but not built.
 
 ### v0.2.4
 
