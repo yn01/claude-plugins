@@ -96,14 +96,13 @@ When the hook event carries the task's own text, it goes into the state as `task
 
 ## Configuration
 
-Layers, later winning: the plugin default → `~/.claude/jev-gate/config.json` → `<project>/.jev-gate/config.json` → environment.
+Layers, later winning: the plugin default → `<plugin data dir>/config.json` → `<project>/.jev-gate/config.json` → environment.
 
 ```json
 {
   "mode": "shadow",
   "model": "jev-1.13.0",
   "timeoutMs": 2000,
-  "journal": "~/.claude/jev-gate/journal.jsonl",
   "gates": {
     "completion": {
       "enabled": true,
@@ -128,11 +127,13 @@ Layers, later winning: the plugin default → `~/.claude/jev-gate/config.json` �
 
 **`earlyStop.action`** is `"notify"` by default. Set it to `"block"` to have Enforce actually push the agent onward with exit 2 — worth doing only once the journal shows the detection is accurate on your work.
 
+Set `journal` only to put the log somewhere specific; left unset it follows the plugin's data directory, so an install that moves does not strand its own history.
+
 Environment overrides: `JEV_GATE_MODE`, `JEV_GATE_DISABLE=1` (everything off for one session), `JEV_GATE_JOURNAL`.
 
 ## What lands on disk, and what to commit
 
-jev-gate writes outside your repository by default: the journal to `~/.claude/jev-gate/journal.jsonl` and a per-session block counter to `~/.claude/jev-gate/sessions/`. Nothing is created in a project unless you put it there.
+jev-gate writes to the directory Claude Code gives every plugin for its own state — `~/.claude/plugins/data/jev-gate-<marketplace>/`, which `CLAUDE_PLUGIN_DATA` points at. The journal lands there as `journal.jsonl`, with a per-session block counter under `sessions/`. Nothing is created in a project unless you put it there.
 
 The one thing you *do* create in a project is its config, and it is meant to be committed — thresholds, mode and `verificationCommands` are project policy, and a teammate who clones the repo should get the same gate you have:
 
@@ -194,6 +195,13 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.3.0
+
+- **Storage moved.** The journal and the block counters now live in the per-plugin data directory Claude Code provides (`CLAUDE_PLUGIN_DATA`, i.e. `~/.claude/plugins/data/jev-gate-<marketplace>/`), as Claude Code's own first-party plugins do. Earlier versions wrote to `~/.claude/jev-gate/`, which squatted in Claude Code's namespace.
+- Nothing is moved on your behalf. `/jev-gate:status` reads the old location too, so no sample is lost, and `/jev-gate:doctor` prints the one command that finishes the move.
+- The journal path is no longer pinned in the shipped config: unset, it follows the plugin's data directory.
+- Each verdict records whether `CLAUDE_PLUGIN_DATA` was actually present, so the assumption is checked against real runs.
 
 ### v0.2.5
 
