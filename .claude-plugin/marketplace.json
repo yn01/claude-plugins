@@ -207,7 +207,7 @@
     {
       "name": "jev-gate",
       "source": "./plugins/jev-gate",
-      "description": "Evidence gate for Claude Code — asks Jev (TypeSafe System One) whether a completion claim is backed by an actual verification run, and records every verdict for threshold tuning",
+      "description": "Stop-event gate for Claude Code — asks Jev (TypeSafe System One) whether a completion claim has evidence behind it, and whether a mid-task pause really needed you",
       "author": {
         "name": "Yohei Nakanishi"
       },
@@ -216,6 +216,7 @@
         "typesafe",
         "hook",
         "completion-gate",
+        "early-stop",
         "evidence",
         "shadow-mode"
       ]

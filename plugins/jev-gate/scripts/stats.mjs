@@ -61,6 +61,11 @@ const hist = (label, values) => {
 hist('evidence_present', judged.map((e) => e.evidencePresent));
 hist('claims_done', judged.filter((e) => typeof e.claimsDone === 'number').map((e) => e.claimsDone));
 
+// Only the turns where work was under way say anything about early stopping;
+// an ordinary answered question is not a stalled task.
+const early = rows.filter((e) => typeof e.blockedOnUser === 'number' && e.workThisTurn);
+if (early.length) hist('blocked_on_user  (work turns only)', early.map((e) => e.blockedOnUser));
+
 const lat = rows.filter((e) => typeof e.latencyMs === 'number').map((e) => e.latencyMs).sort((a, b) => a - b);
 if (lat.length) {
   const p = (q) => lat[Math.min(lat.length - 1, Math.floor(q * lat.length))];

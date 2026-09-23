@@ -10,8 +10,14 @@
       "thresholds": {
         "claimsDone": 0.5,
         "evidencePass": 0.7,
-        "evidenceBlock": 0.3
+        "evidenceBlock": 0.3,
+        "blockedOnUser": 0.5
       },
+      "earlyStop": {
+        "enabled": true,
+        "action": "notify"
+      },
+      "verificationCommands": [],
       "maxBlocksPerSession": 2,
       "stateBudget": {
         "finalMessageChars": 4000,

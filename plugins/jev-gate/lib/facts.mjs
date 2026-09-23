@@ -26,8 +26,31 @@ const VERIFICATION = [
   /\brspec\b|\brake\s+test\b/,
 ];
 
-function isVerification(cmd) {
-  return typeof cmd === 'string' && VERIFICATION.some((re) => re.test(cmd));
+// Projects with a custom runner (`./scripts/verify`) are invisible to the list
+// above, and an invisible runner reads as an absence of evidence. Extra
+// patterns come from `gates.completion.verificationCommands` in config.
+function buildMatcher(extra = []) {
+  const patterns = [...VERIFICATION];
+  for (const src of extra) {
+    try {
+      patterns.push(new RegExp(src));
+    } catch {
+      // a bad pattern in config must not take the gate down
+    }
+  }
+  return (cmd) => typeof cmd === 'string' && patterns.some((re) => re.test(cmd));
+}
+
+// Work means the agent changed something or ran something — as opposed to a
+// turn that only answered a question. Used to tell a task that stopped early
+// apart from an ordinary conversational reply.
+const WORK_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'Bash', 'Task']);
+
+// A transcript entry is a real user turn only if it carries no tool_result;
+// tool results are delivered as user-type entries too.
+function isUserTurn(entry) {
+  if (entry?.type !== 'user') return false;
+  return !blocks(entry).some((b) => b?.type === 'tool_result');
 }
 
 function readTail(path) {
@@ -64,9 +87,11 @@ function resultText(block) {
  *   commands      — verification commands run, oldest first, with output + error flag
  *   lastFailed    — the most recent verification command that reported an error
  *   sawAnyCommand — whether any Bash call happened at all
+ *   workThisTurn  — whether anything was edited or run since the user last spoke
  */
-export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutputChars = 1500 } = {}) {
-  const empty = { finalMessage: '', commands: [], lastFailed: null, sawAnyCommand: false };
+export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutputChars = 1500, verificationCommands = [] } = {}) {
+  const empty = { finalMessage: '', commands: [], lastFailed: null, sawAnyCommand: false, workThisTurn: false };
+  const isVerification = buildMatcher(verificationCommands);
   if (!transcriptPath) return empty;
 
   let lines;
@@ -80,6 +105,7 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
   const commands = [];
   let finalMessage = '';
   let sawAnyCommand = false;
+  let workThisTurn = false;
 
   for (const line of lines) {
     if (!line.trim()) continue;
@@ -90,8 +116,13 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
       continue;
     }
 
+    // A new user turn resets the work flag: only what happened since the user
+    // last spoke tells us whether this stop interrupts work in progress.
+    if (isUserTurn(entry)) workThisTurn = false;
+
     for (const b of blocks(entry)) {
       if (b?.type === 'tool_use') {
+        if (WORK_TOOLS.has(b.name)) workThisTurn = true;
         if (b.name === 'Bash') {
           sawAnyCommand = true;
           const cmd = b?.input?.command;
@@ -123,7 +154,7 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
   for (const c of commands) latestByCommand.set(c.command, c);
   const lastFailed = [...latestByCommand.values()].reverse().find((c) => c.isError) ?? null;
 
-  return { finalMessage, commands: kept, lastFailed, sawAnyCommand };
+  return { finalMessage, commands: kept, lastFailed, sawAnyCommand, workThisTurn };
 }
 
 /** `git diff --stat` for the working tree, or null outside a repo. */
