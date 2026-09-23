@@ -1,6 +1,6 @@
 # jev-gate
 
-A stop-event gate for Claude Code. When an agent stops, jev-gate asks what kind of stop it is — *is this completion claim backed by an actual run?* and *did this pause really need you?* — and answers with [Jev](https://docs.typesafe.ai/introduction), TypeSafe's System One model, at roughly a hundredth of a cent per check.
+A stop-event gate for Claude Code. When an agent stops, jev-gate asks what kind of stop it is — *is this completion claim backed by an actual run?* and *did this pause really need you?* — and answers with [Jev](https://docs.typesafe.ai/introduction), TypeSafe's System One model, at a few thousandths of a cent per check.
 
 ```
 /plugin install jev-gate
@@ -144,6 +144,22 @@ If you point `JEV_GATE_JOURNAL` at a path inside the repo, ignore it — a journ
 
 **What a journal entry contains.** Verdict, the probabilities and thresholds behind it, command count, latency, token usage, the session id and the `cwd`. Transcript text is *not* recorded — neither the agent's message nor command output. The single exception is the `recorded_failure` path, which stores the failing command verbatim so you can see what was being checked. If your verification commands carry secrets inline (`TOKEN=... npm test`), that string reaches the journal, so keep the journal out of the repo and out of anything you share.
 
+## Measured, not assumed
+
+Verified against the live API on 2026-09-23 (`jev-1.13.0`):
+
+| | |
+|---|---|
+| Latency | p50 189 ms, max 332 ms — the 2000 ms default has ~6× margin |
+| Cost | 548–624 input tokens per call, about \$0.000024; larger command logs raise it |
+| Japanese `state` | Same fixtures in Japanese and English moved by ≤ 0.11 and never crossed a threshold |
+| `claims_done` / `evidence_present` | Cleanly separated — values sat at the extremes (0.97 / 0.02), not in the middle |
+| `blocked_on_user` | **6 of 8** hand-written fixtures |
+
+**The `blocked_on_user` miss is worth knowing before you rely on it.** An explicit request for permission — *"次は refunds です。続けますか？"*, *"shall I commit and move on?"* — scores high and is read as a legitimate stop, so early-stop detection stays quiet. jev-1.13 reads the question literally, which it plainly is. Four rewordings and a two-question decomposition were tried; the decomposition fixed these two and broke two others, so the original wording stands rather than being overfitted to eight invented examples.
+
+Both misses are **false negatives**: the gate under-reports rather than wrongly pushing an agent onward. Nothing that genuinely needed the user was flagged as a stall. That is the direction to fail in, and a further reason `stopped_early` is advisory by default.
+
 ## Getting to Enforce
 
 1. **Shadow.** Install, set the key, work normally. Verdicts accumulate; nothing changes.
@@ -174,6 +190,13 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.2.2
+
+- Verify the request and response shapes, latency, cost, and question quality against the live API rather than a mock; record the numbers in the README and the implementation plan.
+- Correct the cost claim: measured \$0.000024 per call, not "roughly a hundredth of a cent".
+- Document the `blocked_on_user` miss — an explicit request for permission reads as a legitimate stop — and that all observed errors are false negatives.
+- Sketch a status-line fragment in the implementation plan.
 
 ### v0.2.1
 

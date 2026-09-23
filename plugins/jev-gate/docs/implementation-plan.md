@@ -26,6 +26,35 @@ The playbook's own remedy for early stopping is a CLAUDE.md rule, not an enforce
 
 ---
 
+## Measured against the live API — 2026-09-23
+
+Everything below was verified against `api.typesafe.ai` with a real key, not against the mock. Three things were confirmed and one was found wanting.
+
+**The request and response shapes are right.** `criteria: {true, false}` on a noul, a pinned `model: "jev-1.13.0"`, and three questions in one request all return `200`, and the answer arrives as `answers.<id>.noul`. Had any of this been wrong, every hook event would have failed open on `http_422` and the plugin would have been installed, firing, and inert.
+
+**Latency leaves room.** p50 189 ms, max 332 ms over 15 calls. The 2000 ms default was a guess when it shipped; it now has roughly a 6× margin behind it.
+
+**Cost was overstated in v0.2.1.** Measured 548–624 input tokens per call on realistic fixtures — about \$0.000024, which is a few *thousandths* of a cent, not the hundredth the README claimed. Larger command logs raise it; the state budget caps how far.
+
+**Japanese `state` holds up.** Design rule 5 was inherited as an assumption. Feeding the same fixtures in Japanese and in English translation moved the probabilities by at most 0.11, and never across a threshold. The rule stands, now on evidence.
+
+**`blocked_on_user` scores 6/8.** On eight hand-written fixtures:
+
+| | probability | verdict | wanted |
+|---|---|---|---|
+| "次は refunds です。続けますか？" | 0.78 | stop | **early** |
+| "このままコミットしてよいですか？" | 0.93 | stop | **early** |
+| choices offered, none blocking | 0.15 | early | early |
+| names the next step, stops | 0.06 | early | early |
+| a spec decision is needed | 0.91 | stop | stop |
+| awaiting approval to delete | 0.97 | stop | stop |
+| no staging credentials | 0.57 | stop | stop |
+| awaiting approval to force-push | 0.94 | stop | stop |
+
+Both misses are the same shape: an explicit request for permission. jev-1.13 reads "may I continue?" as a question that needs answering, which is literally true and is the documented literal-reading behaviour. Four rewordings were tried (negation-free, criteria-free, inverted) and so was a two-question decomposition (`needs_information` + `awaiting_destructive_approval`); the decomposition fixed the two misses and broke two other fixtures. Tuning further against eight invented examples is overfitting, so it was stopped.
+
+**The errors run in the safe direction.** Both misses are false negatives — the gate stays quiet when it could have spoken. There were no false positives: nothing that genuinely needed the user was flagged as a stall. Under-detection is the failure mode to prefer here, and it is a further reason `stopped_early` stays advisory. Revisit the question wording when the journal holds real stops rather than invented ones.
+
 ## Design rules that apply to every gate
 
 These are not stylistic preferences — each one traces to a documented property of jev-1.13.
@@ -137,6 +166,29 @@ This is not a gate. It injects advice and never stops anything, so it does not b
 **Deferred until** gates 1–4 have produced enough journal data to say whether Jev's judgement is worth surfacing to the user unprompted at every single prompt.
 
 ---
+
+## Gate 6 — Status line · not built, design sketched
+
+**Not a gate.** A one-line readout of what jev-gate is doing, in the bar under the Claude Code input box, so Shadow Mode is visible while it runs instead of only when `/jev-gate:status` is called.
+
+Confirmed present in Claude Code 2.1.267: a `statusLine` setting, a `/statusline` command to configure it, and an `executeStatusLineCommand` path that runs it. A separate `subagentStatusLine` exists, reads JSON lines against a schema, and is a different mechanism — check which one fits before building.
+
+**The constraint that shapes the design: `statusLine` is singular.** There is one setting, and the user very likely wants their own branch, model and context readout in it. A plugin that claims the whole line takes it away from them. So jev-gate should ship a **composable fragment** — a command printing one short segment — and document how to splice it into an existing status line, never write `statusLine` itself.
+
+```
+jev-gate ● shadow  3 pass · 1 unclear · 1 early  189ms
+```
+
+**Cost of rendering.** A status line command runs on every render, far more often than a hook. Reading and parsing the whole journal each time is wasteful and gets slower the longer the journal grows. The gate should therefore maintain a small counter file per session — written on the same path that already writes the block budget — and the fragment should read only that. Rendering must never touch the network and never call Jev.
+
+**Open questions for the design pass:**
+
+- Session-scoped counters, or a rolling window across projects? Session is more honest about *what just happened*; rolling shows whether thresholds are working.
+- What does it show when no key is set? "inert" is more useful than silence — an inactive gate that looks absent is how a fail-open plugin goes unnoticed for weeks.
+- Colour or symbols only? The bar is one line and shared; loud output is antisocial.
+- Does it hide entirely when the mode is `off`? Probably yes.
+
+**Prerequisite:** the exact `statusLine` input payload and output contract, verified against the current documentation rather than inferred from strings in the binary. The same rule that applied to the Jev API applies here.
 
 ## Deliberately out of scope
 

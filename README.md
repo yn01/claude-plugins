@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.2.1`
+### [jev-gate](./plugins/jev-gate) `v0.2.2`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -168,7 +168,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-09-23
-- Add **jev-gate** v0.2.1 — stop-event gate judged by Jev (TypeSafe System One); completion-evidence and early-stop detection, Shadow Mode by default, JSONL verdict journal, `/jev-gate:status` `/jev-gate:mode` `/jev-gate:doctor`
+- Add **jev-gate** v0.2.2 — stop-event gate judged by Jev (TypeSafe System One); completion-evidence and early-stop detection, Shadow Mode by default, JSONL verdict journal, `/jev-gate:status` `/jev-gate:mode` `/jev-gate:doctor`
 
 ### 2026-07-05
 - Fix **dev-forge** to v3.0.3 — plugin directory resolution in init/team/gate/guide commands used the nonexistent `claude plugin path`; now resolved via `claude plugin list --json` installPath
