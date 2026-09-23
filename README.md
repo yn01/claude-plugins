@@ -44,6 +44,16 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
+### [jev-gate](./plugins/jev-gate) `v0.2.5`
+
+A stop-event gate judged by Jev (TypeSafe System One).
+
+When an agent stops, a hook on `TaskCompleted`/`SubagentStop`/`Stop` asks what kind of stop it is: is this completion claim backed by an actual run, and — when nothing is being claimed — did this pause really need you? Both are failure modes Anthropic's Opus 5.5 playbook names, and the second is the common one in long-running work. Code settles the facts, Jev settles the meaning, code decides what happens. Ships in Shadow Mode: every verdict is recorded to a JSONL journal, nothing is ever blocked, and thresholds are chosen from the distribution afterwards.
+
+```
+/plugin install jev-gate
+```
+
 ### [genpptx](./plugins/genpptx) `v1.4.4`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
@@ -156,6 +166,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-09-23
+- Add **jev-gate** v0.2.5 — stop-event gate judged by Jev (TypeSafe System One); completion-evidence and early-stop detection, Shadow Mode by default, JSONL verdict journal, `/jev-gate:status` `/jev-gate:mode` `/jev-gate:doctor`
 
 ### 2026-07-05
 - Fix **dev-forge** to v3.0.3 — plugin directory resolution in init/team/gate/guide commands used the nonexistent `claude plugin path`; now resolved via `claude plugin list --json` installPath
