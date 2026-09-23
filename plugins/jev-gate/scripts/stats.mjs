@@ -53,8 +53,15 @@ table('decided by', by('decidedBy'));
 const failopen = rows.filter((e) => e.decidedBy === 'failopen');
 if (failopen.length) table('fail-open reasons', failopen.reduce((m, e) => (m[e.reason] = (m[e.reason] ?? 0) + 1, m), {}));
 
-const judged = rows.filter((e) => typeof e.evidencePresent === 'number');
-if (!judged.length) {
+// v0.4.0 replaced `evidence_present` ("did anything run?", which turned out to
+// agree with commandCount every time) with `evidence_covers_claim` ("does what
+// ran cover the claim?"). They measure different things, so they are never
+// pooled into one histogram.
+// `no_runs` rows carry a coverage probability that was never used — there was
+// nothing to cover. Including them would put a phantom cluster in the histogram.
+const judged = rows.filter((e) => typeof e.evidenceCovers === 'number' && e.reason !== 'no_runs');
+const legacyJudged = rows.filter((e) => typeof e.evidencePresent === 'number');
+if (!judged.length && !legacyJudged.length) {
   console.log('No Jev-decided entries yet — nothing to set thresholds from.');
   process.exit(0);
 }
@@ -71,12 +78,18 @@ const hist = (label, values) => {
   console.log('');
 };
 
-hist('evidence_present', judged.map((e) => e.evidencePresent));
-hist('claims_done', judged.filter((e) => typeof e.claimsDone === 'number').map((e) => e.claimsDone));
+if (judged.length) hist('evidence_covers_claim', judged.map((e) => e.evidenceCovers));
+if (legacyJudged.length) {
+  console.log(`${legacyJudged.length} entries predate v0.4.0 and carry evidence_present, which asked a`);
+  console.log('different question (whether anything ran at all). Not pooled with the above.\n');
+}
+const claimsRows = [...judged, ...legacyJudged].filter((e) => typeof e.claimsDone === 'number');
+if (claimsRows.length) hist('claims_done', claimsRows.map((e) => e.claimsDone));
 
 // Only the turns where work was under way say anything about early stopping;
 // an ordinary answered question is not a stalled task.
 const early = rows.filter((e) => typeof e.blockedOnUser === 'number' && e.workThisTurn);
+
 if (early.length) hist('blocked_on_user  (work turns only)', early.map((e) => e.blockedOnUser));
 
 const lat = rows.filter((e) => typeof e.latencyMs === 'number').map((e) => e.latencyMs).sort((a, b) => a - b);

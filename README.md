@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.3.0`
+### [jev-gate](./plugins/jev-gate) `v0.4.0`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -168,6 +168,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-09-24
+- Update **jev-gate** to v0.4.0 — replace `evidence_present` with `evidence_covers_claim`; 66 real verdicts showed the old question agreed with `commandCount > 0` every time, so it was asking Jev for a fact code already had
 - Fix **jev-gate** to v0.3.0 — store the verdict journal and block counters in the per-plugin data directory (`CLAUDE_PLUGIN_DATA`) instead of squatting at `~/.claude/jev-gate/`
 
 ### 2026-09-23

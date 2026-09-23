@@ -33,7 +33,7 @@ The division is strict:
 
 ## Features
 
-- **Completion gate (hook)** — fires on `TaskCompleted`, `SubagentStop` and `Stop`. A verification run that failed and was never re-run is caught by code alone, without spending a request. Everything else goes to Jev as three independent yes/no questions in a single call.
+- **Completion gate (hook)** — fires on `TaskCompleted`, `SubagentStop` and `Stop`. A verification run that failed and was never re-run, and a completion claim with nothing run behind it at all, are both caught by code alone. Jev is asked only what code cannot count: whether what ran actually covers what is being claimed.
 - **Early-stop detection** — distinguishes a legitimate check-in from a task that stalled into a status report. Advisory by default; the playbook's own remedy for this is a CLAUDE.md rule, not a hard stop.
 - **Shadow Mode by default** — every verdict exits 0 and lands in a JSONL journal alongside the probabilities that produced it.
 - **Fail-open, without exception** — no API key, no network, a slow response, a malformed body, an unexpected exception: every one of those exits 0. A judge that is down never stops work.
@@ -70,14 +70,15 @@ agent stops
   │        no final message at all?            ──yes──▶  pass
   ▼
   Jev: three nouls, one request
-       claims_done      — the final message states the work is finished
-       evidence_present — the command log holds output from a real run
-       blocked_on_user  — the stop needs a decision only the user can give
+       claims_done           — the final message states the work is finished
+       evidence_covers_claim — what ran exercises what is being claimed
+       blocked_on_user       — the stop needs a decision only the user can give
   ▼
   code:  claims_done ≥ 0.5
-           evidence_present ≥ 0.7  ──▶ pass
-           evidence_present ≥ 0.3  ──▶ unclear
-           otherwise               ──▶ block
+           nothing ran at all           ──▶ block   (a count, so code decides)
+           evidence_covers_claim ≥ 0.7  ──▶ pass
+           evidence_covers_claim ≥ 0.3  ──▶ unclear
+           otherwise                    ──▶ block
          claims_done < 0.5
            work happened this turn, and blocked_on_user < 0.5
                                    ──▶ stopped_early
@@ -90,7 +91,9 @@ agent stops
 
 `workThisTurn` — did the agent edit or run anything since the user last spoke — is what keeps an ordinary answered question out of the early-stop branch. A turn that changed nothing is a conversation, not a task that stalled. It is read from the transcript by code, never inferred.
 
-All three questions are phrased **positively**. jev-1.13 reads negations at face value, so `evidence_present` is asked and the inversion is done in code — `evidence_missing` is exactly the shape to avoid. For the same reason the gate never asks whether the tests *passed*: counting and arithmetic are documented weaknesses, and the exit code is already sitting in the transcript.
+Asking whether a run *exists* was the original mistake: that is a count, and code has it. The question that earns its cost is whether the run **reaches** what was claimed — one test file passing does not support "every endpoint is migrated". Success or failure is not asked either, for the same reason: the exit code is a fact, and a failed run short-circuits long before Jev is called.
+
+All three questions are phrased **positively**. jev-1.13 reads negations at face value, so anything absent is computed in code — an `evidence_missing` question is exactly the shape to avoid. For the same reason the gate never asks whether the tests *passed*: counting and arithmetic are documented weaknesses, and the exit code is already sitting in the transcript.
 
 When the hook event carries the task's own text, it goes into the state as `task`. The playbook's advice is to name the finish line per task — *"done means: every endpoint uses the new client, the old client is deleted, and the test suite passes"* — and evidence judged against that beats evidence judged against a generic notion of "some test ran".
 
@@ -158,8 +161,10 @@ Verified against the live API on 2026-09-23 (`jev-1.13.0`):
 | Latency | p50 189 ms, max 332 ms — the 2000 ms default has ~6× margin |
 | Cost | 548–624 input tokens per call, about \$0.000024; larger command logs raise it |
 | Japanese `state` | Same fixtures in Japanese and English moved by ≤ 0.11 and never crossed a threshold |
-| `claims_done` / `evidence_present` | Cleanly separated — values sat at the extremes (0.97 / 0.02), not in the middle |
+| `claims_done` | Cleanly separated — values sat at the extremes, not in the middle |
 | `blocked_on_user` | **6 of 8** hand-written fixtures |
+
+Then 66 real verdicts from a working project said something the fixtures could not: the old `evidence_present` question agreed with `commandCount > 0` **66 times out of 66** — 0.02 whenever nothing had run, 0.98–0.99 whenever something had, never a value in between. It was buying a fact code already had. v0.4.0 replaced it; see the changelog.
 
 **The `blocked_on_user` miss is worth knowing before you rely on it.** An explicit request for permission — *"次は refunds です。続けますか？"*, *"shall I commit and move on?"* — scores high and is read as a legitimate stop, so early-stop detection stays quiet. jev-1.13 reads the question literally, which it plainly is. Four rewordings and a two-question decomposition were tried; the decomposition fixed these two and broke two others, so the original wording stands rather than being overfitted to eight invented examples.
 
@@ -195,6 +200,13 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.4.0
+
+- **`evidence_present` replaced by `evidence_covers_claim`.** Over 66 real verdicts the old question matched `commandCount > 0` every single time, so it was spending a request on a fact code already held — the thing design rule 1 exists to prevent. Whether anything ran is now decided in code; Jev is asked whether what ran covers the claim.
+- The `unclear` verdict becomes reachable. Under the old question nothing ever landed between 0.3 and 0.7, so both thresholds were untested.
+- A claim with no runs behind it is recorded as `decidedBy: "code"`, `reason: "no_runs"`, and excluded from the coverage histogram — the model still answers a question with no subject, and that answer must not reach the numbers thresholds are read from.
+- `/jev-gate:status` never pools the two questions into one histogram; pre-v0.4.0 entries are counted and set aside.
 
 ### v0.3.0
 
