@@ -126,6 +126,24 @@ Layers, later winning: the plugin default → `~/.claude/jev-gate/config.json` �
 
 Environment overrides: `JEV_GATE_MODE`, `JEV_GATE_DISABLE=1` (everything off for one session), `JEV_GATE_JOURNAL`.
 
+## What lands on disk, and what to commit
+
+jev-gate writes outside your repository by default: the journal to `~/.claude/jev-gate/journal.jsonl` and a per-session block counter to `~/.claude/jev-gate/sessions/`. Nothing is created in a project unless you put it there.
+
+The one thing you *do* create in a project is its config, and it is meant to be committed — thresholds, mode and `verificationCommands` are project policy, and a teammate who clones the repo should get the same gate you have:
+
+```
+.jev-gate/config.json     commit this
+```
+
+If you point `JEV_GATE_JOURNAL` at a path inside the repo, ignore it — a journal is a local record, not shared policy:
+
+```gitignore
+.jev-gate/*.jsonl
+```
+
+**What a journal entry contains.** Verdict, the probabilities and thresholds behind it, command count, latency, token usage, the session id and the `cwd`. Transcript text is *not* recorded — neither the agent's message nor command output. The single exception is the `recorded_failure` path, which stores the failing command verbatim so you can see what was being checked. If your verification commands carry secrets inline (`TOKEN=... npm test`), that string reaches the journal, so keep the journal out of the repo and out of anything you share.
+
 ## Getting to Enforce
 
 1. **Shadow.** Install, set the key, work normally. Verdicts accumulate; nothing changes.
@@ -156,6 +174,10 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.2.1
+
+- Document what jev-gate writes to disk, which file belongs in version control (`.jev-gate/config.json`) and which does not, and exactly what a journal entry contains — including the one path that records a command verbatim.
 
 ### v0.2.0
 

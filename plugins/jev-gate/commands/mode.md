@@ -37,6 +37,8 @@ Write or update `.jev-gate/config.json` in the project root:
 
 Preserve any keys already in that file. Create the directory if needed.
 
+`.jev-gate/config.json` is project policy and belongs in version control — mention that if the file is newly created. A journal written inside the repo does not; `.jev-gate/*.jsonl` should be ignored.
+
 ### 4. Before switching to `enforce`, check the evidence
 
 Run `/jev-gate:status` first. If it reports fewer than roughly 30 Jev-decided entries, say so and recommend staying in Shadow — thresholds set on a handful of samples are not thresholds.
