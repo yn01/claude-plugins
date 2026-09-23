@@ -165,28 +165,35 @@ Code supplies the exit code, the command, and the stderr tail. The classificatio
 
 Displaying beats injecting for a judgement this soft. Injected advice spends context on every prompt and is easy to be wrong about loudly; a readout the user can ignore costs nothing when it misses.
 
-This is not a gate. It stops nothing, and it does not belong under the name `jev-gate`. If built, it should be a separate plugin (`jev-advisor`), sharing `lib/` by copy, and it should probably render into gate 6's status line rather than the prompt.
+This is not a gate. It stops nothing, and it does not belong under the name `jev-gate`. If built, it should be a separate plugin (`jev-advisor`), sharing `lib/` by copy. Seven probabilities do not belong in a one-line bar either, so its surface is a command the user runs — not gate 6, and not the prompt.
 
 **Deferred until** gates 1–4 have produced enough journal data to say whether Jev's judgement is worth surfacing unprompted at all.
 
-## Gate 6 — Status line · not built, design sketched
+## Gate 6 — Making the gate visible · not built, surfaces surveyed
 
-**Not a gate.** A readout of what jev-gate is doing, in the bar under the Claude Code input box, so Shadow Mode is visible while it runs rather than only when `/jev-gate:status` is called.
+**Not a gate.** Shadow Mode runs for days before anyone reads it. Somewhere, at a glance, it should be possible to see that jev-gate is alive and what it has been deciding — otherwise a plugin that quietly stopped working weeks ago still looks installed and fine.
 
-Confirmed present in Claude Code 2.1.267: a `statusLine` setting, a `/statusline` command to configure it, and an `executeStatusLineCommand` path that runs it. A separate `subagentStatusLine` exists, reads JSON lines against a schema, and is a different mechanism — check which one fits before building.
+The surface is deliberately **not** decided here. Several exist, they trade off differently, and they are not mutually exclusive.
 
-### Reference: @fladdict's Jev harness
+### What has to be visible, whichever surface wins
 
-A published harness that watches Codex with Jev (2026-09-22) shows a dashboard of the same idea, and four of its choices are worth taking:
+- **Live or inert, first.** A fail-open judge that is dead looks exactly like a judge with nothing to say. This is the single most important thing to show, and the reason the no-key case must never render as silence.
+- **The last verdict with the probability behind it,** not just its name. Shadow Mode exists to read a distribution; a tally of verdict names says nothing about where a threshold should sit.
+- **"Nothing judged yet" as `—`, never as zero.** Not-measured and measured-at-zero are different facts and must look different.
+- **Mode and model.** `shadow` versus `enforce` changes what a verdict means; a pinned model id dates the numbers.
 
-- **Connection state and model are always on screen** — *"Jev接続確認済み · jev-latest"*. A fail-open judge that is quietly dead looks exactly like a judge that had nothing to say. This is the direct remedy, and it settles an open question below: the no-key case must be *visible*, not silent.
-- **Probabilities are shown, not just verdicts.** Its per-action bars total about 163%, so they are independent Nouls rather than one Choice — each candidate action is asked about separately. Shadow Mode exists to read a distribution, so showing the numbers beats showing a tally.
-- **"未取得" is a first-class state.** Its left-hand card shows `—` for every row rather than zeros. "Not measured yet" and "measured at zero" are different facts and must look different.
-- **It is continuous, not event-triggered.** The state is on screen between decisions, not only at one.
+### Candidate surfaces
 
-### The compression problem
+| Surface | Always on screen | Room for detail | Cost | Catch |
+|---|---|---|---|---|
+| `statusLine` fragment | yes | one line | runs on every render | the setting is **singular** — the plugin must ship a composable segment and never claim the line |
+| `SessionStart` hook | at session start | a few lines | once per session | a snapshot, not a pulse; goes stale within the session |
+| A command (`/jev-gate:status`) | no | unlimited | on demand | already exists; needs asking for, so it is not "at a glance" |
+| A published HTML page | no (separate tab) | unlimited, live | a publish step | leaves the terminal; best when the numbers are to be shared or watched over days |
 
-The reference is a dashboard with seven bars per project. The target is **one line**. Most of that cannot survive, so decide deliberately what does:
+**The combination that probably wins:** an ambient minimum plus a rich readout on demand. `SessionStart` is the cheapest ambient option and needs no setting from the user at all — `dev-forge` in this same repository already injects at `SessionStart`, so the pattern is proven here. A `statusLine` fragment is the genuinely continuous one but asks the user to edit their own status line. `/jev-gate:status` already covers the depth.
+
+A one-line form, whichever carries it:
 
 ```
 jev-gate ● shadow · jev-1.13.0 · last: block ev 0.05 · 12↑ 3? 1▲ · 189ms
@@ -194,24 +201,18 @@ jev-gate ○ inert — no TYPESAFE_API_KEY          ← the case that must not b
 jev-gate ● shadow · jev-1.13.0 · last: —        ← nothing judged yet this session
 ```
 
-The full distribution stays in `/jev-gate:status`, which already renders histograms. The line carries what changes: live-or-inert, the mode, the last verdict *with the probability behind it*, session counts, and latency.
-
-### The constraint that shapes it: `statusLine` is singular
-
-There is one setting, and the user very likely wants their own branch, model and context readout in it. A plugin that claims the whole line takes it away from them. So jev-gate ships a **composable fragment** — a command printing one short segment — and documents how to splice it into an existing status line. It never writes `statusLine` itself.
-
 ### Cost of rendering
 
-A status line command runs on every render, far more often than a hook. Reading and parsing the whole journal each time is wasteful and degrades as the journal grows. The gate should maintain a small per-session summary file, written on the same path that already writes the block budget, and the fragment reads only that. Rendering must never touch the network and never call Jev.
+Anything ambient re-renders far more often than a hook fires. Reading and parsing the whole journal each time is wasteful and degrades as the journal grows, so the gate should maintain a small per-session summary file — written on the path that already writes the block budget — and the readout reads only that. It must never touch the network and never call Jev.
 
 ### Open questions for the design pass
 
 - Session-scoped counters, or a rolling window across projects? Session is more honest about what just happened; rolling shows whether the thresholds are working.
-- Colour, or symbols only? The bar is one line and shared; loud output is antisocial.
-- Hide entirely when the mode is `off`, or keep one dim character so the plugin is not invisible?
-- Does the fragment report a stale journal — the last verdict from hours ago — differently from a fresh one?
+- Colour, or symbols only? A shared line should be quiet.
+- Does a stale reading — the last verdict from hours ago — look different from a fresh one?
+- When the mode is `off`, hide entirely or keep one dim character so the plugin is not invisible?
 
-**Prerequisite:** the exact `statusLine` input payload and output contract, verified against current documentation rather than inferred from strings in the binary. The rule that applied to the Jev API applies here.
+**Prerequisite if `statusLine` is chosen:** its exact input payload and output contract, verified against current documentation rather than inferred from strings in the binary. Confirmed to exist in 2.1.267 (`statusLine` setting, `/statusline` command, `executeStatusLineCommand`); a separate `subagentStatusLine` reads JSON lines against a schema and is a different mechanism.
 
 ## Deliberately out of scope
 

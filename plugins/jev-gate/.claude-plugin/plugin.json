@@ -1,6 +1,6 @@
 {
   "name": "jev-gate",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Stop-event gate for Claude Code — asks Jev (TypeSafe System One) whether a completion claim has evidence behind it, and whether a mid-task pause really needed you",
   "author": {
     "name": "Yohei Nakanishi"

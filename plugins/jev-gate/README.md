@@ -191,6 +191,10 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 
 ## Changelog
 
+### v0.2.4
+
+- Survey the surfaces for making Shadow Mode visible at a glance — `statusLine` fragment, `SessionStart` injection, a command, a published page — with what each can and cannot carry, rather than committing to one.
+
 ### v0.2.3
 
 - Revise the status-line sketch and reframe gate 5 in the implementation plan, drawing on a published Jev harness: show connection state and model continuously, show probabilities rather than tallies, and treat "not measured yet" as distinct from zero.
