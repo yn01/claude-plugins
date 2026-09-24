@@ -176,6 +176,17 @@ Both misses are **false negatives**: the gate under-reports rather than wrongly 
 2. **Compare.** Run `/jev-gate:status`. Read the histograms and spot-check the entries whose verdict you would have decided differently. This step is the point of the whole design — thresholds chosen without it are guesses wearing a number.
 3. **Enforce.** Set thresholds from the distribution, then `/jev-gate:mode enforce`.
 
+`/jev-gate:status` counts each branch separately, because a probability only informs a threshold when the branch it governs was actually taken:
+
+```
+--- progress towards Enforce ---
+  coverage ladder reached      3 / 30
+  early-stop branch taken     41 / 30
+  (answers returned but unused: 22 coverage)
+```
+
+The two fill at very different rates and are ready at different times. Turn them on separately.
+
 ## Relationship to the CLAUDE.md stop rule
 
 The playbook's recommended rule is worth having regardless of this plugin:
@@ -200,6 +211,11 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.4.1
+
+- **Count the rows a number actually decided.** `/jev-gate:status` now separates each probability's decisive rows — the ones whose branch was taken — from every answer returned, and prints per-branch progress towards Enforce. The old "≥ 30 Jev-decided entries" criterion used the wrong denominator: on the first v0.4.0 data, 24 coverage answers came back and 3 of them decided anything.
+- The looser count was also hiding a result. Restricted to rows where it was decisive, `blocked_on_user` separates cleanly — 33 below 0.3, none between 0.3 and 0.6, 8 above — where the pooled view had shown a cluster straddling the threshold.
 
 ### v0.4.0
 

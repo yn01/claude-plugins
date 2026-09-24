@@ -68,10 +68,11 @@ These are not stylistic preferences — each one traces to a documented property
 7. **Fail open, always.** No key, no network, timeout, malformed body, unexpected exception — every one exits 0. A judge that is down must never stop work.
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
-10. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
-11. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
-12. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
-13. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
+10. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
+11. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
+12. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
+13. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
+14. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
 
 ## Budget
 
@@ -103,7 +104,16 @@ Input is \$0.042 per million tokens; output is free. The context limit is 64k pe
 
 **Remaining risk.** `stopped_early` is the branch most likely to misfire, because "does this pause need the user" is a genuinely harder judgement than "did something run". It is advisory by default for that reason, and `/jev-gate:status` histograms `blocked_on_user` over work turns only so the distribution is not diluted by conversational turns.
 
-**Exit criteria for Enforce:** ≥ 30 Jev-decided entries in the journal, a readable `evidence_covers_claim` distribution, and a spot-check of disagreements against human judgement. The 66 entries collected under the pre-v0.4.0 question do not count towards this — they measured something else.
+**Exit criteria for Enforce**, per branch — not per entry. The first statement of this criterion said "≥ 30 Jev-decided entries", which was the wrong denominator: every question is asked on every event, but a probability only informs a threshold when the branch it governs was actually taken. On the first v0.4.0 data, 24 coverage answers came back and **3** of them decided anything.
+
+| Branch | Counts an entry when | Needs |
+|---|---|---|
+| Coverage ladder (`evidencePass` / `evidenceBlock`) | completion is claimed *and* something ran | ≥ 30 |
+| Early stop (`blockedOnUser`) | work happened this turn *and* nothing was claimed | ≥ 30 |
+
+Plus, for each: a distribution with a visible gap where the threshold sits, and a spot-check of the entries whose verdict a human would have decided differently. Entries collected under the pre-v0.4.0 question count towards neither — they measured something else.
+
+The two branches fill at very different rates, so they are ready at different times. That is expected and they should be turned on separately, in line with rule 9 — a gate is enabled per branch, not because the journal is large.
 
 ---
 
