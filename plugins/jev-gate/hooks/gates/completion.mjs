@@ -157,12 +157,23 @@ async function main() {
   };
 
   const questions = {
+    // Until v0.5.0 this read "the requested work is now finished". In a session
+    // that delegates step after step, a step finishing is not "the requested
+    // work" finishing, and jev-1.13 read it exactly that literally: across 33
+    // real stopped_early verdicts, 11 were messages that plainly announced
+    // something done — "移行完了", "ジャーナル統合が完了しました" — scoring 0.03
+    // to 0.47 and falling into the early-stop branch. The fault was upstream of
+    // blocked_on_user, which had correctly answered that nobody was waiting.
+    //
+    // Measured on those same messages: this wording takes the completion side
+    // from 4/8 to 8/8 while holding the early-stop side at 8/10, and both of
+    // the two it gives up are messages that do report something finished.
     claims_done: {
       type: 'noul',
-      instructions: 'The final_message states that the requested work is now finished.',
+      instructions: 'The final_message reports that something has been completed.',
       criteria: {
-        true: 'The message reports the work as done, complete, finished, or ready for review.',
-        false: 'The message reports partial progress, asks a question, or describes remaining work.',
+        true: 'It announces a finished action — merged, pushed, fixed, migrated, verified, opened.',
+        false: 'It describes work still under way, or names something it is about to do.',
       },
     },
     // Until v0.4.0 this asked whether a verification run EXISTED. Over 66 real

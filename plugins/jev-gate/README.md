@@ -70,7 +70,7 @@ agent stops
   │        no final message at all?            ──yes──▶  pass
   ▼
   Jev: three nouls, one request
-       claims_done           — the final message states the work is finished
+       claims_done           — the final message reports something completed
        evidence_covers_claim — what ran exercises what is being claimed
        blocked_on_user       — the stop needs a decision only the user can give
   ▼
@@ -211,6 +211,13 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.5.0
+
+- **`claims_done` reworded.** It asked whether "the requested work" was finished; in a session that delegates step after step, a step finishing is not that, and jev-1.13 read it exactly that literally. Reading 33 real `stopped_early` verdicts back against their messages, 11 were plain completion announcements — `## 移行完了 ✅`, `ジャーナル統合が完了しました` — scoring 0.03–0.47 and landing in the early-stop branch. Precision was 39–67%.
+- The replacement was chosen by measuring four wordings **on those same messages**, scoring both the completions it had to start catching and the early stops it must not break: 4/8 → 8/8 on the first, 10/10 → 8/10 on the second. The two it gives up both do report something finished.
+- The fault was never in `blocked_on_user`, which answered correctly every time — nobody was waiting on those messages.
+- Side effect: more messages now clear `claims_done` and reach the coverage ladder, which had been starved at 3 samples.
 
 ### v0.4.1
 

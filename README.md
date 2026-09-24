@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.4.1`
+### [jev-gate](./plugins/jev-gate) `v0.5.0`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -168,6 +168,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-09-25
+- Update **jev-gate** to v0.5.0 — reword `claims_done` after a spot-check of 33 real verdicts found 11 completion announcements misrouted into the early-stop branch; the replacement was measured on those same messages
 - Fix **jev-gate** to v0.4.1 — count each branch's decisive rows towards the Enforce criterion instead of every answer returned; the looser count was both flattering the sample and hiding a clean separation in `blocked_on_user`
 
 ### 2026-09-24

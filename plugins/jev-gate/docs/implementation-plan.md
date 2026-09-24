@@ -68,11 +68,12 @@ These are not stylistic preferences — each one traces to a documented property
 7. **Fail open, always.** No key, no network, timeout, malformed body, unexpected exception — every one exits 0. A judge that is down must never stop work.
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
-10. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
-11. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
-12. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
-13. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
-14. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
+10. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
+11. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
+12. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
+13. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
+14. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
+15. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
 
 ## Budget
 
@@ -101,6 +102,23 @@ Input is \$0.042 per million tokens; output is free. The context limit is 64k pe
 **Custom runners.** The built-in pattern list is a heuristic and misses project-specific runners (a custom `./scripts/verify`), and a miss reads as an absence of evidence. `gates.completion.verificationCommands` takes extra regex sources from config and appends them. A malformed pattern is skipped rather than thrown — a typo in config must not take the gate down. *(Closed in v0.2.0; was the known gap in v0.1.0.)*
 
 **What 66 real verdicts changed (v0.4.0).** The original `evidence_present` asked whether a verification run existed. Against real data it agreed with `commandCount > 0` 66 times out of 66 — 0.02 with nothing run, 0.98–0.99 with something run, and never a value between. It was buying a fact code already held, which is exactly what rule 1 forbids; the fixtures could not show this because each one was built to have an obvious answer. The question now asks whether what ran *covers* the claim, which is the judgement code cannot make. Two consequences: the `unclear` band becomes reachable, and a claim with no runs is recorded as code-decided and kept out of the coverage histogram.
+
+**What the first spot-check found (v0.5.0).** 33 real `stopped_early` verdicts were read back against the messages that produced them. 13 were the documented failure shape and correctly caught. **11 were messages that plainly announced something finished** — `## 移行完了 ✅`, `ジャーナル統合が完了しました`, `## 解決しました ✅` — scoring 0.03 to 0.47 on `claims_done` and so falling into the early-stop branch. Precision was 39–67%: far too low to enforce, and the count and distribution criteria had both already been met. The spot-check is in the criteria for exactly this reason.
+
+The fault was upstream of `blocked_on_user`, which had answered correctly every time — nobody *was* waiting on those messages. `claims_done` asked whether "the requested work" was finished, and in a session that delegates step after step, a step finishing is not the requested work finishing. jev-1.13 read it that literally, which is arguably the right reading of the wrong question. Message length was ruled out: mean `claims_done` was 0.133 under 400 characters and 0.113 over.
+
+Four wordings were then measured **on those same real messages**, scoring both sides — the 8 completion reports the gate had to start catching, and the 10 genuine early stops it must not break:
+
+| wording | completions caught | early stops held | total |
+|---|---|---|---|
+| `the requested work is now finished` (shipped) | 4/8 | 10/10 | 14/18 |
+| **`reports that something has been completed`** | **8/8** | **8/10** | **16/18** |
+| `announces a completed action rather than one still under way` | 8/8 | 5/10 | 13/18 |
+| same as the winner, without `criteria` | 8/8 | 8/10 | 16/18 |
+
+The winner and the criteria-free variant tie on totals; the winner holds wider margins on every early-stop row (0.23 vs 0.31, 0.25 vs 0.37, 0.41 vs 0.48), so the criteria stay. Both rows it gives up are messages that do report something finished — the labels, not the answers, are what is shaky there.
+
+**A side effect worth watching.** More messages now clear `claims_done` and route to the coverage ladder, which had been starved at 3 samples. That should fill faster from here — but it also means a message that reports a step *and* names a next step now lands in the coverage branch rather than the early-stop one.
 
 **Remaining risk.** `stopped_early` is the branch most likely to misfire, because "does this pause need the user" is a genuinely harder judgement than "did something run". It is advisory by default for that reason, and `/jev-gate:status` histograms `blocked_on_user` over work turns only so the distribution is not diluted by conversational turns.
 
