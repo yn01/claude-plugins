@@ -131,7 +131,7 @@ async function main() {
     pass();
   }
 
-  // --- 2. the two questions -------------------------------------------------
+  // --- 2. the questions ------------------------------------------------------
   // Both are phrased POSITIVELY. jev-1.13 reads negations at face value, so
   // "is there NO evidence" is the one shape to avoid; the inversion happens in
   // code below instead.
@@ -165,13 +165,24 @@ async function main() {
         false: 'The message reports partial progress, asks a question, or describes remaining work.',
       },
     },
-    evidence_present: {
+    // Until v0.4.0 this asked whether a verification run EXISTED. Over 66 real
+    // verdicts that question agreed with `commandCount > 0` every single time —
+    // 0.02 when nothing had run, 0.98-0.99 when something had, never anything
+    // between. It was spending a question on a fact code already holds, which
+    // is precisely what design rule 1 forbids.
+    //
+    // Whether a run exists is now settled in code below. What is left for Jev
+    // is the judgement code cannot make: does what ran actually cover what was
+    // claimed? A suite of one test passing does not support "every endpoint is
+    // migrated". Success or failure is not asked either — the exit code is a
+    // fact, and a failed run short-circuits long before this point.
+    evidence_covers_claim: {
       type: 'noul',
       instructions:
-        'The command_log contains output from a test, build, lint, or type-check run that was actually executed.',
+        'The commands in command_log exercise the work that final_message says was completed.',
       criteria: {
-        true: 'At least one entry shows real output from such a run.',
-        false: 'The command_log is empty, or contains no run of that kind.',
+        true: 'What was run covers the thing being claimed.',
+        false: 'What was run is unrelated to the claim, or reaches only a small part of it.',
       },
     },
     blocked_on_user: {
@@ -200,9 +211,9 @@ async function main() {
   }
 
   const claimsDone = noul(answer.answers, 'claims_done');
-  const evidencePresent = noul(answer.answers, 'evidence_present');
+  const evidenceCovers = noul(answer.answers, 'evidence_covers_claim');
   const blockedOnUser = noul(answer.answers, 'blocked_on_user');
-  if (claimsDone === null || evidencePresent === null) {
+  if (claimsDone === null || evidenceCovers === null) {
     record(cfg.journalPath, { ...base, verdict: 'pass', decidedBy: 'failopen', reason: 'missing_answer' });
     pass();
   }
@@ -218,10 +229,19 @@ async function main() {
   const earlyStopOn = earlyStop.enabled !== false;
 
   let verdict;
+  // When nothing ran, "does what ran cover the claim?" has no subject. The
+  // model still answers it, and that answer must not reach the histogram the
+  // thresholds are read from.
+  let coverageMeaningless = false;
   if (claimsDone >= tClaims) {
-    // Completion is being claimed. Is there a run behind it?
-    if (evidencePresent >= tPass) verdict = 'pass';
-    else if (evidencePresent >= tBlock) verdict = 'unclear';
+    // Completion is being claimed. Whether anything ran at all is a count, so
+    // code answers it; only the coverage question goes to the model.
+    if (facts.commands.length === 0) {
+      verdict = 'block';
+      coverageMeaningless = true;
+    }
+    else if (evidenceCovers >= tPass) verdict = 'pass';
+    else if (evidenceCovers >= tBlock) verdict = 'unclear';
     else verdict = 'block';
   } else if (
     earlyStopOn &&
@@ -244,9 +264,10 @@ async function main() {
   record(cfg.journalPath, {
     ...base,
     verdict,
-    decidedBy: 'jev',
+    decidedBy: coverageMeaningless ? 'code' : 'jev',
+    reason: coverageMeaningless ? 'no_runs' : undefined,
     claimsDone,
-    evidencePresent,
+    evidenceCovers,
     blockedOnUser,
     thresholds: { claimsDone: tClaims, evidencePass: tPass, evidenceBlock: tBlock, blockedOnUser: tBlocked },
     commandCount: facts.commands.length,
@@ -276,8 +297,8 @@ async function main() {
 
   if (verdict === 'unclear') {
     notify(
-      `jev-gate: completion claimed, but the evidence of a verification run is unclear ` +
-        `(evidence_present=${evidencePresent.toFixed(2)}). Worth a look.`
+      `jev-gate: completion claimed, but whether the runs cover it is unclear ` +
+        `(evidence_covers_claim=${evidenceCovers.toFixed(2)}). Worth a look.`
     );
   }
 
@@ -290,10 +311,15 @@ async function main() {
 
   noteBlock(cfg.sessionsPath, input.session_id);
   block(
-    `jev-gate: this task is being reported as complete, but no test, build, lint, or type-check ` +
-      `run appears in this session (evidence_present=${evidencePresent.toFixed(2)}).\n` +
-      `Run the project's verification command and report its actual output, ` +
-      `or say plainly that the work was not verified.`
+    facts.commands.length === 0
+      ? `jev-gate: this task is being reported as complete, but no test, build, lint, or ` +
+        `type-check run appears in this session.\n` +
+        `Run the project's verification command and report its actual output, ` +
+        `or say plainly that the work was not verified.`
+      : `jev-gate: this task is being reported as complete, but what was run does not appear ` +
+        `to cover it (evidence_covers_claim=${evidenceCovers.toFixed(2)}).\n` +
+        `Run something that exercises what you are claiming, or narrow the claim to what was ` +
+        `actually verified.`
   );
 }
 

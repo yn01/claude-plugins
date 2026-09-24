@@ -60,7 +60,7 @@ Both misses are the same shape: an explicit request for permission. jev-1.13 rea
 These are not stylistic preferences — each one traces to a documented property of jev-1.13.
 
 1. **Code settles facts; Jev settles meaning.** Exit codes, file counts, elapsed time and date ordering are read from the transcript or the filesystem. The Jev 1.13 jaggedness notes list counting, arithmetic and date comparison as weak areas, so none of them are asked.
-2. **Nouls are phrased positively.** jev-1.13 "answers the question you wrote, not the one you meant", reading negations at face value. `evidence_present` is asked; `evidence_missing` is computed in code. Never ask a Noul what is *absent*.
+2. **Nouls are phrased positively.** jev-1.13 "answers the question you wrote, not the one you meant", reading negations at face value. `evidence_covers_claim` is asked; whatever is missing is computed in code. Never ask a Noul what is *absent*.
 3. **One condition per Noul.** A question joining two conditions produces a value that means neither.
 4. **`state` is not trusted.** jev-1.13 "does not treat state as hostile by default". The state of a completion gate contains the agent's own claim, so the claim is never the evidence — the command log is.
 5. **`state` keeps its original language; `instructions` are English.** The agent writes in Japanese; re-translating it would lose exactly the nuance being judged.
@@ -68,9 +68,10 @@ These are not stylistic preferences — each one traces to a documented property
 7. **Fail open, always.** No key, no network, timeout, malformed body, unexpected exception — every one exits 0. A judge that is down must never stop work.
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
-10. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
-11. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
-12. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
+10. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
+11. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
+12. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
+13. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
 
 ## Budget
 
@@ -87,8 +88,8 @@ Input is \$0.042 per million tokens; output is free. The context limit is 64k pe
 |---|---|---|
 | 1 | code | Walk the transcript tail for Bash calls matching a verification-runner pattern; pair each with its result; find the latest run of each distinct command. |
 | 2 | code | If the latest run of any verification command errored → `block`, **without calling Jev**. |
-| 3 | Jev | Three Nouls in one request: `claims_done`, `evidence_present`, `blocked_on_user`. |
-| 4 | code | `claims_done ≥ 0.5` → the evidence ladder: `≥ 0.7` pass, `≥ 0.3` unclear, else block. |
+| 3 | Jev | Three Nouls in one request: `claims_done`, `evidence_covers_claim`, `blocked_on_user`. |
+| 4 | code | `claims_done ≥ 0.5` → nothing ran at all is a block decided in code; otherwise the coverage ladder: `≥ 0.7` pass, `≥ 0.3` unclear, else block. |
 | 5 | code | `claims_done < 0.5` → if work happened this turn and `blocked_on_user < 0.5`, `stopped_early`; else pass. |
 | 6 | code | Shadow: record, exit 0. Enforce: pass → exit 0, unclear and stopped_early → `systemMessage`, block → exit 2 (budget 2 per session). |
 
@@ -98,9 +99,11 @@ Input is \$0.042 per million tokens; output is free. The context limit is 64k pe
 
 **Custom runners.** The built-in pattern list is a heuristic and misses project-specific runners (a custom `./scripts/verify`), and a miss reads as an absence of evidence. `gates.completion.verificationCommands` takes extra regex sources from config and appends them. A malformed pattern is skipped rather than thrown — a typo in config must not take the gate down. *(Closed in v0.2.0; was the known gap in v0.1.0.)*
 
+**What 66 real verdicts changed (v0.4.0).** The original `evidence_present` asked whether a verification run existed. Against real data it agreed with `commandCount > 0` 66 times out of 66 — 0.02 with nothing run, 0.98–0.99 with something run, and never a value between. It was buying a fact code already held, which is exactly what rule 1 forbids; the fixtures could not show this because each one was built to have an obvious answer. The question now asks whether what ran *covers* the claim, which is the judgement code cannot make. Two consequences: the `unclear` band becomes reachable, and a claim with no runs is recorded as code-decided and kept out of the coverage histogram.
+
 **Remaining risk.** `stopped_early` is the branch most likely to misfire, because "does this pause need the user" is a genuinely harder judgement than "did something run". It is advisory by default for that reason, and `/jev-gate:status` histograms `blocked_on_user` over work turns only so the distribution is not diluted by conversational turns.
 
-**Exit criteria for Enforce:** ≥ 30 Jev-decided entries in the journal, a readable `evidence_present` distribution, and a spot-check of disagreements against human judgement.
+**Exit criteria for Enforce:** ≥ 30 Jev-decided entries in the journal, a readable `evidence_covers_claim` distribution, and a spot-check of disagreements against human judgement. The 66 entries collected under the pre-v0.4.0 question do not count towards this — they measured something else.
 
 ---
 

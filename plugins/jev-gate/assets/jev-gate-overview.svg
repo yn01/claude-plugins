@@ -68,7 +68,7 @@
     <text x="252" y="260" class="th">2 · Ask Jev</text>
     <text x="252" y="279" class="ts">Three nouls, one request:</text>
     <text x="252" y="294" class="mono">claims_done</text>
-    <text x="252" y="308" class="mono">evidence_present</text>
+    <text x="252" y="308" class="mono">evidence_covers_claim</text>
     <text x="252" y="322" class="mono">blocked_on_user</text>
   </g>
   <g class="c-blue">
@@ -130,7 +130,7 @@
     <rect class="card" x="32" y="486" width="816" height="62"/>
     <text x="44" y="504" class="th">Measured against the live API, not assumed — 2026-09-23</text>
     <text x="44" y="522" class="ts">p50 189 ms against a 2000 ms timeout  ·  ~$0.000024 per call  ·  Japanese state moves an answer by ≤ 0.11, never across a threshold</text>
-    <text x="44" y="537" class="ts">claims_done and evidence_present separate cleanly  ·  blocked_on_user scores 6 of 8, and both misses are false negatives — it under-reports</text>
+    <text x="44" y="537" class="ts">claims_done separates cleanly  ·  blocked_on_user scores 6 of 8, both misses false negatives  ·  66 real verdicts then retired the old evidence question</text>
   </g>
 
   <!-- ============ roadmap ============ -->
