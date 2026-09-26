@@ -117,6 +117,30 @@ if (blockedDecisive.length) {
   hist('blocked_on_user  (DECISIVE — work turns, nothing claimed)', blockedDecisive.map((e) => e.blockedOnUser));
 }
 
+// Everything before v0.6.0 took the final message from the transcript, which on
+// SubagentStop belongs to the parent — those verdicts are about the wrong agent
+// and cannot count towards anything.
+const preFix = rows.filter((e) => e.msgSource === undefined);
+const post = rows.filter((e) => e.msgSource !== undefined);
+if (preFix.length) {
+  console.log(`--- ${preFix.length} entries predate v0.6.0 ---`);
+  const badSub = preFix.filter((e) => e.event === 'SubagentStop').length;
+  console.log(`  read the final message from the transcript; ${badSub} of them on SubagentStop,`);
+  console.log('  where that transcript is the parent session. Those judged the wrong agent.\n');
+}
+if (post.length) {
+  const by = (k) => post.reduce((m, e) => (m[e[k] ?? '—'] = (m[e[k] ?? '—'] ?? 0) + 1, m), {});
+  console.log('--- message source (v0.6.0+) ---');
+  for (const [k, v] of Object.entries(by('msgSource'))) console.log(`  ${String(k).padEnd(14)} ${v}`);
+  const differs = post.filter((e) => e.msgDiffers).length;
+  console.log(`  hook text differed from the transcript's: ${differs}`);
+  const at = Object.entries(by('agentType')).filter(([k]) => k !== '—');
+  if (at.length) console.log(`  agent types: ${at.map(([k, v]) => `${k}=${v}`).join(', ')}`);
+  const standDown = post.filter((e) => e.reason === 'subagent_message_unavailable').length;
+  console.log(`  SubagentStop stood down (no message handed over): ${standDown}`);
+  console.log('');
+}
+
 console.log('--- progress towards Enforce ---');
 console.log(`  coverage ladder reached   ${String(coverageDecisive.length).padStart(4)} / 30`);
 console.log(`  early-stop branch taken   ${String(blockedDecisive.length).padStart(4)} / 30`);

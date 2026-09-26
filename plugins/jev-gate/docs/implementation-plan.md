@@ -68,12 +68,13 @@ These are not stylistic preferences — each one traces to a documented property
 7. **Fail open, always.** No key, no network, timeout, malformed body, unexpected exception — every one exits 0. A judge that is down must never stop work.
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
-10. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
-11. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
-12. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
-13. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
-14. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
-15. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
+10. **Take the host's payload over anything you can re-derive from its side effects.** A file the host writes asynchronously is not the event. Read the documented field; fall back to the file only where being stale is the worst that can happen, and never where the file belongs to a different agent.
+11. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
+12. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
+13. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
+14. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
+15. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
+16. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
 
 ## Budget
 
@@ -119,6 +120,17 @@ Four wordings were then measured **on those same real messages**, scoring both s
 The winner and the criteria-free variant tie on totals; the winner holds wider margins on every early-stop row (0.23 vs 0.31, 0.25 vs 0.37, 0.41 vs 0.48), so the criteria stay. Both rows it gives up are messages that do report something finished — the labels, not the answers, are what is shaky there.
 
 **A side effect worth watching.** More messages now clear `claims_done` and route to the coverage ladder, which had been starved at 3 samples. That should fill faster from here — but it also means a message that reports a step *and* names a next step now lands in the coverage branch rather than the early-stop one.
+
+**Why every measurement before v0.6.0 was taken on the wrong data.** The gate read the final assistant message out of the transcript file. Claude Code's hook documentation says not to: *"The transcript file is written asynchronously and may lag the in-memory conversation… Hooks that need the final assistant text of the current turn should use `last_assistant_message` on Stop and SubagentStop instead of reading the transcript."*
+
+Two consequences, one of them severe:
+
+- **On `SubagentStop`, `transcript_path` is the parent session's.** Subagent turns are not written to it — confirmed by `isSidechain` being false on every line of a 944-line transcript, and by every SubagentStop verdict's message resolving out of the *parent's* messages. So those verdicts judged the orchestrator's last message instead of the subagent's report. **188 of 310 entries (61%) were SubagentStop.** The hook was added on the strength of the playbook's "check its evidence before you accept it", and it never once did that.
+- **On `Stop`, the message may simply be stale** — the previous turn's text, judged as if it were this one's. The same lag applies to the command log, which is the likeliest explanation for `no_runs` blocks fired at agents that had just run their tests.
+
+v0.6.0 takes the message from `last_assistant_message` and falls back to the transcript only where that is merely stale rather than wrong. On `SubagentStop` there is no acceptable fallback, so the gate stands down and records `subagent_message_unavailable`. Whether that event actually carries the subagent's text is recorded per verdict (`msgSource`, `agentType`, `msgDiffers`) rather than assumed; if it turns out to carry the parent's, the hook comes off.
+
+**Every accuracy figure in this document that predates v0.6.0 was measured through the transcript** — 6/8, 39–67%, 44%, 59%. They describe a gate reading the wrong agent's words in the majority of cases.
 
 **Remaining risk.** `stopped_early` is the branch most likely to misfire, because "does this pause need the user" is a genuinely harder judgement than "did something run". It is advisory by default for that reason, and `/jev-gate:status` histograms `blocked_on_user` over work turns only so the distribution is not diluted by conversational turns.
 
