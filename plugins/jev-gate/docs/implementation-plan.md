@@ -68,13 +68,14 @@ These are not stylistic preferences — each one traces to a documented property
 7. **Fail open, always.** No key, no network, timeout, malformed body, unexpected exception — every one exits 0. A judge that is down must never stop work.
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
-10. **Take the host's payload over anything you can re-derive from its side effects.** A file the host writes asynchronously is not the event. Read the documented field; fall back to the file only where being stale is the worst that can happen, and never where the file belongs to a different agent.
-11. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
-12. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
-13. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
-14. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
-15. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
-16. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
+10. **When an event is about another agent, every input must come from that agent.** Fixing one of them is worse than fixing none: a subagent's words judged against a parent's actions reads as a confident, uniform failure. If any input cannot be sourced from the right agent, stand down.
+11. **Take the host's payload over anything you can re-derive from its side effects.** A file the host writes asynchronously is not the event. Read the documented field; fall back to the file only where being stale is the worst that can happen, and never where the file belongs to a different agent.
+12. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
+13. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
+14. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
+15. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
+16. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
+17. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
 
 ## Budget
 
@@ -131,6 +132,18 @@ Two consequences, one of them severe:
 v0.6.0 takes the message from `last_assistant_message` and falls back to the transcript only where that is merely stale rather than wrong. On `SubagentStop` there is no acceptable fallback, so the gate stands down and records `subagent_message_unavailable`. Whether that event actually carries the subagent's text is recorded per verdict (`msgSource`, `agentType`, `msgDiffers`) rather than assumed; if it turns out to carry the parent's, the hook comes off.
 
 **Every accuracy figure in this document that predates v0.6.0 was measured through the transcript** — 6/8, 39–67%, 44%, 59%. They describe a gate reading the wrong agent's words in the majority of cases.
+
+**v0.6.0 fixed half of it (v0.7.0).** The message moved to the hook payload; the *facts* — the command log, the diff, whether work happened — kept coming from `transcript_path`, which on `SubagentStop` is still the parent's. So the subagent's claim was being judged against the orchestrator's commands. The first 29 decisive rows under v0.6.0 make it unmistakable: **every coverage value below 0.3, every verdict a block**, and all 13 from named subagents showed the same `commandCount=2` — the same two parent commands, over and over.
+
+A subagent's own transcript does exist, beside the parent's:
+
+```
+<projects>/<session>/subagents/agent-<agent_id>.jsonl
+```
+
+It is present for the named, longer-lived subagents — 14 of 51 recorded `agent_id`s; the other 37 all had an empty `agent_type` and are not persisted. The layout is undocumented, so it is best-effort: found means read it, missing means stand down with `subagent_facts_unavailable`. Never fall back to the parent, which is what produced the wrong answers.
+
+**This also retracts the "no implementer sessions" finding.** The claim that neither project ever edited a file was drawn from parent transcripts. One `alpha-implementer` subagent's own transcript holds **54 Edits, 5 Writes and 123 Bash calls**. The implementer sessions were there all along, in the files the gate was not reading.
 
 **Remaining risk.** `stopped_early` is the branch most likely to misfire, because "does this pause need the user" is a genuinely harder judgement than "did something run". It is advisory by default for that reason, and `/jev-gate:status` histograms `blocked_on_user` over work turns only so the distribution is not diluted by conversational turns.
 

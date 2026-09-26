@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.6.0`
+### [jev-gate](./plugins/jev-gate) `v0.7.0`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -168,6 +168,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-09-26
+- Fix **jev-gate** to v0.7.0 — read a subagent's commands from its own transcript; v0.6.0 had fixed the message but left the facts coming from the parent, so every subagent verdict blocked
 - Fix **jev-gate** to v0.6.0 — take the final message from `last_assistant_message` instead of the transcript; on `SubagentStop` the transcript is the parent's, so 61% of all verdicts so far judged the wrong agent
 
 ### 2026-09-25

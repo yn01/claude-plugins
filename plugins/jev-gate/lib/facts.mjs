@@ -6,7 +6,8 @@
 // which command ran, and how many files changed are all read from the
 // transcript by code, never inferred by the model.
 
-import { readFileSync, statSync, openSync, readSync, closeSync } from 'node:fs';
+import { readFileSync, statSync, openSync, readSync, closeSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const TAIL_BYTES = 2 * 1024 * 1024;
@@ -155,6 +156,25 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
   const lastFailed = [...latestByCommand.values()].reverse().find((c) => c.isError) ?? null;
 
   return { finalMessage, commands: kept, lastFailed, sawAnyCommand, workThisTurn };
+}
+
+/**
+ * Where a subagent's own transcript lives:
+ *   <projects>/<session>/subagents/agent-<agent_id>.jsonl
+ * beside the parent's <projects>/<session>.jsonl.
+ *
+ * On SubagentStop the hook's transcript_path is the PARENT's, so reading it
+ * gives the orchestrator's commands under the subagent's claim — which is how
+ * every subagent verdict up to v0.7.0 came out as "nothing you ran covers
+ * this". Only some subagents are persisted here (the named, longer-lived ones);
+ * the layout is not documented, so callers must treat null as "stand down"
+ * rather than falling back to the parent.
+ */
+export function subagentTranscript(parentPath, agentId) {
+  if (!parentPath || !agentId) return null;
+  const dir = parentPath.replace(/\.jsonl$/, '');
+  const p = join(dir, 'subagents', `agent-${agentId}.jsonl`);
+  return existsSync(p) ? p : null;
 }
 
 /** `git diff --stat` for the working tree, or null outside a repo. */
