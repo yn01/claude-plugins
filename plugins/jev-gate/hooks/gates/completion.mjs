@@ -29,7 +29,7 @@ import { join } from 'node:path';
 import { loadConfig, gateSettings } from '../../lib/config.mjs';
 import { ask, noul } from '../../lib/jev.mjs';
 import { record } from '../../lib/journal.mjs';
-import { readTranscript, diffSummary } from '../../lib/facts.mjs';
+import { readTranscript, diffSummary, subagentTranscript } from '../../lib/facts.mjs';
 
 const GATE = 'completion';
 
@@ -100,10 +100,17 @@ async function main() {
   const spent = blocksSoFar(cfg.sessionsPath, input.session_id);
 
   const sb = gate.stateBudget ?? {};
-  const facts = readTranscript(input.transcript_path, {
-    ...sb,
-    verificationCommands: gate.verificationCommands ?? [],
-  });
+  const readOpts = { ...sb, verificationCommands: gate.verificationCommands ?? [] };
+
+  // v0.6.0 moved the MESSAGE to the hook payload but left the FACTS coming from
+  // transcript_path, which on SubagentStop is the parent's. The result was the
+  // subagent's claim judged against the orchestrator's commands: across the
+  // first 29 decisive rows, every single coverage value landed below 0.3 and
+  // every one blocked. A subagent's work has to be read from the subagent.
+  const isSubagent = input.hook_event_name === 'SubagentStop';
+  const subPath = isSubagent ? subagentTranscript(input.transcript_path, input.agent_id) : null;
+  const facts = readTranscript(isSubagent ? subPath : input.transcript_path, readOpts);
+  const factsSource = isSubagent ? (subPath ? 'subagent' : 'none') : 'parent';
 
   // The transcript is written asynchronously and lags the live conversation, so
   // it may not hold the turn that just ended. Claude Code hands Stop and
@@ -127,10 +134,11 @@ async function main() {
   // On SubagentStop the transcript belongs to the parent, so falling back to it
   // does not produce a worse answer — it produces an answer about the wrong
   // agent. Judge only when the event handed the text over directly.
-  if (input.hook_event_name === 'SubagentStop' && msgSource !== 'hook') {
+  if (isSubagent && (msgSource !== 'hook' || factsSource !== 'subagent')) {
     record(cfg.journalPath, {
       gate: GATE, mode: gate.mode, event: input.hook_event_name, session: input.session_id, cwd,
-      verdict: 'pass', decidedBy: 'code', reason: 'subagent_message_unavailable',
+      verdict: 'pass', decidedBy: 'code',
+      reason: msgSource !== 'hook' ? 'subagent_message_unavailable' : 'subagent_facts_unavailable',
       agentType: input.agent_type ?? null,
     });
     pass();
@@ -147,6 +155,7 @@ async function main() {
     // infer: does last_assistant_message arrive at all, and on SubagentStop is
     // it the subagent's text or the parent's?
     msgSource,
+    factsSource,
     agentType: input.agent_type ?? null,
     agentId: input.agent_id ?? null,
     msgDiffers: Boolean(hookMessage) && hookMessage !== facts.finalMessage,
