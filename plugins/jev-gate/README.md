@@ -212,6 +212,14 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 
 ## Changelog
 
+### v0.6.0
+
+- **The final message now comes from `last_assistant_message`, not the transcript.** Claude Code's hook docs say the transcript file lags the live conversation and that Stop and SubagentStop hooks should use that field instead. This gate had been reading the file since v0.1.0.
+- **On `SubagentStop` the transcript belongs to the parent session** — subagent turns are never written to it. Every SubagentStop verdict was therefore about the orchestrator's last message rather than the subagent's report. That is **188 of 310 entries, 61% of everything collected so far**, and it is the one thing the hook existed to do.
+- Where the event hands no message over, `Stop` falls back to the transcript (merely stale) and `SubagentStop` stands down, recording `subagent_message_unavailable` — a wrong agent is worse than no answer.
+- Each verdict records `msgSource`, `agentType` and `msgDiffers`, so the next batch settles what this release had to infer.
+- **Every accuracy figure reported before this release was measured through the transcript** and describes the wrong agent in the majority of cases.
+
 ### v0.5.0
 
 - **`claims_done` reworded.** It asked whether "the requested work" was finished; in a session that delegates step after step, a step finishing is not that, and jev-1.13 read it exactly that literally. Reading 33 real `stopped_early` verdicts back against their messages, 11 were plain completion announcements — `## 移行完了 ✅`, `ジャーナル統合が完了しました` — scoring 0.03–0.47 and landing in the early-stop branch. Precision was 39–67%.

@@ -105,8 +105,36 @@ async function main() {
     verificationCommands: gate.verificationCommands ?? [],
   });
 
+  // The transcript is written asynchronously and lags the live conversation, so
+  // it may not hold the turn that just ended. Claude Code hands Stop and
+  // SubagentStop the text directly for exactly this reason, and the docs say to
+  // use it instead of reading the transcript.
+  //
+  // This matters twice over on SubagentStop: the transcript_path there is the
+  // PARENT session's — subagent turns are not written to it, verified by
+  // isSidechain being absent from every line — so reading it judged the
+  // orchestrator's last message instead of the subagent's report. Every earlier
+  // measurement of this gate was taken that way.
+  const hookMessage = typeof input.last_assistant_message === 'string'
+    ? input.last_assistant_message.trim()
+    : '';
+  const finalMessage = hookMessage || facts.finalMessage;
+  const msgSource = hookMessage ? 'hook' : 'transcript';
+
   // Nothing was run and nothing was claimed — there is no claim to check.
-  if (!facts.finalMessage) pass();
+  if (!finalMessage) pass();
+
+  // On SubagentStop the transcript belongs to the parent, so falling back to it
+  // does not produce a worse answer — it produces an answer about the wrong
+  // agent. Judge only when the event handed the text over directly.
+  if (input.hook_event_name === 'SubagentStop' && msgSource !== 'hook') {
+    record(cfg.journalPath, {
+      gate: GATE, mode: gate.mode, event: input.hook_event_name, session: input.session_id, cwd,
+      verdict: 'pass', decidedBy: 'code', reason: 'subagent_message_unavailable',
+      agentType: input.agent_type ?? null,
+    });
+    pass();
+  }
 
   const base = {
     gate: GATE,
@@ -115,6 +143,13 @@ async function main() {
     session: input.session_id,
     cwd,
     pluginData: Boolean(process.env.CLAUDE_PLUGIN_DATA),
+    // Diagnostics, so the next batch of data answers what this release had to
+    // infer: does last_assistant_message arrive at all, and on SubagentStop is
+    // it the subagent's text or the parent's?
+    msgSource,
+    agentType: input.agent_type ?? null,
+    agentId: input.agent_id ?? null,
+    msgDiffers: Boolean(hookMessage) && hookMessage !== facts.finalMessage,
   };
 
   // --- 1. facts the code can settle on its own ------------------------------
@@ -147,7 +182,7 @@ async function main() {
 
   const state = {
     task: typeof task === 'string' ? task.slice(0, 2000) : null,
-    final_message: (facts.finalMessage || '').slice(0, sb.finalMessageChars ?? 4000),
+    final_message: finalMessage.slice(0, sb.finalMessageChars ?? 4000),
     command_log: facts.commands.map((c) => ({
       command: c.command,
       result: c.isError ? 'error' : 'ok',
