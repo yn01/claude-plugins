@@ -55,6 +55,26 @@ Both misses are the same shape: an explicit request for permission. jev-1.13 rea
 
 **The errors run in the safe direction.** Both misses are false negatives — the gate stays quiet when it could have spoken. There were no false positives: nothing that genuinely needed the user was flagged as a stall. Under-detection is the failure mode to prefer here, and it is a further reason `stopped_early` stays advisory. Revisit the question wording when the journal holds real stops rather than invented ones.
 
+## What the JEV-as-a-Judge paper changed — 2026-09-30
+
+Li, Miao, Krishnan and Padman (CMU) measure a decision-only judge against sixteen others across five workloads. Three of their results bear directly on this plugin, and one of them invalidated a premise it had been built on.
+
+**Ask what can be read, not what must be derived.** JEV is within about three points of a reasoning judge *"wherever the verdict can be read off the text"* — chat quality, refusals, evidence-grounded factuality — and falls behind by 7 to 28 points *"wherever the judge must derive or check a result"*: expert knowledge −7.0, code −12.9, math −14.3, logic puzzles −27.6. Their operating table files difficult correctness under **Escalate**. `evidence_covers_claim` asked whether a set of commands exercised the work a message claimed; that is tracing, and it lived in the weak zone through three rewordings. `completion@2` asks only read-off questions.
+
+**A Noul already has a confidence.** The paper uses `q = max_k p_k` as the confidence of every judge, reporting Spearman correlations of 0.958–0.999 against JEV's own native value. For a yes/no question that is `max(p, 1−p)` — computable from what this gate already receives. **This plugin spent four versions asserting that a Noul carries no confidence and that a Choice would be required to get one.** It was wrong, and the correction is arithmetic.
+
+**Confidence locates the errors.** Accuracy by band: 55% below q=0.6, 69% in [0.7, 0.8), 89% in [0.95, 0.99), 98% at q=1; AUROC of q against correctness 0.73–0.88. Errors made confidently are 12–21% of all errors. That is the basis for `minConfidence`: below it, the verdict is `unclear` — *could not be read*, which is what a mid-range Noul actually means.
+
+**Jev over-rejects.** On HaluEval *"its whole deficit comes from rejecting correct answers"* (94.4% vs 97.1% accepted) while catching hallucinations as often as the reasoning judge. A gate whose job is to block should hold that bias in mind: the default posture is to pass, and only a contradiction blocks.
+
+**Where the signal weakens.** AUROC drops from 0.870 on easy pairs to 0.764 *"on hard pairs, where the rejected answer is the more elaborately written one"*. Agent completion reports are elaborately written — tables, checkmarks, bold. Expect the confidence signal to be at its weakest exactly on the messages this gate reads.
+
+### The threshold recipe (§8)
+
+The missing piece for Shadow → Enforce, quoted: *"Choosing the threshold by a **lower confidence bound** rather than a point estimate cuts the risk of losing more than two points from about 45% to about 5% with about **100 local labels**, and to under 1% when **each workload gets its own threshold**."*
+
+So, per branch: collect ~100 labelled local examples, set the threshold from a lower confidence bound rather than the observed optimum, and keep a separate threshold per project. jev-gate's per-project `.jev-gate/config.json` already provides the last of those. Note also §7.3 — a two-label Choice, a Noul and a two-level Score disagree by ~0.055 on the same binary question — so **a threshold belongs to one fixed output type** and must be re-derived whenever the question's type changes.
+
 ## Design rules that apply to every gate
 
 These are not stylistic preferences — each one traces to a documented property of jev-1.13.
@@ -64,18 +84,20 @@ These are not stylistic preferences — each one traces to a documented property
 3. **One condition per Noul.** A question joining two conditions produces a value that means neither.
 4. **`state` is not trusted.** jev-1.13 "does not treat state as hostile by default". The state of a completion gate contains the agent's own claim, so the claim is never the evidence — the command log is.
 5. **`state` keeps its original language; `instructions` are English.** The agent writes in Japanese; re-translating it would lose exactly the nuance being judged.
-6. **A Noul has no `confidence`.** Only Choice and Score return one. Branching is on the probability alone. A gate that needs a "the model is unsure" signal must use a Choice instead.
+6. **A Noul's confidence is `max(p, 1−p)`.** The response carries no `confidence` field — only Choice and Score do — but the paper uses `q = max_k p_k` as the confidence of every judge, which for a yes/no question is the distance from the coin flip. *Rules 1–5 and 7 onward were written before this was understood; v0.1.0–v0.7.0 all asserted that a Choice was needed to get an uncertainty signal, and built around that. It was never true.*
 7. **Fail open, always.** No key, no network, timeout, malformed body, unexpected exception — every one exits 0. A judge that is down must never stop work.
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
-10. **When an event is about another agent, every input must come from that agent.** Fixing one of them is worse than fixing none: a subagent's words judged against a parent's actions reads as a confident, uniform failure. If any input cannot be sourced from the right agent, stand down.
-11. **Take the host's payload over anything you can re-derive from its side effects.** A file the host writes asynchronously is not the event. Read the documented field; fall back to the file only where being stale is the worst that can happen, and never where the file belongs to a different agent.
-12. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
-13. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
-14. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
-15. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
-16. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
-17. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
+10. **Ask the model what can be read off the page; leave what must be derived to code.** A decision-only judge keeps pace on the first and loses double digits on the second. A question in the wrong category does not improve with rewording — three attempts here proved it — so check which kind it is before writing the words.
+11. **Version the decision contract apart from the harness.** The questions, the state, the thresholds and the routing are one replaceable unit; the wiring around them is not. Record the contract on every verdict, and never pool rows from two of them. This also makes "start over" a normal operation rather than a project.
+12. **When an event is about another agent, every input must come from that agent.** Fixing one of them is worse than fixing none: a subagent's words judged against a parent's actions reads as a confident, uniform failure. If any input cannot be sourced from the right agent, stand down.
+13. **Take the host's payload over anything you can re-derive from its side effects.** A file the host writes asynchronously is not the event. Read the documented field; fall back to the file only where being stale is the worst that can happen, and never where the file belongs to a different agent.
+14. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
+15. **Count the rows a number actually decided, not the rows it appears in.** Every question is asked on every event; most answers are discarded by the branch that was taken. A sample counted the loose way looks ready long before it is — and can hide a clean separation behind rows where the value did nothing.
+16. **A question that never disagrees with code is not a question.** Before a Noul earns a place, check it against the fact code already holds; if they agree every time, the fact was the answer and the request was waste. Fixtures cannot show this — each is built with an obvious answer — so it only surfaces in the journal.
+17. **One journal for everything.** All gates, all projects, one JSONL. The distribution is the deliverable.
+18. **Write only where the host says to.** Claude Code gives every plugin a directory under `~/.claude/plugins/data/` and points `CLAUDE_PLUGIN_DATA` at it; its own first-party plugins keep their state there. Everything else under `~/.claude/` is Claude Code's, and `~/.claude/plugins/` above `data/` holds install state it rewrites. v0.1.0–v0.2.5 wrote to `~/.claude/jev-gate/` and were wrong to.
+19. **A gate on a frequent event needs a code-side guard.** `Stop` fires on every assistant turn, most of which are not tasks at all. Narrowing by a deterministic fact before spending a question keeps both the cost and the false-positive rate down.
 
 ## Budget
 

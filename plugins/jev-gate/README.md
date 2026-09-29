@@ -69,33 +69,35 @@ agent stops
   │        latest run of any of them errored?  ──yes──▶  block         (no request sent)
   │        no final message at all?            ──yes──▶  pass
   ▼
-  Jev: three nouls, one request
-       claims_done           — the final message reports something completed
-       evidence_covers_claim — what ran exercises what is being claimed
-       blocked_on_user       — the stop needs a decision only the user can give
+  Jev: three nouls, one request — each read off the message alone
+       claims_done     — the message reports something completed
+       claims_verified — the message asserts a test / build / lint / check passed
+       blocked_on_user — the stop needs a decision only the user can give
   ▼
-  code:  claims_done ≥ 0.5
-           nothing ran at all           ──▶ block   (a count, so code decides)
-           evidence_covers_claim ≥ 0.7  ──▶ pass
-           evidence_covers_claim ≥ 0.3  ──▶ unclear
-           otherwise                    ──▶ block
-         claims_done < 0.5
-           work happened this turn, and blocked_on_user < 0.5
-                                   ──▶ stopped_early
-           otherwise               ──▶ pass
+  code:  claims_verified ≥ 0.5  and nothing ran   ──▶ block        ← the contradiction
+         claims_done     ≥ 0.5  and nothing ran   ──▶ unverified   (said, not enforced)
+         claims_done     ≥ 0.5                    ──▶ pass
+         blocked_on_user ≥ 0.5                    ──▶ pass
+         work happened this turn                  ──▶ stopped_early
+         otherwise                                ──▶ pass
+  ▼
+  any verdict whose deciding answer was read with confidence < 0.7
+                                                  ──▶ unclear
   ▼
   shadow  → record everything, exit 0
-  enforce → pass: exit 0 · unclear: systemMessage · block: exit 2, budget 2
+  enforce → pass: exit 0 · unclear / unverified: systemMessage · block: exit 2, budget 2
             stopped_early: systemMessage (exit 2 only if opted in)
 ```
 
-`workThisTurn` — did the agent edit or run anything since the user last spoke — is what keeps an ordinary answered question out of the early-stop branch. A turn that changed nothing is a conversation, not a task that stalled. It is read from the transcript by code, never inferred.
+**Every question reads the message and nothing else.** The paper behind this design measures a decision-only judge as level with a reasoning judge *"wherever the verdict can be read off the text"*, and behind it by 13–28 points *"wherever the judge must derive or check a result"*. So the gate never asks whether a run *covers* a claim — that is tracing, and it sat in the weak zone for three rewrites. It asks what the message **says**, and code checks that against what the transcript **records**. A block is now a contradiction, not a judgement of degree.
 
-Asking whether a run *exists* was the original mistake: that is a count, and code has it. The question that earns its cost is whether the run **reaches** what was claimed — one test file passing does not support "every endpoint is migrated". Success or failure is not asked either, for the same reason: the exit code is a fact, and a failed run short-circuits long before Jev is called.
+The command log is no longer sent at all. Nothing asks about it, so including it would be noise the model has to judge around — and about three quarters of the tokens.
 
-All three questions are phrased **positively**. jev-1.13 reads negations at face value, so anything absent is computed in code — an `evidence_missing` question is exactly the shape to avoid. For the same reason the gate never asks whether the tests *passed*: counting and arithmetic are documented weaknesses, and the exit code is already sitting in the transcript.
+`workThisTurn` — did the agent edit or run anything since the user last spoke — keeps an ordinary answered question out of the early-stop branch. A turn that changed nothing is a conversation, not a task that stalled.
 
-When the hook event carries the task's own text, it goes into the state as `task`. The playbook's advice is to name the finish line per task — *"done means: every endpoint uses the new client, the old client is deleted, and the test suite passes"* — and evidence judged against that beats evidence judged against a generic notion of "some test ran".
+All three questions are phrased **positively**. jev-1.13 reads negations at face value, so anything absent is computed in code.
+
+**Confidence comes free.** A Noul returns one probability, and the paper uses `q = max_k p_k` as the confidence of every judge — for a yes/no question that is just how far the answer sits from a coin flip. Below `minConfidence` the verdict becomes `unclear`, which here means *the answer could not be read confidently*, not that the property was half true. Acting on a coin flip is how a gate earns distrust: the paper measures 55% accuracy below q=0.6 against 89% in [0.95, 0.99).
 
 ## Configuration
 
@@ -211,6 +213,16 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.8.0
+
+- **The decision contract is now a versioned component.** The questions, the state they read, the thresholds and the routing live in `lib/contracts/completion.mjs` and every verdict records which contract produced it. The harness — hook wiring, fail-open paths, journal, storage, subagent resolution — is untouched by a contract change. Rewriting the decision is now a normal change rather than a rewrite of the plugin.
+- **`completion@2` is a rewrite, not an edit.** Two sources forced it: *JEV-as-a-Judge* (Li et al., CMU 2026), which measures a decision-only judge as level with a reasoning judge wherever a verdict can be **read off the text** and 13–28 points behind wherever it must be **derived**; and the Jev-engineering playbook's checklist, which this plugin failed on five points.
+- **`evidence_covers_claim` is gone.** Asking whether commands *cover* a claim is tracing, squarely in the weak zone, and it showed: across 29 real decisive verdicts every value fell below 0.3 and every one blocked. Three rewordings never moved it because the wording was never the problem.
+- **`claims_verified` replaces it** — *does the message assert a check passed?* — which is on the page. Whether such a check ran is a fact code already holds. A block is now a contradiction between the two, which code settles exactly.
+- **Confidence is recorded and routes.** `max(p, 1−p)`, per the paper's `q = max_k p_k`. Below 0.7 a verdict becomes `unclear`, restoring the correct reading of a mid-range Noul: *cannot tell*, not *half true*.
+- The state shrank to `task` + `final_message`; measured input tokens fell from ~600 to ~180.
+- Earlier rows stay in the journal under their own heading and are never pooled with these.
 
 ### v0.7.0
 

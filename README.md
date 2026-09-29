@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.7.0`
+### [jev-gate](./plugins/jev-gate) `v0.8.0`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -166,6 +166,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-09-30
+- Update **jev-gate** to v0.8.0 — make the decision contract a versioned component (`lib/contracts/completion.mjs`) and rewrite it as `completion@2`: only questions that can be read off the message go to Jev, confidence is computed as `max(p, 1−p)` and routes, and the coverage question is retired
 
 ### 2026-09-26
 - Fix **jev-gate** to v0.7.0 — read a subagent's commands from its own transcript; v0.6.0 had fixed the message but left the facts coming from the parent, so every subagent verdict blocked
