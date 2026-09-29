@@ -136,8 +136,11 @@ if (post.length) {
   console.log(`  hook text differed from the transcript's: ${differs}`);
   const at = Object.entries(by('agentType')).filter(([k]) => k !== '—');
   if (at.length) console.log(`  agent types: ${at.map(([k, v]) => `${k}=${v}`).join(', ')}`);
-  const standDown = post.filter((e) => e.reason === 'subagent_message_unavailable').length;
-  console.log(`  SubagentStop stood down (no message handed over): ${standDown}`);
+  const fs = post.reduce((m, e) => (m[e.factsSource ?? '—'] = (m[e.factsSource ?? '—'] ?? 0) + 1, m), {});
+  console.log(`  facts read from: ${Object.entries(fs).map(([k, v]) => `${k}=${v}`).join(', ')}`);
+  const noMsg = post.filter((e) => e.reason === 'subagent_message_unavailable').length;
+  const noFacts = post.filter((e) => e.reason === 'subagent_facts_unavailable').length;
+  console.log(`  SubagentStop stood down: ${noMsg} without a message, ${noFacts} without a transcript of its own`);
   console.log('');
 }
 

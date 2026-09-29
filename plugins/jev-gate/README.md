@@ -212,6 +212,12 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 
 ## Changelog
 
+### v0.7.0
+
+- **v0.6.0 fixed the message but not the facts.** The command log still came from `transcript_path`, which on `SubagentStop` is the parent's — so a subagent's claim was judged against the orchestrator's commands. Of the first 29 decisive rows afterwards, **every coverage value fell below 0.3 and every verdict was a block**, with all 13 named-subagent rows showing the same `commandCount=2`.
+- A subagent's own transcript sits at `<projects>/<session>/subagents/agent-<agent_id>.jsonl`. `SubagentStop` now reads it. The layout is undocumented, so it is best-effort: missing means stand down (`subagent_facts_unavailable`), never fall back to the parent.
+- **Retraction:** the earlier finding that neither project contained an implementer session was wrong. It was drawn from parent transcripts; one `alpha-implementer` subagent's own transcript holds 54 Edits, 5 Writes and 123 Bash calls. The sessions this gate was designed for were there all along, in the files it was not reading.
+
 ### v0.6.0
 
 - **The final message now comes from `last_assistant_message`, not the transcript.** Claude Code's hook docs say the transcript file lags the live conversation and that Stop and SubagentStop hooks should use that field instead. This gate had been reading the file since v0.1.0.
