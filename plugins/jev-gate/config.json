@@ -8,9 +8,9 @@
       "enabled": true,
       "thresholds": {
         "claimsDone": 0.5,
-        "evidencePass": 0.7,
-        "evidenceBlock": 0.3,
-        "blockedOnUser": 0.5
+        "claimsVerified": 0.5,
+        "blockedOnUser": 0.5,
+        "minConfidence": 0.7
       },
       "earlyStop": {
         "enabled": true,
@@ -20,7 +20,6 @@
       "maxBlocksPerSession": 2,
       "stateBudget": {
         "finalMessageChars": 4000,
-        "commandLogChars": 12000,
         "maxCommands": 8,
         "perCommandOutputChars": 1500
       }
