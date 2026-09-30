@@ -102,6 +102,22 @@ async function main() {
   // Blocking again from here is how infinite loops start.
   if (input.stop_hook_active === true) pass();
 
+  // Some agent types have no business running a check: a Plan agent designs, an
+  // Explore agent searches, and neither holds a tool that edits. Judging their
+  // reports as completion claims only produced "nothing ran" — correct as a
+  // fact, wrong as a verdict. They are skipped before Jev is asked, and the
+  // skip is recorded without a verdict so it never counts as a decision.
+  const isSubagent = input.hook_event_name === 'SubagentStop';
+  const excluded = gate.excludeAgentTypes ?? [];
+  if (isSubagent && Array.isArray(excluded) && excluded.includes(input.agent_type)) {
+    record(cfg.journalPath, {
+      gate: GATE, mode: gate.mode, event: input.hook_event_name, session: input.session_id, cwd,
+      skip: 'excluded_agent_type', decidedBy: 'code',
+      agentType: input.agent_type ?? null, agentId: input.agent_id ?? null,
+    });
+    pass();
+  }
+
   const budget = gate.maxBlocksPerSession ?? 2;
   const spent = blocksSoFar(cfg.sessionsPath, input.session_id);
 
@@ -113,7 +129,6 @@ async function main() {
   // subagent's claim judged against the orchestrator's commands: across the
   // first 29 decisive rows, every single coverage value landed below 0.3 and
   // every one blocked. A subagent's work has to be read from the subagent.
-  const isSubagent = input.hook_event_name === 'SubagentStop';
   const subPath = isSubagent ? subagentTranscript(input.transcript_path, input.agent_id) : null;
   const facts = readTranscript(isSubagent ? subPath : input.transcript_path, readOpts);
   const factsSource = isSubagent ? (subPath ? 'subagent' : 'none') : 'parent';
@@ -189,7 +204,7 @@ async function main() {
   const task =
     input.task_description ?? input.task ?? input.description ?? input.prompt ?? null;
 
-  // Every question in completion@2 reads the message and nothing else, so the
+  // Every question since completion@2 reads the message and nothing else, so the
   // command log no longer belongs in the state: what ran is a fact code holds
   // and checks itself. Sending it anyway would be noise the model has to judge
   // around, and about three quarters of the tokens.
@@ -225,7 +240,11 @@ async function main() {
   // --- 3. the contract decides; this file only carries it out ---------------
   const outcome = contract.decide({
     answers: probs,
-    facts: { ranVerification: facts.commands.length > 0, workThisTurn: facts.workThisTurn },
+    facts: {
+      ranVerification: facts.commands.length > 0,
+      editedFiles: facts.editCount > 0,
+      workThisTurn: facts.workThisTurn,
+    },
     thresholds: gate.thresholds,
   });
 
@@ -243,6 +262,7 @@ async function main() {
     thresholds: { ...contract.defaultThresholds, ...(gate.thresholds ?? {}) },
     commandCount: facts.commands.length,
     sawAnyCommand: facts.sawAnyCommand,
+    editCount: facts.editCount,
     workThisTurn: facts.workThisTurn,
     latencyMs: answer.latencyMs,
     usage: answer.usage,

@@ -23,6 +23,8 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/stats.mjs" $ARGUMENTS
 
 If it reports no journal, say so plainly and stop — there is nothing to tune yet.
 
+`skipped:` counts `SubagentStop` events from an excluded agent type (`excludeAgentTypes`). They were never judged, so they are not verdicts and appear in no decided total. `script:` names the copy of the script that ran and its version — if it is not the version you expect, the numbers may be an old reading of a new journal.
+
 ### 2. Read the histograms, not the verdicts
 
 The verdict counts reflect the *current* thresholds, so they cannot justify those thresholds. The histograms can.

@@ -167,6 +167,13 @@ It is present for the named, longer-lived subagents — 14 of 51 recorded `agent
 
 **This also retracts the "no implementer sessions" finding.** The claim that neither project ever edited a file was drawn from parent transcripts. One `alpha-implementer` subagent's own transcript holds **54 Edits, 5 Writes and 123 Bash calls**. The implementer sessions were there all along, in the files the gate was not reading.
 
+**What the first `completion@2` rows found (v0.9.0).** Every `claimed_done_nothing_ran` verdict — four, all on `SubagentStop` — came from a role that never needs a check: a `Plan` agent, a `general-purpose` agent doing a review, and two doc-managers that had edited docs. Two changes, and they sit on opposite sides of rule 11:
+
+- **Excluded agent types are the harness's business.** `gates.completion.excludeAgentTypes` (default `Explore`, `Plan` — the two built-in agents with no editing tool) stops the gate before Jev is asked, like `stop_hook_active`. The contract never sees those events, so no contract changed; the journal records a `skip` row with no verdict, which is not a decision and is counted apart from every decided total.
+- **Edits counting as work is the contract's business, so it is `completion@3`.** The route to `claimed_done_nothing_ran` now also needs no file edit, and a claim with edits but no check passes as `claim_backed_by_edits`. Questions and thresholds are unchanged, but the same probabilities now reach a different verdict, and rule 11 says the routing is part of the unit — so the id moved, and `@2` rows are not pooled with `@3`. Edits are never verification: `claimed_check_never_ran` still reads only the command log.
+
+The `general-purpose` reviewer stays judged. A name that covers implementers as well as reviewers cannot be excluded by default; a project that uses it only read-only can list it.
+
 **Remaining risk.** `stopped_early` is the branch most likely to misfire, because "does this pause need the user" is a genuinely harder judgement than "did something run". It is advisory by default for that reason, and `/jev-gate:status` histograms `blocked_on_user` over work turns only so the distribution is not diluted by conversational turns.
 
 **Exit criteria for Enforce**, per branch — not per entry. The first statement of this criterion said "≥ 30 Jev-decided entries", which was the wrong denominator: every question is asked on every event, but a probability only informs a threshold when the branch it governs was actually taken. On the first v0.4.0 data, 24 coverage answers came back and **3** of them decided anything.

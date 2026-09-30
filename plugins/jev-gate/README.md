@@ -65,6 +65,7 @@ Without it the plugin installs and runs, but every event fails open — `/jev-ga
 ```
 agent stops
   │
+  ├─ code: SubagentStop from an excluded agent type (Explore, Plan)?  ──▶  skip  (recorded, no verdict)
   ├─ code: walk the transcript for verification runs (test / build / lint / typecheck)
   │        latest run of any of them errored?  ──yes──▶  block         (no request sent)
   │        no final message at all?            ──yes──▶  pass
@@ -75,8 +76,10 @@ agent stops
        blocked_on_user — the stop needs a decision only the user can give
   ▼
   code:  claims_verified ≥ 0.5  and nothing ran   ──▶ block        ← the contradiction
-         claims_done     ≥ 0.5  and nothing ran   ──▶ unverified   (said, not enforced)
-         claims_done     ≥ 0.5                    ──▶ pass
+         claims_done     ≥ 0.5  and nothing ran,
+                                nothing edited    ──▶ unverified   (said, not enforced)
+         claims_done     ≥ 0.5  and files edited  ──▶ pass         (claim_backed_by_edits)
+         claims_done     ≥ 0.5  and a check ran   ──▶ pass
          blocked_on_user ≥ 0.5                    ──▶ pass
          work happened this turn                  ──▶ stopped_early
          otherwise                                ──▶ pass
@@ -92,6 +95,8 @@ agent stops
 **Every question reads the message and nothing else.** The paper behind this design measures a decision-only judge as level with a reasoning judge *"wherever the verdict can be read off the text"*, and behind it by 13–28 points *"wherever the judge must derive or check a result"*. So the gate never asks whether a run *covers* a claim — that is tracing, and it sat in the weak zone for three rewrites. It asks what the message **says**, and code checks that against what the transcript **records**. A block is now a contradiction, not a judgement of degree.
 
 The command log is no longer sent at all. Nothing asks about it, so including it would be noise the model has to judge around — and about three quarters of the tokens.
+
+**Edits are work, not evidence.** A file edit keeps a completion claim out of `unverified` — a doc-manager that rewrote the docs did something — but it never satisfies `claims_verified`. A message that says the tests pass still needs a test in the log, edits or no edits.
 
 `workThisTurn` — did the agent edit or run anything since the user last spoke — keeps an ordinary answered question out of the early-stop branch. A turn that changed nothing is a conversation, not a task that stalled.
 
@@ -112,10 +117,11 @@ Layers, later winning: the plugin default → `<plugin data dir>/config.json` �
     "completion": {
       "enabled": true,
       "thresholds": {
-        "claimsDone": 0.5, "evidencePass": 0.7, "evidenceBlock": 0.3, "blockedOnUser": 0.5
+        "claimsDone": 0.5, "claimsVerified": 0.5, "blockedOnUser": 0.5, "minConfidence": 0.7
       },
       "earlyStop": { "enabled": true, "action": "notify" },
       "verificationCommands": [],
+      "excludeAgentTypes": ["Explore", "Plan"],
       "maxBlocksPerSession": 2
     }
   }
@@ -128,6 +134,12 @@ Layers, later winning: the plugin default → `<plugin data dir>/config.json` �
 
 ```json
 { "gates": { "completion": { "verificationCommands": ["\\./scripts/verify", "\\bbazel test\\b"] } } }
+```
+
+**`excludeAgentTypes`** lists `SubagentStop` agent types the gate does not judge. It asks nothing of Jev for them and records a row with `skip: "excluded_agent_type"` and no verdict, which `/jev-gate:status` counts apart from every decided total. The default is `["Explore", "Plan"]`: Claude Code's two built-in read-only agents, which hold no tool that edits and are never expected to run a check. Every `claimed_done_nothing_ran` recorded under `completion@2` in Shadow came from an agent like that, so judging them measured nothing but the role. Custom agents are not in the default because a name says nothing reliable about what an agent can do; add your own read-only roles per project. The list is **replaced**, not merged, by a later layer — a project that sets it must restate `Explore` and `Plan` if it still wants them skipped:
+
+```json
+{ "gates": { "completion": { "excludeAgentTypes": ["Explore", "Plan", "code-review"] } } }
 ```
 
 **`earlyStop.action`** is `"notify"` by default. Set it to `"block"` to have Enforce actually push the agent onward with exit 2 — worth doing only once the journal shows the detection is accurate on your work.
@@ -152,7 +164,7 @@ If you point `JEV_GATE_JOURNAL` at a path inside the repo, ignore it — a journ
 .jev-gate/*.jsonl
 ```
 
-**What a journal entry contains.** Verdict, the probabilities and thresholds behind it, command count, latency, token usage, the session id and the `cwd`. Transcript text is *not* recorded — neither the agent's message nor command output. The single exception is the `recorded_failure` path, which stores the failing command verbatim so you can see what was being checked. If your verification commands carry secrets inline (`TOKEN=... npm test`), that string reaches the journal, so keep the journal out of the repo and out of anything you share.
+**What a journal entry contains.** Verdict, the probabilities and thresholds behind it, command and edit counts, latency, token usage, the session id and the `cwd`. Transcript text is *not* recorded — neither the agent's message nor command output. The single exception is the `recorded_failure` path, which stores the failing command verbatim so you can see what was being checked. If your verification commands carry secrets inline (`TOKEN=... npm test`), that string reaches the journal, so keep the journal out of the repo and out of anything you share.
 
 ## Measured, not assumed
 
@@ -189,6 +201,8 @@ Both misses are **false negatives**: the gate under-reports rather than wrongly 
 
 The two fill at very different rates and are ready at different times. Turn them on separately.
 
+Setting a threshold from a lower confidence bound needs labelled examples as well as counts. How those labels are to be recorded is specified, not built, in [`docs/labeling.md`](docs/labeling.md).
+
 ## Relationship to the CLAUDE.md stop rule
 
 The playbook's recommended rule is worth having regardless of this plugin:
@@ -213,6 +227,14 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.9.0
+
+- **`excludeAgentTypes`** (`gates.completion`, default `["Explore", "Plan"]`). A `SubagentStop` from a listed agent type is not judged: no request is sent, and the journal gets a `skip: "excluded_agent_type"` row with no verdict. Every `claimed_done_nothing_ran` under `completion@2` came from a role that never needs a check — Plan designing, a reviewer reviewing, a doc-manager editing docs. A project's `.jev-gate/config.json` replaces the list.
+- **`completion@3`: file edits count as work.** `claimed_done_nothing_ran` now requires that nothing ran *and* nothing was edited; a claim backed by edits alone passes as `claim_backed_by_edits`. Edits are never counted as verification — `claimed_check_never_ran` is unchanged. The routing changed, so the contract id changed and `@2` rows are shown apart. Rows now record `editCount`.
+- **`/jev-gate:status`** counts skips on their own line and keeps them out of every decided total, and prints which copy of the script is running and its version — an old cached copy reads today's journal with yesterday's assumptions.
+- **Tests.** `node --test plugins/jev-gate/test/*.test.mjs` runs every branch of `decide()` and the harness paths above against a throwaway data dir, with no API key.
+- **Labelling specified, not built:** [`docs/labeling.md`](docs/labeling.md).
 
 ### v0.8.0
 

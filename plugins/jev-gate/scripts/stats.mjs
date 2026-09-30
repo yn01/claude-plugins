@@ -8,7 +8,8 @@
 // aside rather than mixed in.
 
 import { readFileSync } from 'node:fs';
-import { loadConfig } from '../lib/config.mjs';
+import { join } from 'node:path';
+import { loadConfig, PLUGIN_ROOT } from '../lib/config.mjs';
 import * as current from '../lib/contracts/completion.mjs';
 
 const cfg = loadConfig();
@@ -32,7 +33,10 @@ all.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
 
 const gateArg = process.argv[2];
 const rows = gateArg ? all.filter((e) => e.gate === gateArg) : all;
-const byContract = rows.reduce((m, e) => ((m[e.contract ?? '(before contracts were recorded)'] ??= []).push(e), m), {});
+// A skip is the gate declining to judge (an excluded agent type), not a
+// verdict. It is counted on its own and kept out of every decided total.
+const skipped = rows.filter((e) => e.skip);
+const byContract = rows.filter((e) => !e.skip).reduce((m, e) => ((m[e.contract ?? '(before contracts were recorded)'] ??= []).push(e), m), {});
 
 console.log(`journal:  ${cfg.journalPath}`);
 if (cfg.legacyJournalPath && read(cfg.legacyJournalPath).length) {
@@ -40,7 +44,15 @@ if (cfg.legacyJournalPath && read(cfg.legacyJournalPath).length) {
 }
 console.log(`mode:     ${cfg.mode}`);
 console.log(`entries:  ${rows.length}${gateArg ? ` (gate=${gateArg})` : ''}`);
-console.log(`current:  ${current.id}\n`);
+console.log(`current:  ${current.id}`);
+// Printed because an old cached copy of this script reads today's journal
+// with yesterday's assumptions and reports zeros that are not there.
+console.log(`script:   ${PLUGIN_ROOT} (v${pluginVersion()})`);
+if (skipped.length) {
+  const by = Object.entries(count(skipped, 'agentType')).map(([k, v]) => `${k}=${v}`).join(', ');
+  console.log(`skipped:  ${skipped.length}  (not judged; ${by})`);
+}
+console.log('');
 
 for (const [name, of] of Object.entries(byContract)) {
   const span = `${of[0].ts?.slice(0, 16)} .. ${of[of.length - 1].ts?.slice(0, 16)}`;
@@ -51,6 +63,14 @@ for (const [name, of] of Object.entries(byContract)) {
     continue;
   }
   report(of);
+}
+
+function pluginVersion() {
+  try {
+    return JSON.parse(readFileSync(join(PLUGIN_ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version ?? '?';
+  } catch {
+    return '?';
+  }
 }
 
 function count(list, key) {

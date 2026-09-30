@@ -23,8 +23,18 @@
 // code. The block condition is no longer a judgement about coverage; it is a
 // contradiction between what the message asserts and what the transcript
 // records — which code can settle exactly.
+//
+// completion@3 keeps @2's questions and thresholds and changes one route. In
+// Shadow, every `claimed_done_nothing_ran` recorded under @2 came from a
+// subagent whose job needs no check: a Plan agent designing, a reviewer
+// reviewing, a doc-manager editing docs. The doc-manager had edited files —
+// work had plainly happened — yet the reason said nothing had. So file edits
+// now count as work for that branch. They do not count as verification: a
+// message that says a check passed still needs the check in the log, exactly
+// as in @2. Routing changed, so the id changed; @2 rows carry no `editCount`
+// and are not pooled with these.
 
-export const id = 'completion@2';
+export const id = 'completion@3';
 
 // All three are read-off-the-text questions, phrased positively — jev-1.13
 // reads negations at face value, so anything absent is computed in code.
@@ -89,7 +99,7 @@ export const confidenceOf = (p) => (typeof p === 'number' ? Math.max(p, 1 - p) :
  * randomness, no clock — so a row in the journal can be replayed against a
  * later version of this function and the two answers compared.
  *
- * facts: { ranVerification, workThisTurn }
+ * facts: { ranVerification, editedFiles, workThisTurn }
  * Returns { verdict, reason, deciding, confidence, message }
  */
 export function decide({ answers, facts, thresholds }) {
@@ -114,9 +124,10 @@ export function decide({ answers, facts, thresholds }) {
     });
   }
 
-  // Completion claimed with nothing run behind it. Weaker than the above — the
-  // work may not have needed a check — so it is said, not enforced.
-  if (claimsDone && !facts.ranVerification) {
+  // Completion claimed with nothing run and nothing edited behind it. Weaker
+  // than the above — the work may not have needed a check — so it is said, not
+  // enforced.
+  if (claimsDone && !facts.ranVerification && !facts.editedFiles) {
     return withConfidence(done, t, {
       verdict: 'unverified',
       reason: 'claimed_done_nothing_ran',
@@ -124,6 +135,13 @@ export function decide({ answers, facts, thresholds }) {
       message:
         'jev-gate: completion reported with no test, build, lint or type-check in this session.',
     });
+  }
+
+  // Files were edited and no check was claimed. Edits are work, not evidence:
+  // this passes only because the message asserts nothing a check would back,
+  // and the claimed_check_never_ran branch above has already had its say.
+  if (claimsDone && !facts.ranVerification) {
+    return { verdict: 'pass', reason: 'claim_backed_by_edits', deciding: 'claims_done', confidence: confidenceOf(done) };
   }
 
   if (claimsDone) {

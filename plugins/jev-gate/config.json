@@ -17,6 +17,7 @@
         "action": "notify"
       },
       "verificationCommands": [],
+      "excludeAgentTypes": ["Explore", "Plan"],
       "maxBlocksPerSession": 2,
       "stateBudget": {
         "finalMessageChars": 4000,

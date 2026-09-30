@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.8.0`
+### [jev-gate](./plugins/jev-gate) `v0.9.0`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -168,6 +168,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-09-30
+- Update **jev-gate** to v0.9.0 — add `excludeAgentTypes` (default `Explore`, `Plan`) so read-only subagents are skipped rather than judged; `completion@3` counts file edits as work, so `claimed_done_nothing_ran` needs neither a run nor an edit; `/jev-gate:status` counts skips apart; add tests and a labelling spec
 - Update **jev-gate** to v0.8.0 — make the decision contract a versioned component (`lib/contracts/completion.mjs`) and rewrite it as `completion@2`: only questions that can be read off the message go to Jev, confidence is computed as `max(p, 1−p)` and routes, and the coverage question is retired
 
 ### 2026-09-26
