@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.9.0`
+### [jev-gate](./plugins/jev-gate) `v0.9.1`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -166,6 +166,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-10-02
+- Fix **jev-gate** to v0.9.1 — advisory mode (Enforce with a block budget of 0) now says it is advisory instead of reporting an exhausted budget, and a recorded test failure is shown rather than dropped when a block is withheld
 
 ### 2026-10-01
 - Fix **jev-gate** to v0.9.0 — `completion@3`: recognise `node --test`, `prettier --check`, `npm run format:check` and `gh pr checks` as verification (five of the first seven blocks were agents that had verified with them); stamp the contract on every row; skip `Explore` and `Plan` subagents by default; add a test suite and a labelling specification

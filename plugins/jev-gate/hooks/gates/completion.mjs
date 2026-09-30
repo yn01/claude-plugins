@@ -135,6 +135,19 @@ async function main() {
   const budget = gate.maxBlocksPerSession ?? 2;
   const spent = blocksSoFar(cfg.sessionsPath, input.session_id);
 
+  // A block that is not carried out is still shown. Two different situations
+  // lead here and they must not read alike: a budget of 0 is a deliberate
+  // advisory setting — Enforce that surfaces every verdict and never stops
+  // work — while a spent budget is the gate standing down after sending the
+  // same session back too often. v0.9.0 printed the second wording for both,
+  // so an advisory setup reported "already sent back 0 time(s); standing down".
+  const withheld = (message) => {
+    const body = message.replace(/^jev-gate: /, '');
+    return budget <= 0
+      ? `jev-gate (advisory, nothing is blocked): ${body}`
+      : `jev-gate: already sent back ${spent} time(s) this session; standing down. ${body}`;
+  };
+
   const sb = gate.stateBudget ?? {};
   const readOpts = { ...sb, verificationCommands: gate.verificationCommands ?? [] };
 
@@ -196,7 +209,12 @@ async function main() {
       `  $ ${facts.lastFailed.command}\n` +
       `Fix the failure and run it again before reporting this task as complete.`;
     record(cfg.journalPath, { ...base, verdict: 'block', decidedBy: 'code', reason: 'recorded_failure', command: facts.lastFailed.command });
-    if (gate.mode === 'enforce' && spent < budget) {
+    if (gate.mode === 'enforce') {
+      // A recorded failure is the strongest signal this gate has — settled in
+      // code, no model involved — so when the block is withheld it is shown,
+      // not dropped. Until v0.9.1 it passed silently here while weaker verdicts
+      // further down were still displayed.
+      if (spent >= budget) notify(withheld(msg));
       noteBlock(cfg.sessionsPath, input.session_id);
       block(msg);
     }
@@ -283,14 +301,13 @@ async function main() {
     // The playbook's own remedy for this failure mode is a CLAUDE.md rule, not
     // enforcement, and a wrong block interrupts a legitimate check-in.
     const earlyStop = gate.earlyStop ?? {};
-    if (earlyStop.action !== 'block' || spent >= budget) notify(outcome.message);
+    if (earlyStop.action !== 'block') notify(outcome.message);
+    if (spent >= budget) notify(withheld(outcome.message));
     noteBlock(cfg.sessionsPath, input.session_id);
     block(outcome.message);
   }
 
-  if (spent >= budget) {
-    notify(`jev-gate: already sent back ${spent} time(s) this session; standing down. ${outcome.message}`);
-  }
+  if (spent >= budget) notify(withheld(outcome.message));
   noteBlock(cfg.sessionsPath, input.session_id);
   block(outcome.message);
 }
