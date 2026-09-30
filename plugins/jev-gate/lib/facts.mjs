@@ -92,11 +92,12 @@ function resultText(block) {
  *   commands      — verification commands run, oldest first, with output + error flag
  *   lastFailed    — the most recent verification command that reported an error
  *   sawAnyCommand — whether any Bash call happened at all
- *   editCount     — how many file-editing tool calls were made
+ *   editCount     — how many file-editing tool calls were made in the whole tail
+ *   editsThisTurn — how many of them came since the user last spoke
  *   workThisTurn  — whether anything was edited or run since the user last spoke
  */
 export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutputChars = 1500, verificationCommands = [] } = {}) {
-  const empty = { finalMessage: '', commands: [], lastFailed: null, sawAnyCommand: false, editCount: 0, workThisTurn: false };
+  const empty = { finalMessage: '', commands: [], lastFailed: null, sawAnyCommand: false, editCount: 0, editsThisTurn: 0, workThisTurn: false };
   const isVerification = buildMatcher(verificationCommands);
   if (!transcriptPath) return empty;
 
@@ -112,6 +113,7 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
   let finalMessage = '';
   let sawAnyCommand = false;
   let editCount = 0;
+  let editsThisTurn = 0;
   let workThisTurn = false;
 
   for (const line of lines) {
@@ -125,12 +127,18 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
 
     // A new user turn resets the work flag: only what happened since the user
     // last spoke tells us whether this stop interrupts work in progress.
-    if (isUserTurn(entry)) workThisTurn = false;
+    if (isUserTurn(entry)) {
+      workThisTurn = false;
+      editsThisTurn = 0;
+    }
 
     for (const b of blocks(entry)) {
       if (b?.type === 'tool_use') {
         if (WORK_TOOLS.has(b.name)) workThisTurn = true;
-        if (EDIT_TOOLS.has(b.name)) editCount++;
+        if (EDIT_TOOLS.has(b.name)) {
+          editCount++;
+          editsThisTurn++;
+        }
         if (b.name === 'Bash') {
           sawAnyCommand = true;
           const cmd = b?.input?.command;
@@ -162,7 +170,7 @@ export function readTranscript(transcriptPath, { maxCommands = 8, perCommandOutp
   for (const c of commands) latestByCommand.set(c.command, c);
   const lastFailed = [...latestByCommand.values()].reverse().find((c) => c.isError) ?? null;
 
-  return { finalMessage, commands: kept, lastFailed, sawAnyCommand, editCount, workThisTurn };
+  return { finalMessage, commands: kept, lastFailed, sawAnyCommand, editCount, editsThisTurn, workThisTurn };
 }
 
 /**

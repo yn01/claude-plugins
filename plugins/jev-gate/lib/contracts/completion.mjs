@@ -29,10 +29,10 @@
 // subagent whose job needs no check: a Plan agent designing, a reviewer
 // reviewing, a doc-manager editing docs. The doc-manager had edited files —
 // work had plainly happened — yet the reason said nothing had. So file edits
-// now count as work for that branch. They do not count as verification: a
-// message that says a check passed still needs the check in the log, exactly
-// as in @2. Routing changed, so the id changed; @2 rows carry no `editCount`
-// and are not pooled with these.
+// made since the user last spoke now count as work for that branch. They do
+// not count as verification: a message that says a check passed still needs
+// the check in the log, exactly as in @2. Routing changed, so the id changed;
+// @2 rows carry no `editsThisTurn` and are not pooled with these.
 
 export const id = 'completion@3';
 

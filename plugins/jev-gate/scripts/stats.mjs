@@ -43,7 +43,7 @@ if (cfg.legacyJournalPath && read(cfg.legacyJournalPath).length) {
   console.log(`          + ${read(cfg.legacyJournalPath).length} from the pre-0.3.0 path`);
 }
 console.log(`mode:     ${cfg.mode}`);
-console.log(`entries:  ${rows.length}${gateArg ? ` (gate=${gateArg})` : ''}`);
+console.log(`entries:  ${rows.length}${gateArg ? ` (gate=${gateArg})` : ''}${skipped.length ? `, of which ${skipped.length} skipped (below)` : ''}`);
 console.log(`current:  ${current.id}`);
 // Printed because an old cached copy of this script reads today's journal
 // with yesterday's assumptions and reports zeros that are not there.

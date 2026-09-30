@@ -242,7 +242,9 @@ async function main() {
     answers: probs,
     facts: {
       ranVerification: facts.commands.length > 0,
-      editedFiles: facts.editCount > 0,
+      // Edits since the user last spoke, the same boundary as workThisTurn — an
+      // edit from an earlier turn is not work behind this turn's claim.
+      editedFiles: facts.editsThisTurn > 0,
       workThisTurn: facts.workThisTurn,
     },
     thresholds: gate.thresholds,
@@ -263,6 +265,7 @@ async function main() {
     commandCount: facts.commands.length,
     sawAnyCommand: facts.sawAnyCommand,
     editCount: facts.editCount,
+    editsThisTurn: facts.editsThisTurn,
     workThisTurn: facts.workThisTurn,
     latencyMs: answer.latencyMs,
     usage: answer.usage,

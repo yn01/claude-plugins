@@ -96,7 +96,7 @@ agent stops
 
 The command log is no longer sent at all. Nothing asks about it, so including it would be noise the model has to judge around — and about three quarters of the tokens.
 
-**Edits are work, not evidence.** A file edit keeps a completion claim out of `unverified` — a doc-manager that rewrote the docs did something — but it never satisfies `claims_verified`. A message that says the tests pass still needs a test in the log, edits or no edits.
+**Edits are work, not evidence.** A file edit keeps a completion claim out of `unverified` — a doc-manager that rewrote the docs did something — but it never satisfies `claims_verified`. A message that says the tests pass still needs a test in the log, edits or no edits. Only edits made **since the user last spoke** count — the same boundary as `workThisTurn` — so an edit from an earlier turn does not back this turn's claim. On the main session's `Stop`, only edits the main session made itself are counted: work delegated through `Task` happens in the subagent's own transcript and is not included (that subagent's `SubagentStop` is judged on it instead).
 
 `workThisTurn` — did the agent edit or run anything since the user last spoke — keeps an ordinary answered question out of the early-stop branch. A turn that changed nothing is a conversation, not a task that stalled.
 
@@ -136,7 +136,7 @@ Layers, later winning: the plugin default → `<plugin data dir>/config.json` �
 { "gates": { "completion": { "verificationCommands": ["\\./scripts/verify", "\\bbazel test\\b"] } } }
 ```
 
-**`excludeAgentTypes`** lists `SubagentStop` agent types the gate does not judge. It asks nothing of Jev for them and records a row with `skip: "excluded_agent_type"` and no verdict, which `/jev-gate:status` counts apart from every decided total. The default is `["Explore", "Plan"]`: Claude Code's two built-in read-only agents, which hold no tool that edits and are never expected to run a check. Every `claimed_done_nothing_ran` recorded under `completion@2` in Shadow came from an agent like that, so judging them measured nothing but the role. Custom agents are not in the default because a name says nothing reliable about what an agent can do; add your own read-only roles per project. The list is **replaced**, not merged, by a later layer — a project that sets it must restate `Explore` and `Plan` if it still wants them skipped:
+**`excludeAgentTypes`** lists `SubagentStop` agent types the gate does not judge. It asks nothing of Jev for them and records a row with `skip: "excluded_agent_type"` and no verdict, which `/jev-gate:status` counts apart from every decided total. The default is `["Explore", "Plan"]`: Claude Code's two built-in read-only agents, which hold no tool that edits and are never expected to run a check. Every `claimed_done_nothing_ran` recorded under `completion@2` in Shadow came from an agent like that, so judging them measured nothing but the role. Custom agents are not in the default because a name says nothing reliable about what an agent can do; add your own read-only roles per project. The list is **replaced**, not merged, by a later layer — a project that sets it must restate `Explore` and `Plan` if it still wants them skipped. A value that is not an array is ignored, and nothing is excluded:
 
 ```json
 { "gates": { "completion": { "excludeAgentTypes": ["Explore", "Plan", "code-review"] } } }
@@ -231,7 +231,7 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 ### v0.9.0
 
 - **`excludeAgentTypes`** (`gates.completion`, default `["Explore", "Plan"]`). A `SubagentStop` from a listed agent type is not judged: no request is sent, and the journal gets a `skip: "excluded_agent_type"` row with no verdict. Every `claimed_done_nothing_ran` under `completion@2` came from a role that never needs a check — Plan designing, a reviewer reviewing, a doc-manager editing docs. A project's `.jev-gate/config.json` replaces the list.
-- **`completion@3`: file edits count as work.** `claimed_done_nothing_ran` now requires that nothing ran *and* nothing was edited; a claim backed by edits alone passes as `claim_backed_by_edits`. Edits are never counted as verification — `claimed_check_never_ran` is unchanged. The routing changed, so the contract id changed and `@2` rows are shown apart. Rows now record `editCount`.
+- **`completion@3`: file edits count as work.** `claimed_done_nothing_ran` now requires that nothing ran *and* nothing was edited; a claim backed by edits alone passes as `claim_backed_by_edits`. Edits are never counted as verification — `claimed_check_never_ran` is unchanged. Only edits since the user last spoke count, the same boundary as `workThisTurn`. The routing changed, so the contract id changed and `@2` rows are shown apart. Rows now record `editsThisTurn` (the deciding fact) and `editCount` (the whole transcript tail).
 - **`/jev-gate:status`** counts skips on their own line and keeps them out of every decided total, and prints which copy of the script is running and its version — an old cached copy reads today's journal with yesterday's assumptions.
 - **Tests.** `node --test plugins/jev-gate/test/*.test.mjs` runs every branch of `decide()` and the harness paths above against a throwaway data dir, with no API key.
 - **Labelling specified, not built:** [`docs/labeling.md`](docs/labeling.md).

@@ -80,7 +80,7 @@ A command plus a script (`scripts/label.mjs`), in the shape of `/jev-gate:status
 /jev-gate:label --relabel r_4f0c…     show one row again
 ```
 
-For each row the command shows the verdict, reason, deciding question, its probability and confidence, the facts (`commandCount`, `editCount`, `workThisTurn`), and **the message itself, read from the transcript at that moment** — then asks the two questions (`questionTruth`, then `verdict`, then `expected` if incorrect) with `AskUserQuestion`, and appends one line.
+For each row the command shows the verdict, reason, deciding question, its probability and confidence, the facts (`commandCount`, `editsThisTurn`, `workThisTurn`), and **the message itself, read from the transcript at that moment** — then asks the two questions (`questionTruth`, then `verdict`, then `expected` if incorrect) with `AskUserQuestion`, and appends one line.
 
 **Where the message comes from.** The journal deliberately does not store it (see *privacy*), so the command re-reads it. That needs the row to say where to look, so this release would also record, per row:
 
@@ -130,7 +130,7 @@ A threshold belongs to one question wording and one output type (§7.3). Changin
 ## 6. Open questions
 
 - **Label unit.** Is one `questionTruth` per row enough, or should the non-deciding questions be labelled too? Labelling all three would fill the rarely-deciding branches (`claims_verified` has decided 1 row so far) from rows where they were asked but did not decide — but rule 15 warns that such rows flatter the sample. Current proposal: deciding question only; revisit if a branch cannot reach 100 in reasonable time.
-- **Replaying old rows under a new contract.** `decide()` is pure, so an `@2` row plus its probabilities could be replayed as `@3` — except `@2` rows carry no `editCount`, which `@3` routes on. Replay is possible only for rows whose missing facts cannot change the route. Worth building only if a contract change strands a large labelled set.
+- **Replaying old rows under a new contract.** `decide()` is pure, so an `@2` row plus its probabilities could be replayed as `@3` — except `@2` rows carry no `editsThisTurn`, which `@3` routes on. Replay is possible only for rows whose missing facts cannot change the route. Worth building only if a contract change strands a large labelled set.
 - **Auditing skips.** `excludeAgentTypes` removes rows before they are judged, so a wrongly excluded role would never be seen. Should `/jev-gate:label --skips` show a sample of skipped events and ask "should this have been judged"? Useful, but it labels a config choice, not a probability, and belongs in its own file if built.
 - **More than one labeller.** `by` is `"human"` today. If teammates label the same journal, agreement between them is the ceiling on any threshold's accuracy and should be reported; that needs an identity in `by`, which touches privacy.
 - **`unsure` rate as a signal.** A branch where the labeller is often unsure is a branch whose question is ambiguous to a human too. Whether to surface that as a warning, and at what rate, is undecided.
