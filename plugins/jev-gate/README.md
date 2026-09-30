@@ -200,20 +200,29 @@ Both misses are **false negatives**: the gate under-reports rather than wrongly 
 
 ## Getting to Enforce
 
-1. **Shadow.** Install, set the key, work normally. Verdicts accumulate; nothing changes.
-2. **Compare.** Run `/jev-gate:status`. Read the histograms and spot-check the entries whose verdict you would have decided differently. This step is the point of the whole design — thresholds chosen without it are guesses wearing a number.
-3. **Enforce.** Set thresholds from the distribution, then `/jev-gate:mode enforce`.
+Only one verdict ever stops work: **`block`**, reached through `claims_verified`. Every other verdict — `unverified`, `unclear`, `stopped_early` by default — is advisory even under Enforce. So being ready for Enforce means one thing: that branch can be trusted.
 
-`/jev-gate:status` counts each branch separately, because a probability only informs a threshold when the branch it governs was actually taken:
+1. **Shadow.** Install, set the key, work normally. Verdicts accumulate in the journal; nothing is shown and nothing changes.
+2. **Advisory.** Enforce with a block budget of zero — every verdict appears as it happens, and nothing is ever stopped:
+
+   ```json
+   { "mode": "enforce", "gates": { "completion": { "maxBlocksPerSession": 0 } } }
+   ```
+
+   Messages read `jev-gate (advisory, nothing is blocked): …`. This is where you first see the gate's judgement live, and each verdict you disagree with is a spot-check done for free. It also runs the Enforce code path for real with nothing at stake.
+3. **Label.** Collect about 100 labels on the `claims_verified` branch — the only one that blocks. See [`docs/labeling.md`](docs/labeling.md); not yet built.
+4. **Enforce.** Set `claimsVerified` from the lower confidence bound of those labels, then restore a block budget. Watch the first blocks closely: what an agent does when it is sent back has not been observed yet, and no amount of Shadow data can show it.
+
+`/jev-gate:status` counts each branch by the rows it actually decided:
 
 ```
 --- progress towards Enforce ---
-  coverage ladder reached      3 / 30
-  early-stop branch taken     41 / 30
-  (answers returned but unused: 22 coverage)
+  claims_verified decided          7 / 30
+  blocked_on_user decided          5 / 30
+  claims_done decided             51 / 30
 ```
 
-The two fill at very different rates and are ready at different times. Turn them on separately.
+Thirty is where a distribution starts to be readable, not where a threshold can be set; that takes the ~100 labels.
 
 ## Relationship to the CLAUDE.md stop rule
 
@@ -239,6 +248,14 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.9.1
+
+- **Advisory mode reads as what it is.** Enforce with `maxBlocksPerSession: 0` surfaces every verdict and never stops work, but v0.9.0 worded each one as *"already sent back 0 time(s) this session; standing down"* — as if a budget had been used up. A zero budget now reads `jev-gate (advisory, nothing is blocked): …`; a spent budget keeps the standing-down wording, with its count.
+- **A recorded test failure is no longer dropped when a block is withheld.** It was the one verdict that passed silently in that situation — while weaker, model-decided verdicts were still shown — although it is the strongest signal the gate has: settled in code, no model involved. This applied to a spent budget as well as to advisory mode.
+- *Getting to Enforce* rewritten as four stages with advisory as the second, and brought up to date: it still described the `completion@1` coverage ladder.
+- Four delivery tests, run against the v0.9.0 gate as well: the two behaviours this release changes fail there, and the two it must not change — a default budget still blocks, a spent budget still stands down — pass on both.
+- The decision contract is unchanged. Only how a verdict is delivered changed, so rows are still `completion@3`.
 
 ### v0.9.0 — `completion@3`
 

@@ -56,18 +56,35 @@ after(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-function runHook(input, { key = 'dummy' } = {}) {
-  const journal = join(dir, `j-${Math.random().toString(36).slice(2)}.jsonl`);
+// `config` gives the run its own project directory, so a test can switch to
+// Enforce or change the block budget without touching the others. `pd` lets a
+// test reuse a plugin data dir, which is where the block budget is counted.
+function runHook(input, { key = 'dummy', config = null, pd = null } = {}) {
+  const tag = Math.random().toString(36).slice(2);
+  const journal = join(dir, `j-${tag}.jsonl`);
+  let cwd = join(dir, 'proj');
+  if (config) {
+    cwd = join(dir, `proj-${tag}`);
+    mkdirSync(join(cwd, '.jev-gate'), { recursive: true });
+    writeFileSync(join(cwd, '.jev-gate', 'config.json'), JSON.stringify({
+      endpoint: `http://127.0.0.1:${port}/v1/systemone`, timeoutMs: 3000, ...config,
+    }));
+  }
   return new Promise((resolve) => {
-    const env = { ...process.env, JEV_GATE_JOURNAL: journal, CLAUDE_PLUGIN_DATA: join(dir, 'pd') };
+    const env = { ...process.env, JEV_GATE_JOURNAL: journal, CLAUDE_PLUGIN_DATA: pd ?? join(dir, `pd-${tag}`) };
     if (key) env.TYPESAFE_API_KEY = key; else delete env.TYPESAFE_API_KEY;
     const child = spawn(process.execPath, [HOOK], { env });
-    child.stdin.end(JSON.stringify({ cwd: join(dir, 'proj'), session_id: 's1', ...input }));
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (c) => (stdout += c));
+    child.stderr.on('data', (c) => (stderr += c));
+    child.stdin.end(JSON.stringify({ cwd, session_id: 's1', ...input }));
     child.on('close', (code) => {
       const rows = existsSync(journal)
         ? readFileSync(journal, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l))
         : [];
-      resolve({ code, rows });
+      const shown = stdout ? JSON.parse(stdout).systemMessage : null;
+      resolve({ code, rows, shown, stderr });
     });
   });
 }
@@ -106,4 +123,45 @@ test('an event with no agent_type is judged, never silently exempted', async () 
     hook_event_name: 'Stop', transcript_path: join(dir, 'ran.jsonl'), last_assistant_message: '完了しました。',
   });
   assert.notEqual(rows[0].verdict, 'skip');
+});
+
+// --- how a verdict is delivered under Enforce --------------------------------
+// The mock answers "claims a check passed" for every request, so a transcript
+// with no verification in it is a block; one with a failed run is a recorded
+// failure. Only the block budget varies.
+
+const claimsCheck = (transcript) => ({
+  hook_event_name: 'Stop', transcript_path: join(dir, `${transcript}.jsonl`),
+  last_assistant_message: 'テストも全部通りました。',
+});
+
+test('enforce, default budget: a block still stops work', async () => {
+  writeFileSync(join(dir, 'edited.jsonl'), user('go') + line({ type: 'assistant', message: { role: 'assistant', content: [{ type: 'tool_use', id: 'e1', name: 'Edit', input: { file_path: 'a' } }] } }));
+  const { code, stderr } = await runHook(claimsCheck('edited'), { config: { mode: 'enforce' } });
+  assert.equal(code, 2);
+  assert.match(stderr, /no test, build, lint or type-check/);
+});
+
+test('enforce, budget 0: advisory — shown, never blocked, and says so', async () => {
+  const { code, shown } = await runHook(claimsCheck('edited'), { config: { mode: 'enforce', gates: { completion: { maxBlocksPerSession: 0 } } } });
+  assert.equal(code, 0, 'advisory never exits 2');
+  assert.match(shown, /^jev-gate \(advisory, nothing is blocked\): /);
+  assert.doesNotMatch(shown, /standing down|sent back/, 'must not read as an exhausted budget');
+});
+
+test('enforce, budget 0: a recorded test failure is shown, not dropped', async () => {
+  const { code, shown } = await runHook(claimsCheck('failed'), { config: { mode: 'enforce', gates: { completion: { maxBlocksPerSession: 0 } } } });
+  assert.equal(code, 0);
+  assert.ok(shown, 'a recorded failure must surface in advisory mode');
+  assert.match(shown, /advisory, nothing is blocked.*verification run failed/s);
+});
+
+test('enforce, budget spent: the gate stands down and says how many times', async () => {
+  const pd = join(dir, 'pd-spent');
+  const config = { mode: 'enforce', gates: { completion: { maxBlocksPerSession: 1 } } };
+  const first = await runHook(claimsCheck('edited'), { config, pd });
+  assert.equal(first.code, 2, 'the first block is carried out');
+  const second = await runHook(claimsCheck('edited'), { config, pd });
+  assert.equal(second.code, 0, 'the second is withheld');
+  assert.match(second.shown, /already sent back 1 time\(s\) this session; standing down/);
 });
