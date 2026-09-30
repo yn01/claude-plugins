@@ -24,7 +24,19 @@
 // contradiction between what the message asserts and what the transcript
 // records — which code can settle exactly.
 
-export const id = 'completion@2';
+// completion@3 keeps @2's questions, thresholds and routing unchanged. What
+// changed is what one routed fact means: `ranVerification` now also counts
+// `node --test`, `prettier --check`, `npm run format:check` and `gh pr checks`.
+// Five of the seven blocks recorded under @2 were agents that had verified with
+// exactly those, so identical probabilities now reach a different verdict.
+// That is a contract change even though no line of decide() moved — rows from
+// @2 and @3 are not comparable and are never pooled.
+//
+// Plan and Explore subagents are also skipped by default (config, not code
+// here): they never run a check by design, and judging them only ever
+// produced "nothing ran".
+
+export const id = 'completion@3';
 
 // All three are read-off-the-text questions, phrased positively — jev-1.13
 // reads negations at face value, so anything absent is computed in code.

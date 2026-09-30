@@ -6,6 +6,16 @@ A stop-event gate for Claude Code. When an agent stops, jev-gate asks what kind 
 /plugin install jev-gate
 ```
 
+**Updating** — installed per project, jev-gate lives at `local` scope, and `claude plugin update` looks at `user` scope unless told otherwise. Without `--scope local` it reports *"not installed at scope user"* **and still exits 0**, so a failed update looks like a successful one. Run it in each project that uses the plugin, then restart that project's sessions:
+
+```
+claude plugin marketplace update yn01-claude-plugins-marketplace
+claude plugin update jev-gate --scope local     # in each project directory
+# then restart every open session in that project
+```
+
+`/jev-gate:status` prints the path and version of the script it is running from; if that is not the version you expect, the update did not land.
+
 It ships in **Shadow Mode**: every verdict is recorded, nothing is ever blocked. Thresholds are meant to be chosen from that record, not guessed up front.
 
 <p align="center">
@@ -47,6 +57,16 @@ The division is strict:
 | `/jev-gate:status [gate]` | Verdict distribution, probability histograms, latency percentiles and token spend — then a threshold recommendation drawn from the histogram, not from intuition. |
 | `/jev-gate:mode [shadow\|enforce\|off]` | Show the resolved mode and its source layer, or write a new one to `.jev-gate/config.json`. Refuses to recommend Enforce on a thin journal. |
 | `/jev-gate:doctor` | Print the resolved configuration and send one small real request. Reports latency, serving model and token usage. Never prints the key. |
+
+Labelling verdicts — the step between Shadow and Enforce — is specified in [`docs/labeling.md`](docs/labeling.md) and not yet built.
+
+## Tests
+
+```
+node --test plugins/jev-gate/test/*.test.mjs
+```
+
+No network and no key: the decision contract is a pure function and is tested route by route; the verification-command list is tested in both directions, including lookalikes taken from real transcripts that must *not* count; and the hook itself is run end to end against a local stand-in for the API, asserting that every path that writes a row stamps it with its contract.
 
 ## Setup
 
@@ -91,7 +111,7 @@ agent stops
 
 **Every question reads the message and nothing else.** The paper behind this design measures a decision-only judge as level with a reasoning judge *"wherever the verdict can be read off the text"*, and behind it by 13–28 points *"wherever the judge must derive or check a result"*. So the gate never asks whether a run *covers* a claim — that is tracing, and it sat in the weak zone for three rewrites. It asks what the message **says**, and code checks that against what the transcript **records**. A block is now a contradiction, not a judgement of degree.
 
-The command log is no longer sent at all. Nothing asks about it, so including it would be noise the model has to judge around — and about three quarters of the tokens.
+The command log is no longer sent at all. Nothing asks about it, so including it would be noise the model has to judge around. What remains is dominated by the message itself: agent reports run long, and real requests measure 546–1,881 input tokens.
 
 `workThisTurn` — did the agent edit or run anything since the user last spoke — keeps an ordinary answered question out of the early-stop branch. A turn that changed nothing is a conversation, not a task that stalled.
 
@@ -124,11 +144,17 @@ Layers, later winning: the plugin default → `<plugin data dir>/config.json` �
 
 `mode` is global; `gates.<name>.enabled` is per gate, so switching to Enforce never silently activates a gate that was never trialled.
 
-**`verificationCommands`** takes regex sources matched against Bash commands, on top of the built-in list of common runners. A project with its own script needs this, or the gate reads a custom runner as an absence of evidence:
+> **Check this first if you see blocks.** A block means *the message says a check passed, and no check appears in the log*. If your project verifies with something the built-in list does not recognise, every honest report of it becomes a block. That was five of the first seven blocks ever recorded.
+
+**`verificationCommands`** takes regex sources matched against Bash commands, on top of the built-in list:
 
 ```json
 { "gates": { "completion": { "verificationCommands": ["\\./scripts/verify", "\\bbazel test\\b"] } } }
 ```
+
+Built in: test runners for npm / pnpm / yarn / bun, `jest` `vitest` `mocha` `playwright` `cypress`, `pytest` `tox`, `go` `cargo` `mvn` `gradle` `make` `dotnet` `swift` `rspec`, the linters and type checkers `tsc` `eslint` `ruff` `mypy` `flake8` `rubocop` `shellcheck`, and — since v0.9.0 — `node --test`, `prettier --check`, `npm run format:check` and `gh pr checks`. Each pattern needs its verifying flag or subcommand: `prettier --version` and `npm run format` do not count.
+
+**`excludeAgentTypes`** lists subagent types that are never judged. The default, `["Explore", "Plan"]`, covers the built-in types that search or design and never run a check; judging them only ever produced *"nothing ran"*. Excluded stops are recorded as `skip` and kept out of every count. A stop with no `agent_type` is always judged, so a missing field can never become a silent exemption.
 
 **`earlyStop.action`** is `"notify"` by default. Set it to `"block"` to have Enforce actually push the agent onward with exit 2 — worth doing only once the journal shows the detection is accurate on your work.
 
@@ -213,6 +239,17 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.9.0 — `completion@3`
+
+- **Five of the first seven blocks were wrong, and not because of the model.** Every one had `claims_verified` read correctly: the agent said a check passed, and it had run one — `node --test` three times, `npm run format:check`, `gh pr checks` — that the built-in list did not recognise. The list now includes those four, each requiring its verifying flag or subcommand; `prettier --version`, `npm run format` and a `grep` for the word "prettier", all present in the same transcripts, still do not count. Identical probabilities now reach a different verdict, so the contract is `completion@3`.
+- **Every row now names its contract.** v0.8.0 stamped only rows that reached Jev; the 41 subagent stand-downs and one recorded failure it wrote were filed as pre-contract data and dropped from every count. The stamp is now built before any path can record, so an unstamped row cannot be written.
+- **`excludeAgentTypes`**, default `["Explore", "Plan"]`: subagent types that never run a check are skipped rather than judged, and skips are kept out of all counts. A stop with no `agent_type` is always judged.
+- **Tests** under `test/`: every route of the contract, the verification list in both directions, and the hook end to end. The end-to-end suite was checked against the v0.8.0 bug reintroduced — it fails on exactly the path that bug broke.
+- `/jev-gate:status` prints the path and version of the script it runs from, and separates skips from verdicts.
+- **Updating now documented with `--scope local`.** Without it, `claude plugin update` fails and exits 0.
+- **Corrected:** v0.8.0 reported input tokens falling from ~600 to ~180. That was measured on a one-line mock message. Real requests measure 546–1,881 tokens, dominated by the message.
+- `docs/labeling.md` specifies labelling. Not built.
 
 ### v0.8.0
 
