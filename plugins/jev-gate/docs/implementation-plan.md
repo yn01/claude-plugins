@@ -89,7 +89,7 @@ These are not stylistic preferences — each one traces to a documented property
 8. **Every gate has a block budget.** Blocking the same session indefinitely is worse than not gating at all. When the budget is spent the gate goes quiet and the human decides.
 9. **Thresholds live in config, never in code.** They are set from the journal, not from intuition.
 10. **Ask the model what can be read off the page; leave what must be derived to code.** A decision-only judge keeps pace on the first and loses double digits on the second. A question in the wrong category does not improve with rewording — three attempts here proved it — so check which kind it is before writing the words.
-11. **Version the decision contract apart from the harness.** The questions, the state, the thresholds and the routing are one replaceable unit; the wiring around them is not. Record the contract on every verdict, and never pool rows from two of them. This also makes "start over" a normal operation rather than a project.
+11. **Version the decision contract apart from the harness.** The questions, the state, the thresholds and the routing are one replaceable unit; the wiring around them is not. Record the contract on **every row** — the ones code decides before any question is asked included — and never pool rows from two of them. This also makes "start over" a normal operation rather than a project. **A change to what a routed fact means is a contract change even when `decide()` does not move**: `completion@3` altered only the verification-command list in `lib/facts.mjs`, yet five blocks became passes on identical probabilities. The test is simple — if the same recorded answers can now reach a different verdict, bump the id.
 12. **When an event is about another agent, every input must come from that agent.** Fixing one of them is worse than fixing none: a subagent's words judged against a parent's actions reads as a confident, uniform failure. If any input cannot be sourced from the right agent, stand down.
 13. **Take the host's payload over anything you can re-derive from its side effects.** A file the host writes asynchronously is not the event. Read the documented field; fall back to the file only where being stale is the worst that can happen, and never where the file belongs to a different agent.
 14. **Measure a reworded question on the rows it got wrong, and on the rows it got right.** A wording that fixes the failures and quietly breaks the successes looks like progress in a one-sided test. Both sides, every time — and prefer real misclassified data over invented fixtures, which cannot surprise you.
@@ -104,6 +104,20 @@ These are not stylistic preferences — each one traces to a documented property
 Input is \$0.042 per million tokens; output is free. The context limit is 64k per request, of which `state` plus the longest question must fit in 32k — so every gate truncates its state rather than assuming it fits. A completion-gate call runs a few hundred input tokens, which is fractions of a cent per stop event.
 
 ---
+
+## What the first completion@2 data found — 2026-10-01
+
+68 rows under `completion@2`, and 15 of them read back against their subagents' own transcripts. Three findings, in order of what they cost.
+
+**The blocks were mostly wrong, and not because of the model.** Seven blocks, every one `claimed_check_never_ran`, every one with `claims_verified` read correctly. Five of the agents *had* verified — `node --test` three times, `npm run format:check`, `gh pr checks` — with runners the built-in list did not know. One (`general-purpose`) had only `grep`ped config files and was probably blocked rightly; one (`reviewer-3`) is unresolved. Since `block` is the one verdict Enforce acts on, this was the most expensive failure in the data and the first to fix. `completion@3`.
+
+**A proposed fix did not fit its own evidence.** A handoff from another session (closed PR #16) proposed counting file edits as work, citing doc-manager agents that "edited documents". They had — through `sed -i` and Python heredocs in Bash. Not one of the five `unverified` agents used an Edit or Write tool, so the fix would have changed none of the verdicts it was written for. It was not adopted. In this environment agents edit mostly through Bash; any "changed files" fact would have to see that, which is heuristic and is left as an open question in `labeling.md`. The same PR had also left the block problem untouched in favour of this advisory-only one.
+
+**The contract was missing from 42 rows.** v0.8.0 stamped rows that reached Jev and nothing else, so every subagent stand-down and a recorded test failure were filed as pre-contract data. The fix builds the stamp before any path can record, and an end-to-end test fails on exactly the path that broke.
+
+**Two thirds of subagent stops are unjudgeable.** 41 of 62 `SubagentStop` events stood down because the subagent's own transcript was not on disk. The persisted ones are the named, longer-running agents. Subagent coverage is therefore partial, and any subagent-branch statistic describes those agents, not all of them.
+
+**One working rule for this repository.** Its pre-commit hook requires the plugin version to move on every commit under `plugins/`, so a fix-up commit inside an open PR is refused. Each PR is kept to a single commit, amended rather than appended to. That avoids both changing the hook and bypassing it.
 
 ## Gate 1 — Stop gate · **implemented (Shadow)**
 

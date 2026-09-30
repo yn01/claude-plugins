@@ -8,8 +8,23 @@
 // aside rather than mixed in.
 
 import { readFileSync } from 'node:fs';
-import { loadConfig } from '../lib/config.mjs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { loadConfig, PLUGIN_ROOT } from '../lib/config.mjs';
 import * as current from '../lib/contracts/completion.mjs';
+
+// Which copy of this script is running, and what version it belongs to.
+// Claude Code keeps every installed version under the plugin cache, and an old
+// copy of this file does not know about newer contracts — reading one showed a
+// live branch as zero. Printing the path makes that visible at a glance.
+const SELF = fileURLToPath(import.meta.url);
+const VERSION = (() => {
+  try {
+    return JSON.parse(readFileSync(join(PLUGIN_ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version;
+  } catch {
+    return 'unknown';
+  }
+})();
 
 const cfg = loadConfig();
 const read = (p) => {
@@ -34,6 +49,7 @@ const gateArg = process.argv[2];
 const rows = gateArg ? all.filter((e) => e.gate === gateArg) : all;
 const byContract = rows.reduce((m, e) => ((m[e.contract ?? '(before contracts were recorded)'] ??= []).push(e), m), {});
 
+console.log(`script:   ${SELF}  (v${VERSION})`);
 console.log(`journal:  ${cfg.journalPath}`);
 if (cfg.legacyJournalPath && read(cfg.legacyJournalPath).length) {
   console.log(`          + ${read(cfg.legacyJournalPath).length} from the pre-0.3.0 path`);
@@ -77,7 +93,15 @@ function hist(label, values) {
   console.log('');
 }
 
-function report(of) {
+function report(all) {
+  // A skip is a deliberate non-decision — an agent type excluded by config —
+  // and counting it alongside verdicts would dilute every rate below.
+  const skipped = all.filter((e) => e.verdict === 'skip');
+  const of = all.filter((e) => e.verdict !== 'skip');
+  if (skipped.length) {
+    const why = count(skipped, 'agentType');
+    console.log(`skipped   ${skipped.length}  (${Object.entries(why).map(([k, v]) => `${k}=${v}`).join(', ')}) — not decisions, excluded below\n`);
+  }
   table('verdict', count(of, 'verdict'), of.length);
   table('decided by', count(of, 'decidedBy'), of.length);
 

@@ -102,6 +102,36 @@ async function main() {
   // Blocking again from here is how infinite loops start.
   if (input.stop_hook_active === true) pass();
 
+  // Every row this gate writes carries the contract that governed it — the
+  // ones written before any question is asked included. v0.8.0 stamped only
+  // the rows that reached Jev, so 42 of its rows (every subagent stand-down,
+  // and a recorded test failure) were filed as pre-contract data and dropped
+  // out of every count. Building the stamp first makes an unstamped row
+  // impossible rather than merely unlikely.
+  const isSubagent = input.hook_event_name === 'SubagentStop';
+  const stamp = {
+    gate: GATE,
+    mode: gate.mode,
+    event: input.hook_event_name,
+    session: input.session_id,
+    cwd,
+    contract: contract.id,
+    agentType: input.agent_type ?? null,
+    agentId: input.agent_id ?? null,
+  };
+
+  // Some agent types never run a check by design: Plan designs, Explore
+  // searches, and neither holds a tool that edits. Judging their reports as
+  // completion claims only ever produced "nothing ran" — true as a fact, wrong
+  // as a verdict. They are recorded as skipped, before Jev is asked, and a skip
+  // never counts as a decision. An event with no agent_type is judged, not
+  // skipped: the unsafe error here is a silent exemption.
+  const excluded = Array.isArray(gate.excludeAgentTypes) ? gate.excludeAgentTypes : [];
+  if (isSubagent && input.agent_type && excluded.includes(input.agent_type)) {
+    record(cfg.journalPath, { ...stamp, verdict: 'skip', decidedBy: 'code', reason: 'excluded_agent_type' });
+    pass();
+  }
+
   const budget = gate.maxBlocksPerSession ?? 2;
   const spent = blocksSoFar(cfg.sessionsPath, input.session_id);
 
@@ -113,7 +143,6 @@ async function main() {
   // subagent's claim judged against the orchestrator's commands: across the
   // first 29 decisive rows, every single coverage value landed below 0.3 and
   // every one blocked. A subagent's work has to be read from the subagent.
-  const isSubagent = input.hook_event_name === 'SubagentStop';
   const subPath = isSubagent ? subagentTranscript(input.transcript_path, input.agent_id) : null;
   const facts = readTranscript(isSubagent ? subPath : input.transcript_path, readOpts);
   const factsSource = isSubagent ? (subPath ? 'subagent' : 'none') : 'parent';
@@ -142,28 +171,21 @@ async function main() {
   // agent. Judge only when the event handed the text over directly.
   if (isSubagent && (msgSource !== 'hook' || factsSource !== 'subagent')) {
     record(cfg.journalPath, {
-      gate: GATE, mode: gate.mode, event: input.hook_event_name, session: input.session_id, cwd,
+      ...stamp,
       verdict: 'pass', decidedBy: 'code',
       reason: msgSource !== 'hook' ? 'subagent_message_unavailable' : 'subagent_facts_unavailable',
-      agentType: input.agent_type ?? null,
     });
     pass();
   }
 
   const base = {
-    gate: GATE,
-    mode: gate.mode,
-    event: input.hook_event_name,
-    session: input.session_id,
-    cwd,
+    ...stamp,
     pluginData: Boolean(process.env.CLAUDE_PLUGIN_DATA),
     // Diagnostics, so the next batch of data answers what this release had to
     // infer: does last_assistant_message arrive at all, and on SubagentStop is
     // it the subagent's text or the parent's?
     msgSource,
     factsSource,
-    agentType: input.agent_type ?? null,
-    agentId: input.agent_id ?? null,
     msgDiffers: Boolean(hookMessage) && hookMessage !== facts.finalMessage,
   };
 
@@ -218,7 +240,7 @@ async function main() {
     blocked_on_user: noul(answer.answers, 'blocked_on_user'),
   };
   if (Object.values(probs).some((v) => v === null)) {
-    record(cfg.journalPath, { ...base, contract: contract.id, verdict: 'pass', decidedBy: 'failopen', reason: 'missing_answer' });
+    record(cfg.journalPath, { ...base, verdict: 'pass', decidedBy: 'failopen', reason: 'missing_answer' });
     pass();
   }
 
@@ -231,7 +253,6 @@ async function main() {
 
   record(cfg.journalPath, {
     ...base,
-    contract: contract.id,
     verdict: outcome.verdict,
     decidedBy: 'jev',
     reason: outcome.reason,

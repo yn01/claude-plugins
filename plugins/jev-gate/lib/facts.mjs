@@ -25,7 +25,25 @@ const VERIFICATION = [
   /\bdotnet\s+(test|build)\b/,
   /\bswift\s+(test|build)\b/,
   /\brspec\b|\brake\s+test\b/,
+  // Added in completion@3. Each one is a runner an agent was seen using in real
+  // sessions while the gate counted it as nothing — five of the seven blocks
+  // recorded under @2 were agents that had verified with exactly these:
+  //   node --test          jev-gate's own suite, run three times by one agent
+  //   npm run format:check a reviewer checking formatting
+  //   gh pr checks         a release manager watching CI to completion
+  // Each pattern demands the verifying flag or subcommand, so `prettier
+  // --version`, `npm run format` (which rewrites files) and a grep for the word
+  // "prettier" — all present in the same transcripts — do not count.
+  /\bnode\b[^|;&]*\s--test\b/,
+  /\bprettier\b[^|;&]*\s--check\b/,
+  /\b(npm|pnpm|yarn|bun)\s+(run\s+)?format:check\b/,
+  /\bgh\s+pr\s+checks\b/,
 ];
+
+/** Exposed for tests: does this command count as a verification run? */
+export function isVerificationCommand(cmd, extra = []) {
+  return buildMatcher(extra)(cmd);
+}
 
 // Projects with a custom runner (`./scripts/verify`) are invisible to the list
 // above, and an invisible runner reads as an absence of evidence. Extra
