@@ -5,13 +5,14 @@
 
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { loadConfig, gateSettings } from '../lib/config.mjs';
+import { loadConfig, gateSettings, deliveryOf } from '../lib/config.mjs';
 import { ask, noul } from '../lib/jev.mjs';
 
 const cfg = loadConfig();
 const gate = gateSettings(cfg, 'completion');
 
-console.log(`mode              ${cfg.mode}`);
+console.log(`delivery          ${deliveryOf(cfg).summary}`);
+console.log(`config read from  ${cfg.sources.join('\n                  ')}`);
 console.log(`model             ${cfg.model}`);
 console.log(`endpoint          ${cfg.endpoint}`);
 console.log(`timeout           ${cfg.timeoutMs} ms`);

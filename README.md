@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.9.1`
+### [jev-gate](./plugins/jev-gate) `v0.9.2`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -168,6 +168,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-02
+- Update **jev-gate** to v0.9.2 — `/jev-gate:status` and `/jev-gate:doctor` show the effective delivery (shadow / advisory / enforce) and which config files were actually read; `mode: enforce` alone could not say whether the gate would block
 - Fix **jev-gate** to v0.9.1 — advisory mode (Enforce with a block budget of 0) now says it is advisory instead of reporting an exhausted budget, and a recorded test failure is shown rather than dropped when a block is withheld
 
 ### 2026-10-01
