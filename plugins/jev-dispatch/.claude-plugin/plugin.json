@@ -1,6 +1,6 @@
 {
   "name": "jev-dispatch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Model router — Jev reads each prompt for task kind and difficulty, then recommends delegating to a lighter subagent or consulting a stronger one",
   "author": {"name": "Yohei Nakanishi"}
 }

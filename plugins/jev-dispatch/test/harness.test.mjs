@@ -143,6 +143,17 @@ test('a skipped prompt is journalled without asking Jev', async () => {
   assert.equal(r.rows[0].contract, 'route@1');
 });
 
+test('a system message is skipped as skip:system_message without asking Jev', async () => {
+  behavior = { kind: 'error' };
+  const r = await run({ ...easy, prompt: '<task-notification>\n<task-id>abc</task-id>\n<status>completed</status>' }, { mode: 'advise', name: 'system-message' });
+  assert.equal(r.code, 0);
+  assert.equal(r.stdout, '');
+  assert.equal(r.rows[0].reason, 'skip:system_message');
+  assert.equal(r.rows[0].error, null);
+  assert.equal(r.rows[0].action, 'none');
+  assert.equal(r.rows[0].contract, 'route@1');
+});
+
 test('no API key fails open and records no_api_key', async () => {
   const r = await run(easy, { mode: 'advise', key: '', name: 'nokey' });
   assert.equal(r.code, 0);

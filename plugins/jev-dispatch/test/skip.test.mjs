@@ -47,3 +47,39 @@ test('a malformed pattern is ignored rather than thrown', () => {
 test('minChars counts the trimmed prompt', () => {
   assert.equal(skipReason('   abc   ', { minChars: 6 }), 'too_short');
 });
+
+const prefixes = skip.systemPrefixes;
+
+test('every default prefix marks a system message', () => {
+  assert.equal(prefixes.length, 6);
+  for (const p of prefixes) {
+    assert.equal(skipReason(`${p}>body that is long enough</x>`, skip), 'system_message', p);
+  }
+});
+
+test('real shapes: agent hand-back and task notification', () => {
+  assert.equal(skipReason('<agent-message from="a8595c5e">\n[Subagent hand-back] done', skip), 'system_message');
+  assert.equal(skipReason('<task-notification>\n<task-id>b19</task-id>', skip), 'system_message');
+});
+
+test('leading whitespace does not hide a system message', () => {
+  assert.equal(skipReason('  \n<task-notification>\n<task-id>x</task-id>', skip), 'system_message');
+});
+
+test('a prompt that merely mentions a tag later is judged', () => {
+  assert.equal(skipReason('Why does the <agent-message from="x"> tag show up in my logs?', skip), null);
+});
+
+test('prefix matching is case-sensitive', () => {
+  assert.equal(skipReason('<Task-Notification> is not the real tag, fix the parser', skip), null);
+});
+
+test('an empty systemPrefixes array disables the rule', () => {
+  assert.equal(skipReason('<task-notification>\n<task-id>x</task-id>', { ...skip, systemPrefixes: [] }), null);
+  assert.equal(skipReason('<task-notification>\n<task-id>x</task-id>', { minChars: 0 }), null);
+});
+
+test('a custom prefix is honoured, and an empty string prefix matches nothing', () => {
+  assert.equal(skipReason('[bot] build finished with warnings', { systemPrefixes: ['[bot]'] }), 'system_message');
+  assert.equal(skipReason('fix the parser please', { systemPrefixes: [''] }), null);
+});
