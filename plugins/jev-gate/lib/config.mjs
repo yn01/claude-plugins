@@ -74,13 +74,25 @@ function merge(base, overlay) {
 export function loadConfig(cwd = process.cwd()) {
   const dir = dataDir();
 
-  let cfg = readJson(join(PLUGIN_ROOT, 'config.json')) ?? {};
-  cfg = merge(cfg, readJson(join(dir, 'config.json')) ?? readJson(join(LEGACY_DIR, 'config.json')));
-  cfg = merge(cfg, readJson(join(cwd, '.jev-gate', 'config.json')));
+  // Every layer that actually contributed, in order. A project config written
+  // to the wrong place is silently ignored and the plugin runs on defaults —
+  // so the only way to confirm a setting took effect is to see which files
+  // were read.
+  const sources = [];
+  const layer = (path) => {
+    const j = readJson(path);
+    if (j) sources.push(path);
+    return j;
+  };
 
-  if (process.env.JEV_GATE_MODE) cfg.mode = process.env.JEV_GATE_MODE;
-  if (process.env.JEV_GATE_DISABLE === '1') cfg.mode = 'off';
+  let cfg = layer(join(PLUGIN_ROOT, 'config.json')) ?? {};
+  cfg = merge(cfg, layer(join(dir, 'config.json')) ?? layer(join(LEGACY_DIR, 'config.json')));
+  cfg = merge(cfg, layer(join(cwd, '.jev-gate', 'config.json')));
+
+  if (process.env.JEV_GATE_MODE) { cfg.mode = process.env.JEV_GATE_MODE; sources.push('env JEV_GATE_MODE'); }
+  if (process.env.JEV_GATE_DISABLE === '1') { cfg.mode = 'off'; sources.push('env JEV_GATE_DISABLE=1'); }
   if (process.env.JEV_GATE_JOURNAL) cfg.journal = process.env.JEV_GATE_JOURNAL;
+  cfg.sources = sources;
 
   // `journal` unset means "wherever this plugin's data lives" rather than a
   // fixed path, so an install that moves does not strand its own history.
@@ -107,3 +119,16 @@ export function gateSettings(cfg, name) {
 }
 
 export { PLUGIN_ROOT };
+
+// What a verdict will actually do, which `mode` alone does not say: Enforce
+// with a block budget of zero shows every verdict and stops nothing, while
+// Enforce with a budget blocks. Both read "mode: enforce", and the difference
+// is whether the gate can stop your work.
+export function deliveryOf(cfg, name = 'completion') {
+  const mode = cfg?.mode ?? 'shadow';
+  const budget = cfg?.gates?.[name]?.maxBlocksPerSession ?? 2;
+  if (mode === 'off') return { kind: 'off', summary: 'off — the gate is disabled' };
+  if (mode !== 'enforce') return { kind: 'shadow', summary: 'shadow — recorded only, nothing shown, nothing blocked' };
+  if (budget <= 0) return { kind: 'advisory', summary: 'advisory — every verdict shown, nothing blocked' };
+  return { kind: 'enforce', summary: `enforce — blocks, at most ${budget} time(s) per session` };
+}

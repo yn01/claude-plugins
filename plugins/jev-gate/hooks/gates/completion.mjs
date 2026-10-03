@@ -31,7 +31,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadConfig, gateSettings } from '../../lib/config.mjs';
+import { loadConfig, gateSettings, deliveryOf } from '../../lib/config.mjs';
 import { ask, noul } from '../../lib/jev.mjs';
 import { record } from '../../lib/journal.mjs';
 import { readTranscript, subagentTranscript } from '../../lib/facts.mjs';
@@ -143,7 +143,9 @@ async function main() {
   // so an advisory setup reported "already sent back 0 time(s); standing down".
   const withheld = (message) => {
     const body = message.replace(/^jev-gate: /, '');
-    return budget <= 0
+    // The same definition status and doctor display, so what they say and
+    // what the gate does cannot drift apart.
+    return deliveryOf(cfg, GATE).kind === 'advisory'
       ? `jev-gate (advisory, nothing is blocked): ${body}`
       : `jev-gate: already sent back ${spent} time(s) this session; standing down. ${body}`;
   };

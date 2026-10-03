@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadConfig, PLUGIN_ROOT } from '../lib/config.mjs';
+import { loadConfig, deliveryOf, PLUGIN_ROOT } from '../lib/config.mjs';
 import * as current from '../lib/contracts/completion.mjs';
 
 // Which copy of this script is running, and what version it belongs to.
@@ -54,7 +54,8 @@ console.log(`journal:  ${cfg.journalPath}`);
 if (cfg.legacyJournalPath && read(cfg.legacyJournalPath).length) {
   console.log(`          + ${read(cfg.legacyJournalPath).length} from the pre-0.3.0 path`);
 }
-console.log(`mode:     ${cfg.mode}`);
+console.log(`delivery: ${deliveryOf(cfg).summary}`);
+console.log(`config:   ${cfg.sources.join('\n          ')}`);
 console.log(`entries:  ${rows.length}${gateArg ? ` (gate=${gateArg})` : ''}`);
 console.log(`current:  ${current.id}\n`);
 

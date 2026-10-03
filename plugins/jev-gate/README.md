@@ -38,12 +38,12 @@ A generating model asked to grade its own output is doing two jobs with one set 
 The division is strict:
 
 - **Code decides facts.** Which commands ran, whether they exited non-zero, whether anything was edited or run since the user last spoke.
-- **Jev decides meaning.** Whether a message claims completion; whether a log holds a real verification run; whether a pause is actually waiting on the user.
+- **Jev decides meaning — only what can be read off the message.** Whether it reports something completed; whether it asserts that a check passed; whether the stop is waiting on the user. Never whether the claim is *true*: that is checked by code against the transcript.
 - **Code decides what happens.** Thresholds, block budgets, and the exit code are never the model's to choose.
 
 ## Features
 
-- **Completion gate (hook)** — fires on `TaskCompleted`, `SubagentStop` and `Stop`. A verification run that failed and was never re-run, and a completion claim with nothing run behind it at all, are both caught by code alone. Jev is asked only what code cannot count: whether what ran actually covers what is being claimed.
+- **Completion gate (hook)** — fires on `TaskCompleted`, `SubagentStop` and `Stop`. A verification run that failed and was never re-run is caught by code alone. Otherwise Jev reads what the message *says* — completed? claims a check passed? — and code compares that with what the transcript *records*. A block is the contradiction between the two: a message asserting a check passed, with no check in the log.
 - **Early-stop detection** — distinguishes a legitimate check-in from a task that stalled into a status report. Advisory by default; the playbook's own remedy for this is a CLAUDE.md rule, not a hard stop.
 - **Shadow Mode by default** — every verdict exits 0 and lands in a JSONL journal alongside the probabilities that produced it.
 - **Fail-open, without exception** — no API key, no network, a slow response, a malformed body, an unexpected exception: every one of those exits 0. A judge that is down never stops work.
@@ -121,7 +121,33 @@ All three questions are phrased **positively**. jev-1.13 reads negations at face
 
 ## Configuration
 
-Layers, later winning: the plugin default → `<plugin data dir>/config.json` → `<project>/.jev-gate/config.json` → environment.
+### Choosing what the gate does
+
+Create `<project>/.jev-gate/config.json` in the project where the gate should behave differently. It needs only the keys you change:
+
+| Delivery | What happens | `.jev-gate/config.json` |
+|---|---|---|
+| **shadow** (default) | Recorded to the journal; nothing shown, nothing blocked | *(no file needed)* |
+| **advisory** | Every verdict shown as it happens; nothing blocked | `{ "mode": "enforce", "gates": { "completion": { "maxBlocksPerSession": 0 } } }` |
+| **enforce** | Blocks, at most twice per session, then stands down | `{ "mode": "enforce" }` |
+
+No restart is needed: the config is read afresh on every stop. (Updating the *plugin* is different — that does need one.)
+
+**Confirm it took effect** with `/jev-gate:status` or `/jev-gate:doctor`. Both print the delivery and every config file actually read:
+
+```
+delivery          advisory — every verdict shown, nothing blocked
+config read from  …/plugins/jev-gate/config.json
+                  …/your-project/.jev-gate/config.json
+```
+
+If your file is not in that list, it was not read — wrong directory, or invalid JSON. **A config file with a syntax error is ignored as a whole and the gate runs on defaults**, so a typo quietly puts you back in shadow. `mode: enforce` on its own does not tell you whether the gate will stop your work; the `delivery` line does.
+
+To turn everything off for one session, set `JEV_GATE_DISABLE=1`; it shows up in the same list.
+
+### Layers
+
+Later wins: the plugin default → `<plugin data dir>/config.json` → `<project>/.jev-gate/config.json` → environment.
 
 ```json
 {
@@ -209,7 +235,7 @@ Only one verdict ever stops work: **`block`**, reached through `claims_verified`
    { "mode": "enforce", "gates": { "completion": { "maxBlocksPerSession": 0 } } }
    ```
 
-   Messages read `jev-gate (advisory, nothing is blocked): …`. This is where you first see the gate's judgement live, and each verdict you disagree with is a spot-check done for free. It also runs the Enforce code path for real with nothing at stake.
+   Messages read `jev-gate (advisory, nothing is blocked): …`, and `/jev-gate:status` shows `delivery: advisory` once the file has been read. This is where you first see the gate's judgement live, and each verdict you disagree with is a spot-check done for free. It also runs the Enforce code path for real with nothing at stake.
 3. **Label.** Collect about 100 labels on the `claims_verified` branch — the only one that blocks. See [`docs/labeling.md`](docs/labeling.md); not yet built.
 4. **Enforce.** Set `claimsVerified` from the lower confidence bound of those labels, then restore a block budget. Watch the first blocks closely: what an agent does when it is sent back has not been observed yet, and no amount of Shadow data can show it.
 
@@ -248,6 +274,15 @@ Further gates are specified in [`docs/implementation-plan.md`](docs/implementati
 - **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
 
 ## Changelog
+
+### v0.9.2
+
+- **`/jev-gate:status` and `/jev-gate:doctor` show what the gate will actually do.** Both printed only `mode`, and `mode: enforce` reads the same whether the gate blocks or only advises — the difference being whether it can stop your work. They now print a `delivery` line: `shadow`, `advisory`, `enforce — blocks, at most N time(s) per session`, or `off`.
+- **Both list every config file actually read**, plus any environment override. A project config in the wrong directory, or with a JSON syntax error, is silently ignored and the gate runs on defaults; it now visibly fails to appear in that list.
+- The gate's own advisory wording uses the same definition as the display, so what status says and what the gate does cannot drift apart.
+- README: a *Choosing what the gate does* section — the three settings as a table, how to confirm one took effect, and the malformed-config trap.
+- Seven config tests. No change to the decision contract; rows stay `completion@3`.
+- Two README lines still described `completion@1` — Jev judging whether a run *covers* a claim, which was retired in @2. Corrected to what Jev actually asks.
 
 ### v0.9.1
 
