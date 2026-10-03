@@ -220,6 +220,22 @@
         "evidence",
         "shadow-mode"
       ]
+    },
+    {
+      "name": "jev-dispatch",
+      "source": "./plugins/jev-dispatch",
+      "description": "Model router — Jev reads each prompt for task kind and difficulty, then recommends delegating to a lighter subagent or consulting a stronger one",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "jev",
+        "typesafe",
+        "model-routing",
+        "subagent",
+        "hook",
+        "shadow-mode"
+      ]
     }
   ]
 }
