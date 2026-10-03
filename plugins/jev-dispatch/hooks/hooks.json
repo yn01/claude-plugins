@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/route.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Ask Jev how hard the prompt is, record the routing recommendation, and (advise mode only) hint at a lighter or stronger subagent"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Remember the session's starting model, so routing can compare against it when a prompt arrives without one"
+      }
+    ]
+  }
+}

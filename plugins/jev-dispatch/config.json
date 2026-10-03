@@ -1,0 +1,36 @@
+{
+  "mode": "shadow",
+  "model": "jev-1.13.0",
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "timeoutMs": 3000,
+  "maxPromptChars": 4000,
+  "skip": {
+    "minChars": 6,
+    "skipPatterns": [
+      "^(y|yes|yep|ok|okay|sure|go|go ahead|continue|proceed|thanks|thank you|lgtm|はい|ええ|お願い|お願いします|ありがとう|続けて|進めて)[\\s.!。！]*$"
+    ]
+  },
+  "journal": {
+    "promptChars": 200
+  },
+  "policy": {
+    "difficultyTiers": [
+      { "below": 1.2, "tier": "light" },
+      { "below": 2.6, "tier": "standard" },
+      { "tier": "deep" }
+    ],
+    "gainBump": 1.5,
+    "minTierByKind": { "design": "standard" },
+    "minConfidence": { "taskKind": 0.6, "difficulty": 0.5, "strongerGain": 0.6 },
+    "contextDependent": 0.5,
+    "baseline": { "lightBelowChars": 200, "standardBelowChars": 800 }
+  },
+  "sessionModelRank": { "haiku": 1, "sonnet": 2, "opus": 3, "fable": 3 },
+  "tiers": {
+    "light":    { "rank": 1, "executor": "subagent", "agent": "jev-dispatch:light",    "model": "haiku",  "enabled": true },
+    "standard": { "rank": 2, "executor": "subagent", "agent": "jev-dispatch:standard", "model": "sonnet", "enabled": true },
+    "deep":     { "rank": 3, "executor": "subagent", "agent": "jev-dispatch:deep",     "model": "opus",   "enabled": true },
+    "gemini":   { "rank": 2, "executor": "external", "command": "gemini", "model": "", "enabled": false },
+    "codex":    { "rank": 2, "executor": "external", "command": "codex",  "model": "", "enabled": false }
+  }
+}

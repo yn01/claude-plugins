@@ -44,6 +44,16 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
+### [jev-dispatch](./plugins/jev-dispatch) `v0.1.0`
+
+A model router judged by Jev (TypeSafe System One).
+
+On every prompt, a hook asks Jev what kind of task it is, how hard, and whether it needs the earlier conversation; code then compares the resulting tier with your session's model and recommends delegating to a lighter subagent, or consulting a stronger one while the main agent keeps working. Ships in Shadow Mode: decisions are only journaled and nothing is injected until you switch to `advise`.
+
+```
+/plugin install jev-dispatch
+```
+
 ### [jev-gate](./plugins/jev-gate) `v0.9.2`
 
 A stop-event gate judged by Jev (TypeSafe System One).
@@ -166,6 +176,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-10-03
+- Add **jev-dispatch** v0.1.0 — model router judged by Jev (TypeSafe System One); `UserPromptSubmit` hook classifies task kind, difficulty and context dependence, then recommends delegating to a lighter subagent or consulting a stronger one, Shadow Mode by default, JSONL decision journal
 
 ### 2026-10-02
 - Update **jev-gate** to v0.9.2 — `/jev-gate:status` and `/jev-gate:doctor` show the effective delivery (shadow / advisory / enforce) and which config files were actually read; `mode: enforce` alone could not say whether the gate would block
