@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-dispatch](./plugins/jev-dispatch) `v0.1.0`
+### [jev-dispatch](./plugins/jev-dispatch) `v0.1.1`
 
 A model router judged by Jev (TypeSafe System One).
 
@@ -176,6 +176,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-10-04
+- Fix **jev-dispatch** to v0.1.1 — machine-generated `UserPromptSubmit` messages (subagent hand-backs, task notifications) are skipped instead of being judged; configurable via `skip.systemPrefixes`
 
 ### 2026-10-03
 - Add **jev-dispatch** v0.1.0 — model router judged by Jev (TypeSafe System One); `UserPromptSubmit` hook classifies task kind, difficulty and context dependence, then recommends delegating to a lighter subagent or consulting a stronger one, Shadow Mode by default, JSONL decision journal

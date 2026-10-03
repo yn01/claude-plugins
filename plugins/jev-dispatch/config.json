@@ -6,6 +6,7 @@
   "maxPromptChars": 4000,
   "skip": {
     "minChars": 6,
+    "systemPrefixes": ["<task-notification", "<agent-message", "<teammate-message", "<system-reminder", "<local-command-", "<command-name"],
     "skipPatterns": [
       "^(y|yes|yep|ok|okay|sure|go|go ahead|continue|proceed|thanks|thank you|lgtm|はい|ええ|お願い|お願いします|ありがとう|続けて|進めて)[\\s.!。！]*$"
     ]

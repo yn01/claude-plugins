@@ -77,8 +77,9 @@ UserPromptSubmit  {prompt, session_id, cwd, transcript_path, model?}
   │
   ├─ mode off?                                         ──▶ exit
   ├─ session model: payload `model` ▸ transcript ▸ SessionStart cache
-  ├─ code: skip rules (empty, "/command", too short,
-  │        stock replies like "yes" / "ok" / "lgtm")   ──▶ journal "skip:*", exit
+  ├─ code: skip rules (empty, machine-generated message,
+  │        "/command", too short, stock replies like
+  │        "yes" / "ok" / "lgtm")                      ──▶ journal "skip:*", exit
   ▼
   Jev: route@1 — four questions, one request
        task_kind         implement | bugfix | refactor | investigate | design | docs | question
@@ -111,7 +112,7 @@ A prompt that leans on earlier context is never delegated: a subagent sees only 
 
 **Consult** is the advisor pattern. The main agent keeps the task and the editing; it asks a stronger, read-only model for its plan before starting and for a review before declaring completion. **Delegate** hands the whole task to a cheaper worker, and the hint reminds the main agent to verify what comes back.
 
-Every other outcome is `none` with a reason recorded: `unclear` (the difficulty was read below `minConfidence.difficulty`; a low-confidence `task_kind` does not cause this, see `kindUsed`), `unknown_session_model` (no session model could be found, or it matches nothing in `sessionModelRank`; see [Session model](#session-model)), `no_tier` (no enabled subagent tier), `judge_unavailable` (the request failed), or `skip:empty` / `skip:slash_command` / `skip:too_short` / `skip:pattern`.
+Every other outcome is `none` with a reason recorded: `unclear` (the difficulty was read below `minConfidence.difficulty`; a low-confidence `task_kind` does not cause this, see `kindUsed`), `unknown_session_model` (no session model could be found, or it matches nothing in `sessionModelRank`; see [Session model](#session-model)), `no_tier` (no enabled subagent tier), `judge_unavailable` (the request failed), or `skip:empty` / `skip:system_message` / `skip:slash_command` / `skip:too_short` / `skip:pattern`.
 
 ### The hint
 
@@ -154,6 +155,7 @@ A project config written to the wrong place is ignored silently; to confirm a se
 | `timeoutMs` | `3000` | Abort the Jev request after this long; the prompt then passes untouched. |
 | `maxPromptChars` | `4000` | Prompt characters sent to Jev. |
 | `skip.minChars` | `6` | Prompts shorter than this are not judged. |
+| `skip.systemPrefixes` | `<task-notification`, `<agent-message`, `<teammate-message`, `<system-reminder`, `<local-command-`, `<command-name` | A prompt that starts with any of these (after trimming; case-sensitive, start only) is machine-generated and is skipped as `skip:system_message`. An empty array disables the rule. |
 | `skip.skipPatterns` | stock replies (yes, ok, thanks, lgtm, and Japanese equivalents) | Case-insensitive regexes; a match skips the prompt. Prompts starting with `/` are always skipped. |
 | `journal.promptChars` | `200` | Prompt characters stored as `promptHead`. |
 | `policy.difficultyTiers` | `<1.2` light, `<2.6` standard, else deep | Threshold table from the expected difficulty score to a tier. |
@@ -211,7 +213,7 @@ One JSONL file for every project — Shadow mode exists to accumulate decisions 
 
 ## Privacy and cost
 
-- **Your prompt leaves your machine.** Up to `maxPromptChars` characters of every non-skipped prompt are sent to TypeSafe (`api.typesafe.ai`). Skipped prompts (slash commands, short or stock replies) are not. If prompts may contain material that must not leave, set `mode` to `off` for that project or lower `maxPromptChars`.
+- **Your prompt leaves your machine.** Up to `maxPromptChars` characters of every non-skipped prompt are sent to TypeSafe (`api.typesafe.ai`). Skipped prompts (machine-generated messages, slash commands, short or stock replies) are not. If prompts may contain material that must not leave, set `mode` to `off` for that project or lower `maxPromptChars`.
 - **The journal stores part of your prompt** — the first `journal.promptChars` characters as `promptHead`, for every row including skipped ones. It stays local. Set `journal.promptChars` to `0` to store none.
 - **Latency on every judged prompt.** One Jev round trip, typically a few hundred milliseconds, before the prompt reaches the model. The request is cut off at `timeoutMs` (3000) and the hook at 5 seconds; a slow or failed judgement costs that wait and then lets the prompt through.
 - **Cost** is Jev tokens per prompt (recorded in `usage`), at a small fraction of a cent. Acting on advice changes your Claude usage: delegating to a lighter model costs less; consulting a deeper one costs more.
@@ -222,6 +224,7 @@ One JSONL file for every project — Shadow mode exists to accumulate decisions 
 - **A hook cannot change the main session's model.** jev-dispatch can only hand the main agent a hint to spawn a subagent. Switching the session itself is up to you.
 - **Hints are advisory.** The main agent may ignore, or only partly follow, a hint.
 - **Judged from the prompt text alone.** Jev does not see the transcript, so a prompt that is short but depends on a long conversation is only caught if it reads as context-dependent.
+- **Not every `UserPromptSubmit` is something you typed.** Subagent hand-backs and background-task notifications also arrive as `UserPromptSubmit`. They are skipped by default via `skip.systemPrefixes`; a machine-generated message with a prefix not in that list would still be judged.
 - **Subagents have no memory of the conversation.** That is why delegation requires a self-contained prompt.
 ## Tests
 
@@ -236,6 +239,10 @@ Pass the glob, not the directory: handing `node --test` a directory fails on Nod
 Not built yet: a manual `/jev-dispatch:route` command, `mode` / `status` / `doctor` commands, external executors (`claude -p`, Gemini CLI, Codex CLI), outcome recording and a calibration report, stall detection, capability pre-filtering, allow/exclude lists, and judge-backend swaps. See [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Changelog
+
+### v0.1.1 — 2026-10-04
+
+Fix: machine-generated messages — subagent hand-backs, background-task notifications and similar — also arrive as `UserPromptSubmit` and were being sent to Jev as if they were requests (13 of 20 rows in one real install, 3 of them recommending `delegate`). They are now skipped as `skip:system_message`, configurable through `skip.systemPrefixes`.
 
 ### v0.1.0 — 2026-10-03
 
