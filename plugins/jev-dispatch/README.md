@@ -1,6 +1,6 @@
 # jev-dispatch
 
-A model router for Claude Code. On every prompt, [Jev](https://docs.typesafe.ai/introduction) (TypeSafe's System One model) reads the *properties of the task* — what kind of work it is, how hard, how much a stronger model would help, whether it only makes sense with the earlier conversation — and code turns those properties into a recommendation: hand this to a lighter subagent, or consult a stronger one while you keep working.
+A model router for Claude Code. On every prompt, [Jev](https://docs.typesafe.ai/introduction) (TypeSafe's System One model) reads the *properties of the task* — what kind of work it is, how hard, how much a stronger model would help, whether it only makes sense with the earlier conversation — and code turns those properties into a recommendation: hand this to a lighter subagent, or consult a stronger one while you keep working. It can also choose the model of each subagent the main agent launches, rewriting the call's `model` to match how hard the brief is.
 
 It runs entirely inside Claude Code: the "models" are subagents (`haiku`, `sonnet`, `opus`) and the hint is injected into the main agent's context.
 
@@ -45,12 +45,79 @@ export JEV_DISPATCH_MODE=advise
 
 Any other value (a typo, say) is not rejected: it behaves like `shadow`.
 
+## Subagent routing
+
+The prompt hook can only *hint*. The place where a model is actually chosen is the moment the main agent launches a subagent, so a second hook, on the `Agent` tool (`PreToolUse`), judges the brief the main agent wrote and picks the model the subagent runs on.
+
+```
+Agent tool call {description, prompt, subagent_type, model?, ...}
+  ├─ spawn.mode off?                                    ──▶ exit
+  ├─ subagent_type (default general-purpose) not in
+  │  spawn.subagentTypes                                ──▶ journal "not_targeted", exit
+  ├─ spawn.respectExplicit and a model was given        ──▶ journal "explicit_respected", exit
+  ▼
+  Jev: spawn@1 — task_kind, difficulty, stronger_gain  (about the brief)
+  ▼
+  code: spawn.difficultyTiers (and spawn.gainBump, off by default), with the
+        prompt hook's per-kind floor ─▶ tier ─▶ capped at spawn.maxTier ─▶ that tier's model
+        compared by rank with the model the call asked for
+        (or, if it named none, the session's model: "inherit")
+  ▼
+  same rank ─▶ keep    different ─▶ route up | down    difficulty unreadable ─▶ unclear (untouched)
+  ▼
+  journal row (hook "spawn") ─▶ apply mode only: updatedInput with `model` replaced
+```
+
+Start in `shadow`, the default: every launch is judged and journaled with the model it *would* have been routed to, and nothing is changed. Read the rows, then switch on `apply`:
+
+```bash
+# per project (a separate switch from the prompt hook's mode)
+mkdir -p .jev-dispatch && echo '{"spawn":{"mode":"apply"}}' > .jev-dispatch/config.json
+
+# or per shell / per session
+export JEV_DISPATCH_SPAWN_MODE=apply
+
+# what would have been rewritten
+jq -c 'select(.hook=="spawn" and .action=="route") | {requestedModel, routedModel, direction, reason, descriptionHead}' "$J"
+```
+
+| `spawn.mode` | Judges and journals | Rewrites `model` |
+|---|---|---|
+| `shadow` (default) | yes | never |
+| `apply` | yes | when the action is `route` |
+| `off` | no | never |
+
+Any other value behaves like `shadow`.
+
+What is rewritten, exactly:
+
+- **Only `model`.** The hook returns the full original tool input with that one field replaced (the output replaces the input, so nothing else may be dropped), plus a one-line notice for the main agent such as `[jev-dispatch] routed this subagent to haiku (docs, difficulty 0.4).` It never returns a permission decision; approvals work as they always did.
+- **Up and down.** A brief harder than the requested model gets a stronger one; an easier brief gets a lighter one. `opus` and `fable` share a rank, so nothing is rewritten between them.
+- **Effort is not touched.** The Agent call has no per-call effort; it comes from the agent's definition.
+- **Briefs are self-contained**, so `context_dependent` is not asked, and a brief that is a question is routed on difficulty like any other.
+- **Nothing is rewritten when a model cannot be ranked:** the requested model, or the inherited session model, matches nothing in `sessionModelRank` (`unknown_model`). Inside a subagent, an omitted `model` inherits the *subagent's* model, which is not known to the hook, so only an explicit `model` is compared there.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `spawn.mode` | `"shadow"` | `shadow`, `apply` or `off`. Overridden by `JEV_DISPATCH_SPAWN_MODE`. Independent of `mode`. |
+| `spawn.subagentTypes` | `["general-purpose"]` | `subagent_type` values that are routed. A missing `subagent_type` counts as `general-purpose`. Others are journaled as `not_targeted`, with their name. |
+| `spawn.difficultyTiers` | `<1.2` light, `<3.3` standard, else deep | Threshold table for spawns only. If the key is absent, `policy.difficultyTiers` is used. |
+| `spawn.gainBump` | `null` | `stronger_gain` at or above this lifts a spawn's tier one step; `null` means no bump for spawns. If the key is absent, `policy.gainBump` is used. `policy.minConfidence` and `policy.minTierByKind` stay shared. |
+| `spawn.respectExplicit` | `false` | When `true`, a call that names a `model` is left as asked. By default Jev's judgement overrides an explicit model. |
+| `spawn.maxTier` | `"deep"` | The highest tier a spawn may be routed to. A capped decision carries `:capped` on its `reason`. |
+| `spawn._knownSubagentTypes` | a list of names | **Reference only; the code never reads it.** JSON has no comments, so this is where example names live. Real names are in the journal: `jq -r 'select(.reason=="not_targeted") | .subagentType' "$J" | sort | uniq -c`. Copy the ones you want into `spawn.subagentTypes`. |
+
+### Why spawn has its own thresholds
+
+A brief written by the main agent is detailed, and Jev reads detail as difficulty: in real use briefs cluster around difficulty 3 and `stronger_gain` 1.5–1.9, almost regardless of the task. With the prompt table (deep from 2.6) and the gain bump, most spawns would be sent to the deep tier. So spawns use a higher table (deep from 3.3) and no gain bump, and reach the deep tier only when the judgement leans towards "very hard". `stronger_gain` is still recorded in `signals` and `answers`, so the choice can be revisited from the journal. Set `spawn.difficultyTiers` and `spawn.gainBump` to different values, or delete the keys to share the prompt thresholds.
+
 ## Features
 
 - **Task-property judging** — one Jev request per prompt asks four questions: `task_kind`, `difficulty`, `stronger_gain`, `context_dependent`.
 - **Code owns the decision** — thresholds, tiers, and what to do about the session's own model are config and pure functions, never the judge's to choose. Jev is never told a model name.
 - **Delegate down, consult up** — a lighter tier takes self-contained work; a heavier tier is consulted as an advisor while the main agent keeps the task.
 - **Shadow mode by default** — every decision is journaled with the raw probabilities and a length-heuristic baseline, so Jev can later be compared against the trivial rule.
+- **Subagent routing** — a hook on the Agent tool judges each subagent's brief and, in apply mode, rewrites its `model` up or down, capped by `spawn.maxTier`.
 - **Fail-open, without exception** — no API key, no network, a slow answer, bad JSON, a config typo, a thrown error: every one exits 0 and the prompt goes through untouched.
 - **Layered configuration** — plugin default, per user, per project, environment.
 - **Extensible tiers** — change a tier's model in config, point it at your own agent, or add a tier.
@@ -141,7 +208,7 @@ Layers, later wins. Each is merged key by key; an unreadable or malformed file i
 1. Plugin default — `config.json` in the plugin
 2. Per user — `<data dir>/config.json`
 3. Per project — `<project>/.jev-dispatch/config.json`
-4. Environment — `JEV_DISPATCH_MODE`
+4. Environment — `JEV_DISPATCH_MODE`, `JEV_DISPATCH_SPAWN_MODE`
 
 The data dir is `CLAUDE_PLUGIN_DATA` if set, else the first `~/.claude/plugins/data/jev-dispatch-*` directory, else `~/.claude/jev-dispatch/`.
 
@@ -188,7 +255,7 @@ If none of them answers, the decision is `none` with reason `unknown_session_mod
 
 ## Journal
 
-One JSONL file for every project — Shadow mode exists to accumulate decisions in one place so the distribution can be read back. It is written for every judged or skipped prompt unless `mode` is `off`.
+One JSONL file for every project — Shadow mode exists to accumulate decisions in one place so the distribution can be read back. It is written for every judged or skipped prompt unless `mode` is `off`, and for every Agent call unless `spawn.mode` is `off`. Rows from the prompt hook carry `hook: "prompt"`; rows written before v0.2.0 have no `hook` field, so count a row without one as a prompt row.
 
 | Field | Meaning |
 |---|---|
@@ -211,9 +278,24 @@ One JSONL file for every project — Shadow mode exists to accumulate decisions 
 | `latencyMs`, `usage` | Jev round-trip time and token usage. |
 | `error` | Failure reason when the judge was unavailable (`no_api_key`, `timeout`, `network_error`, `bad_json`, `http_<status>`). |
 
+Subagent rows (`hook: "spawn"`, `contract: "spawn@1"`) share `ts`, `session_id`, `cwd`, `mode` (the spawn mode), `sessionModel`, `sessionModelSource`, `answers`, `signals`, `kindUsed`, `tier`, `action`, `reason`, `delivered`, `latencyMs`, `usage` and `error` with the fields above, and add:
+
+| Field | Meaning |
+|---|---|
+| `subagentType` | The `subagent_type` of the call (`general-purpose` when omitted). Use it to see which names are really in use. |
+| `requestedModel` | The `model` the call asked for, or `null`. |
+| `routedModel` | The model it was routed to; `null` unless the action is `route`. |
+| `direction` | `up` or `down` for a route, else `null`. |
+| `action` | `route`, `keep` or `none`. |
+| `reason` | `heavier` / `lighter` (route), `same_model` (keep), or for `none`: `not_targeted`, `explicit_respected`, `no_brief`, `unclear`, `unknown_model`, `no_tier`, `judge_unavailable`. A `:capped` suffix means `spawn.maxTier` lowered the tier. |
+| `agentId`, `agentType` | Set only when the call was made from inside a subagent. |
+| `descriptionHead` | First `journal.promptChars` characters of the call's `description`. |
+| `briefChars` | Length of the whole brief (the brief itself is not stored). |
+
 ## Privacy and cost
 
 - **Your prompt leaves your machine.** Up to `maxPromptChars` characters of every non-skipped prompt are sent to TypeSafe (`api.typesafe.ai`). Skipped prompts (machine-generated messages, slash commands, short or stock replies) are not. If prompts may contain material that must not leave, set `mode` to `off` for that project or lower `maxPromptChars`.
+- **Subagent briefs leave your machine too.** Up to `maxPromptChars` characters of the brief of each targeted Agent call are sent to TypeSafe. Only the call's `description` (up to `journal.promptChars` characters) is stored locally, not the brief. Set `spawn.mode` to `off` to stop this.
 - **The journal stores part of your prompt** — the first `journal.promptChars` characters as `promptHead`, for every row including skipped ones. It stays local. Set `journal.promptChars` to `0` to store none.
 - **Latency on every judged prompt.** One Jev round trip, typically a few hundred milliseconds, before the prompt reaches the model. The request is cut off at `timeoutMs` (3000) and the hook at 5 seconds; a slow or failed judgement costs that wait and then lets the prompt through.
 - **Cost** is Jev tokens per prompt (recorded in `usage`), at a small fraction of a cent. Acting on advice changes your Claude usage: delegating to a lighter model costs less; consulting a deeper one costs more.
@@ -221,7 +303,8 @@ One JSONL file for every project — Shadow mode exists to accumulate decisions 
 
 ## Limitations
 
-- **A hook cannot change the main session's model.** jev-dispatch can only hand the main agent a hint to spawn a subagent. Switching the session itself is up to you.
+- **A hook cannot change the main session's model.** For the main session jev-dispatch can only hand the agent a hint. What it can change is the model of a subagent at launch (see [Subagent routing](#subagent-routing)).
+- **Only `model` is routed.** Effort cannot be set per Agent call, and `apply` can only rewrite a call the main agent actually makes.
 - **Hints are advisory.** The main agent may ignore, or only partly follow, a hint.
 - **Judged from the prompt text alone.** Jev does not see the transcript, so a prompt that is short but depends on a long conversation is only caught if it reads as context-dependent.
 - **Not every `UserPromptSubmit` is something you typed.** Subagent hand-backs and background-task notifications also arrive as `UserPromptSubmit`. They are skipped by default via `skip.systemPrefixes`; a machine-generated message with a prefix not in that list would still be judged.
@@ -236,9 +319,13 @@ Pass the glob, not the directory: handing `node --test` a directory fails on Nod
 
 ## Roadmap
 
-Not built yet: a manual `/jev-dispatch:route` command, `mode` / `status` / `doctor` commands, external executors (`claude -p`, Gemini CLI, Codex CLI), outcome recording and a calibration report, stall detection, capability pre-filtering, allow/exclude lists, and judge-backend swaps. See [`docs/roadmap.md`](docs/roadmap.md).
+Subagent routing shipped in v0.2.0. Not built yet: a manual `/jev-dispatch:route` command, `mode` / `status` / `doctor` commands, external executors (`claude -p`, Gemini CLI, Codex CLI), outcome recording and a calibration report, stall detection, capability pre-filtering, allow/exclude lists, and judge-backend swaps. See [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Changelog
+
+### v0.2.0 — 2026-10-04
+
+Subagent routing. A `PreToolUse` hook on the Agent tool judges the brief of each launch (contract `spawn@1`) and, in `apply` mode, rewrites the call's `model` up or down; `shadow` (the default) only records. New config: `spawn.mode`, `spawn.subagentTypes`, `spawn.respectExplicit`, `spawn.maxTier`, and `JEV_DISPATCH_SPAWN_MODE`. The three questions shared with `route@1` moved to `lib/contracts/questions.mjs` (texts unchanged), and the signals-to-tier step became `judgeTier()` in the policy, used by both hooks. Journal rows now carry `hook` (`prompt` or `spawn`).
 
 ### v0.1.1 — 2026-10-04
 

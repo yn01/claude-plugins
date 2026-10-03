@@ -12,6 +12,7 @@ beforeEach(() => {
   saved = { data: process.env.CLAUDE_PLUGIN_DATA, mode: process.env.JEV_DISPATCH_MODE, key: process.env.TYPESAFE_API_KEY };
   process.env.CLAUDE_PLUGIN_DATA = join(dir, 'data');
   delete process.env.JEV_DISPATCH_MODE;
+  delete process.env.JEV_DISPATCH_SPAWN_MODE;
   delete process.env.TYPESAFE_API_KEY;
 });
 afterEach(() => {
@@ -80,4 +81,26 @@ test('the API key comes from the environment only', () => {
 test('merge replaces arrays and ignores a non-object overlay', () => {
   assert.deepEqual(merge({ a: [1, 2] }, { a: [3] }), { a: [3] });
   assert.deepEqual(merge({ a: 1 }, null), { a: 1 });
+});
+
+test('spawn defaults: shadow, general-purpose only, explicit overridden, capped at deep', () => {
+  const c = loadConfig(join(dir, 'proj'));
+  assert.deepEqual([c.spawn.mode, c.spawn.subagentTypes, c.spawn.respectExplicit, c.spawn.maxTier],
+    ['shadow', ['general-purpose'], false, 'deep']);
+  assert.ok(Array.isArray(c.spawn._knownSubagentTypes));
+});
+
+test('JEV_DISPATCH_SPAWN_MODE overrides spawn.mode only, and is listed as a source', () => {
+  write(join(dir, 'proj', '.jev-dispatch', 'config.json'), { spawn: { mode: 'off', maxTier: 'standard' } });
+  assert.equal(loadConfig(join(dir, 'proj')).spawn.mode, 'off');
+  process.env.JEV_DISPATCH_SPAWN_MODE = 'apply';
+  try {
+    const c = loadConfig(join(dir, 'proj'));
+    assert.equal(c.spawn.mode, 'apply');
+    assert.equal(c.spawn.maxTier, 'standard');
+    assert.equal(c.mode, 'shadow', 'the prompt hook mode is separate');
+    assert.ok(c.sources.includes('env JEV_DISPATCH_SPAWN_MODE'));
+  } finally {
+    delete process.env.JEV_DISPATCH_SPAWN_MODE;
+  }
 });

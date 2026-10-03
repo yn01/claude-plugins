@@ -4,7 +4,7 @@
 //   1. the plugin default (config.json next to this package)
 //   2. <plugin data dir>/config.json       (per user)
 //   3. <cwd>/.jev-dispatch/config.json     (per project)
-//   4. environment overrides
+//   4. environment overrides (JEV_DISPATCH_MODE, JEV_DISPATCH_SPAWN_MODE)
 //
 // Anything unreadable or malformed is skipped silently. A router must never
 // fail a prompt because a config file has a typo in it.
@@ -77,6 +77,10 @@ export function loadConfig(cwd = process.cwd()) {
   cfg = merge(cfg, layer(join(cwd, '.jev-dispatch', 'config.json')));
 
   if (process.env.JEV_DISPATCH_MODE) { cfg.mode = process.env.JEV_DISPATCH_MODE; sources.push('env JEV_DISPATCH_MODE'); }
+  if (process.env.JEV_DISPATCH_SPAWN_MODE) {
+    cfg.spawn = { ...(cfg.spawn ?? {}), mode: process.env.JEV_DISPATCH_SPAWN_MODE };
+    sources.push('env JEV_DISPATCH_SPAWN_MODE');
+  }
   cfg.sources = sources;
 
   cfg.dataDir = dir;

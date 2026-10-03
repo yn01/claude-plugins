@@ -36,8 +36,8 @@ Seam: reuse `policy` tier ranks to pick the next step up.
 Drop tiers that cannot take the input before choosing one, for example when the prompt carries an image and a tier has no vision.
 Seam: `candidateTiers()` in `lib/policy.mjs`, with a capability field on each tier.
 
-### Allow and exclude lists, and a tier cap
-Controls over which tiers may be used: only these tiers, never these tiers, nothing above this one.
+### Allow and exclude lists, and a tier cap for prompt hints
+Controls over which tiers may be used: only these tiers, never these tiers, nothing above this one. Subagent routing already has `spawn.maxTier`; this would extend a cap and the lists to the prompt hook.
 Seam: `candidateTiers()` and a final clamp in `policy.decide()`.
 
 ### Per-project thresholds from labels
@@ -53,3 +53,9 @@ Seam: `stateOf()` in `lib/contracts/route.mjs`; this would be a new contract ver
 ### Judge backend swap
 Run the same questions on another backend: OpenAI Decisions API, Clef, pydecide.
 Seam: `ask()` in `lib/judge.mjs`; `decide()` already takes `ask` as a parameter.
+
+## Implemented
+
+Kept here so the history of what was once a candidate is not lost.
+
+- **Choosing a subagent's model at launch** (v0.2.0) — a `PreToolUse` hook on the Agent tool, `spawn@1`, `decideSpawn()`; `spawn.respectExplicit` and `spawn.maxTier` cover the explicit-model and tier-cap questions for spawns.
