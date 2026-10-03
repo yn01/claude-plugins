@@ -26,6 +26,23 @@
     "contextDependent": 0.5,
     "baseline": { "lightBelowChars": 200, "standardBelowChars": 800 }
   },
+  "spawn": {
+    "mode": "shadow",
+    "subagentTypes": ["general-purpose"],
+    "_knownSubagentTypes": [
+      "general-purpose", "Explore", "Plan", "claude-code-guide", "statusline-setup",
+      "jev-dispatch:light", "jev-dispatch:standard", "jev-dispatch:deep",
+      "<plugin>:<agent> — plugin agents", "<name> — your own ~/.claude/agents or .claude/agents"
+    ],
+    "difficultyTiers": [
+      { "below": 1.2, "tier": "light" },
+      { "below": 3.3, "tier": "standard" },
+      { "tier": "deep" }
+    ],
+    "gainBump": null,
+    "respectExplicit": false,
+    "maxTier": "deep"
+  },
   "sessionModelRank": { "haiku": 1, "sonnet": 2, "opus": 3, "fable": 3 },
   "tiers": {
     "light":    { "rank": 1, "executor": "subagent", "agent": "jev-dispatch:light",    "model": "haiku",  "enabled": true },

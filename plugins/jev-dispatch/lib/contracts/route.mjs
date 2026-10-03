@@ -15,45 +15,13 @@
 // that says what the work IS.
 
 import { choice, score, noul } from '../judge.mjs';
+import { sharedQuestions } from './questions.mjs';
 
 export const id = 'route@1';
 
+// The first three questions are shared with spawn@1; see questions.mjs.
 export const questions = () => ({
-  task_kind: {
-    type: 'choice',
-    instructions: 'Classify what kind of work the user_prompt asks for.',
-    criteria: {
-      implement: 'Write new code or add a new feature.',
-      bugfix: 'Find and fix a defect, an error, or unexpected behaviour.',
-      refactor: 'Restructure, rename or clean up existing code without changing its behaviour.',
-      investigate: 'Work through the codebase or a system — read, search, run or trace it — to establish how something works or why it fails, as a task to carry out.',
-      design: 'Decide an approach, an architecture or a plan before building, or weigh alternatives.',
-      docs: 'Write or edit documentation, comments, messages or other prose.',
-      question: 'Ask the assistant something to be answered in its reply — an explanation, a cause, an opinion or advice — with no change to the code requested.',
-    },
-  },
-
-  difficulty: {
-    type: 'score',
-    instructions: 'Rate how much skill and effort the work in the user_prompt takes to do well.',
-    criteria: [
-      'Trivial: a one-line or purely mechanical change, such as fixing a typo.',
-      'Easy: a small, well-specified change in one place.',
-      'Moderate: several steps or files, with a clear way to do it.',
-      'Hard: needs real understanding of a codebase or careful reasoning, with details to get right.',
-      'Very hard: open-ended, spans a whole system, or needs deep judgement among competing options.',
-    ],
-  },
-
-  stronger_gain: {
-    type: 'score',
-    instructions: 'Rate how much a more capable assistant would improve the result of the work in the user_prompt.',
-    criteria: [
-      'None: any capable assistant would produce the same result.',
-      'Some: a more capable assistant would handle edge cases or style a little better.',
-      'Large: a more capable assistant would likely get right what a lesser one gets wrong.',
-    ],
-  },
+  ...sharedQuestions('user_prompt'),
 
   context_dependent: {
     type: 'noul',

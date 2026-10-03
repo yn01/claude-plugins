@@ -23,6 +23,19 @@
         ],
         "description": "Remember the session's starting model, so routing can compare against it when a prompt arrives without one"
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/spawn.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Ask Jev how hard a subagent's brief is and, in apply mode only, rewrite the Agent call's model to match"
+      }
     ]
   }
 }

@@ -44,11 +44,11 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-dispatch](./plugins/jev-dispatch) `v0.1.1`
+### [jev-dispatch](./plugins/jev-dispatch) `v0.2.0`
 
 A model router judged by Jev (TypeSafe System One).
 
-On every prompt, a hook asks Jev what kind of task it is, how hard, and whether it needs the earlier conversation; code then compares the resulting tier with your session's model and recommends delegating to a lighter subagent, or consulting a stronger one while the main agent keeps working. Ships in Shadow Mode: decisions are only journaled and nothing is injected until you switch to `advise`.
+On every prompt, a hook asks Jev what kind of task it is, how hard, and whether it needs the earlier conversation; code then compares the resulting tier with your session's model and recommends delegating to a lighter subagent, or consulting a stronger one while the main agent keeps working. A second hook on the Agent tool can rewrite the `model` of each subagent launch to match how hard its brief is. Ships in Shadow Mode: decisions are only journaled and nothing is injected or rewritten until you switch to `advise` (hints) or `spawn.mode: apply` (subagent models).
 
 ```
 /plugin install jev-dispatch
@@ -178,6 +178,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-04
+- Update **jev-dispatch** to v0.2.0 — subagent routing: a `PreToolUse` hook on the Agent tool asks Jev how hard the subagent's brief is and, in apply mode, rewrites the call's `model` up or down to match (shadow by default; `spawn.respectExplicit`, `spawn.maxTier`, `spawn.subagentTypes`)
 - Fix **jev-dispatch** to v0.1.1 — machine-generated `UserPromptSubmit` messages (subagent hand-backs, task notifications) are skipped instead of being judged; configurable via `skip.systemPrefixes`
 
 ### 2026-10-03

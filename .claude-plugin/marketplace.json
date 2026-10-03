@@ -224,7 +224,7 @@
     {
       "name": "jev-dispatch",
       "source": "./plugins/jev-dispatch",
-      "description": "Model router — Jev reads each prompt for task kind and difficulty, then recommends delegating to a lighter subagent or consulting a stronger one",
+      "description": "Model router — Jev reads each prompt for task kind and difficulty, then recommends delegating to a lighter subagent or consulting a stronger one, and can route the model of each subagent launch",
       "author": {
         "name": "Yohei Nakanishi"
       },

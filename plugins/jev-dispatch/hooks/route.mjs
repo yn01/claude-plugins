@@ -49,6 +49,7 @@ async function main() {
 
   const head = config.journal?.promptChars ?? 200;
   record(config.journalPath, {
+    hook: 'prompt',
     contract: decision.contract,
     session_id: input.session_id ?? null,
     cwd,

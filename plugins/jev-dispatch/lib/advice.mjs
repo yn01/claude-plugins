@@ -31,3 +31,11 @@ export function adviceFor({ action, tier, signals }, config) {
     `Ask it to review the result before you declare the work complete.`
   );
 }
+
+// What the main agent is told after a spawn was rewritten. Short on purpose:
+// it is a notice that the model differs from the one it asked for, not advice.
+export function spawnAdvice({ model, signals }) {
+  const kind = signals?.taskKind ? `${signals.taskKind}, ` : '';
+  const level = typeof signals?.difficulty === 'number' ? `difficulty ${signals.difficulty.toFixed(1)}` : 'difficulty unknown';
+  return `${PREFIX} routed this subagent to ${model} (${kind}${level}).`;
+}
