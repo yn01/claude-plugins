@@ -85,7 +85,7 @@ export function loadConfig(cwd = process.cwd()) {
 
   cfg.dataDir = dir;
   cfg.journalPath = join(dir, 'journal.jsonl');
-  cfg.apiKey = process.env.TYPESAFE_API_KEY || '';
+  cfg.apiKey = process.env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY || '';
   return cfg;
 }
 

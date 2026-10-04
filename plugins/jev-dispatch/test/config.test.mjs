@@ -9,14 +9,14 @@ import { loadConfig, dataDir, merge } from '../lib/config.mjs';
 let dir, saved;
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'jev-dispatch-cfg-'));
-  saved = { data: process.env.CLAUDE_PLUGIN_DATA, mode: process.env.JEV_DISPATCH_MODE, key: process.env.TYPESAFE_API_KEY };
+  saved = { data: process.env.CLAUDE_PLUGIN_DATA, mode: process.env.JEV_DISPATCH_MODE, key: process.env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY };
   process.env.CLAUDE_PLUGIN_DATA = join(dir, 'data');
   delete process.env.JEV_DISPATCH_MODE;
   delete process.env.JEV_DISPATCH_SPAWN_MODE;
-  delete process.env.TYPESAFE_API_KEY;
+  delete process.env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY;
 });
 afterEach(() => {
-  for (const [k, v] of [['CLAUDE_PLUGIN_DATA', saved.data], ['JEV_DISPATCH_MODE', saved.mode], ['TYPESAFE_API_KEY', saved.key]]) {
+  for (const [k, v] of [['CLAUDE_PLUGIN_DATA', saved.data], ['JEV_DISPATCH_MODE', saved.mode], ['CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY', saved.key]]) {
     if (v === undefined) delete process.env[k]; else process.env[k] = v;
   }
   rmSync(dir, { recursive: true, force: true });
@@ -74,8 +74,17 @@ test('a malformed config file is skipped, not fatal', () => {
 
 test('the API key comes from the environment only', () => {
   assert.equal(loadConfig(dir).apiKey, '');
-  process.env.TYPESAFE_API_KEY = 'k';
+  process.env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY = 'k';
   assert.equal(loadConfig(dir).apiKey, 'k');
+});
+
+test('TYPESAFE_API_KEY in the environment is ignored', () => {
+  process.env.TYPESAFE_API_KEY = 'legacy';
+  try {
+    assert.equal(loadConfig(dir).apiKey, '');
+  } finally {
+    delete process.env.TYPESAFE_API_KEY;
+  }
 });
 
 test('merge replaces arrays and ignores a non-object overlay', () => {

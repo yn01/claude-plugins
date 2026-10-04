@@ -44,7 +44,7 @@ after(() => {
 });
 
 // Every run gets its own data dir and project dir, so journals never mix.
-function run(input, { mode, key = 'k', timeoutMs = 3000, name } = {}) {
+function run(input, { mode, key = 'k', legacyKey, timeoutMs = 3000, name } = {}) {
   const data = join(dir, name, 'data');
   const proj = join(dir, name, 'proj');
   mkdirSync(join(proj, '.jev-dispatch'), { recursive: true });
@@ -53,9 +53,11 @@ function run(input, { mode, key = 'k', timeoutMs = 3000, name } = {}) {
   }));
 
   const env = { ...process.env, CLAUDE_PLUGIN_DATA: data };
-  delete env.TYPESAFE_API_KEY;
+  delete env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY;
   delete env.JEV_DISPATCH_MODE;
-  if (key) env.TYPESAFE_API_KEY = key;
+  if (key) env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY = key;
+  if (legacyKey) env.TYPESAFE_API_KEY = legacyKey;
+  else delete env.TYPESAFE_API_KEY;
   if (mode) env.JEV_DISPATCH_MODE = mode;
 
   return new Promise((resolve) => {
@@ -152,6 +154,13 @@ test('a system message is skipped as skip:system_message without asking Jev', as
   assert.equal(r.rows[0].error, null);
   assert.equal(r.rows[0].action, 'none');
   assert.equal(r.rows[0].contract, 'route@1');
+});
+
+test('TYPESAFE_API_KEY alone is ignored: fail open with no_api_key', async () => {
+  const r = await run(easy, { mode: 'advise', key: '', legacyKey: 'legacy', name: 'legacykey' });
+  assert.equal(r.code, 0);
+  assert.equal(r.stdout, '');
+  assert.equal(r.rows[0].error, 'no_api_key');
 });
 
 test('no API key fails open and records no_api_key', async () => {

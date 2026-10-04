@@ -1,12 +1,16 @@
 #!/usr/bin/env node
-// jev-gate — connectivity and configuration check.
-// Sends ONE tiny real request so "installed" and "actually working" stay
-// separate facts. The API key is never printed.
+// jev-gate — configuration and health report.
+//
+// Prints the resolved configuration, then the result of the last SessionStart
+// health check (hooks/health.mjs). The API key reaches hook processes but not
+// commands Claude runs through Bash, so this script cannot see it and sends no
+// request itself. The key is never printed.
 
-import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { loadConfig, gateSettings, deliveryOf } from '../lib/config.mjs';
-import { ask, noul } from '../lib/jev.mjs';
+
+const STALE_MS = 24 * 60 * 60 * 1000;
 
 const cfg = loadConfig();
 const gate = gateSettings(cfg, 'completion');
@@ -27,34 +31,35 @@ if (cfg.legacyJournalPath && existsSync(cfg.legacyJournalPath)) {
   console.log('/jev-gate:status reads it as well, so nothing is lost. To finish the move:');
   console.log(`  cat "${cfg.legacyJournalPath}" >> "${cfg.journalPath}" && rm -rf "${legacyRoot}"`);
 }
-console.log(`TYPESAFE_API_KEY  ${cfg.apiKey ? 'set' : 'NOT SET — the gate will fail open on every event'}`);
 console.log('');
 
-if (!cfg.apiKey) {
-  console.log('Set TYPESAFE_API_KEY in your environment, then run this again.');
+const healthPath = join(cfg.dataDir, 'health.json');
+let health = null;
+try {
+  health = JSON.parse(readFileSync(healthPath, 'utf8'));
+} catch {
+  // missing or unreadable
+}
+
+if (!health) {
+  console.log('health check      no result yet');
+  console.log('The check runs at session start. Start a new session, then run this again.');
   process.exit(0);
 }
 
-const res = await ask({
-  endpoint: cfg.endpoint,
-  apiKey: cfg.apiKey,
-  model: cfg.model,
-  timeoutMs: Math.max(cfg.timeoutMs ?? 2000, 5000),
-  state: { final_message: 'Done. All 12 tests pass.', command_log: [] },
-  questions: {
-    claims_done: {
-      type: 'noul',
-      instructions: 'The final_message states that the requested work is now finished.',
-    },
-  },
-});
-
-if (!res.ok) {
-  console.log(`request FAILED: ${res.reason} (${res.latencyMs} ms)`);
+const age = Date.now() - Date.parse(health.ts);
+console.log(`health check      ${health.ts}${Number.isFinite(age) && age > STALE_MS ? '  (STALE: over 24 h old, start a new session for a fresh check)' : ''}`);
+console.log(`API key           ${health.keySet ? 'set' : 'NOT SET — the gate will fail open on every event'}`);
+if (health.ok) {
+  console.log(`request           OK, ${health.latencyMs} ms`);
+  console.log(`model             ${health.model ?? 'unknown'}`);
+  console.log(`usage             ${JSON.stringify(health.usage)}`);
+} else if (!health.keySet) {
+  console.log('The gate would have exited 0 and let the agent through.');
+  console.log('Set the key in /plugin > Installed > jev-gate > Configure options, then start a new session.');
+  process.exit(1);
+} else {
+  console.log(`request           FAILED: ${health.reason}${health.latencyMs != null ? ` (${health.latencyMs} ms)` : ''}`);
   console.log('The gate would have exited 0 and let the agent through.');
   process.exit(1);
 }
-
-console.log(`request OK        ${res.latencyMs} ms, served by ${res.model}`);
-console.log(`claims_done       ${noul(res.answers, 'claims_done')}  (expect a high value)`);
-console.log(`usage             ${JSON.stringify(res.usage)}`);

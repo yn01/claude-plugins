@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-dispatch](./plugins/jev-dispatch) `v0.2.1`
+### [jev-dispatch](./plugins/jev-dispatch) `v0.3.0`
 
 A model router judged by Jev (TypeSafe System One).
 
@@ -54,7 +54,7 @@ On every prompt, a hook asks Jev what kind of task it is, how hard, and whether 
 /plugin install jev-dispatch
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.9.3`
+### [jev-gate](./plugins/jev-gate) `v0.10.0`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -178,6 +178,8 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-05
+- Update **jev-dispatch** to v0.3.0 — breaking: the TypeSafe API key now comes from the plugin's `userConfig` (sensitive, stored in the system credential store) instead of `TYPESAFE_API_KEY`; migration: configure the key via `/plugin` > Installed > Configure options and remove the old env entry
+- Update **jev-gate** to v0.10.0 — breaking: same `userConfig` key change as jev-dispatch; adds a `SessionStart` health check that `/jev-gate:doctor` now reports instead of sending its own request
 - Fix **ci-forge** to v1.1.1 — marketplace-validate installs Claude Code with the native installer; the npm package lagged (2.1.197 vs 2.1.285), so CI validated with an old validator
 - Update **jev-dispatch** to v0.2.1 — docs: roadmap removed from the repo
 - Update **git-flow** to v1.0.1 — docs: README no longer lists planned features

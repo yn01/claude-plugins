@@ -1,6 +1,16 @@
 {
   "name": "jev-dispatch",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Model router — Jev reads each prompt for task kind and difficulty, then recommends delegating to a lighter subagent or consulting a stronger one, and can route the model of each subagent launch",
-  "author": {"name": "Yohei Nakanishi"}
+  "author": {
+    "name": "Yohei Nakanishi"
+  },
+  "userConfig": {
+    "typesafe_api_key": {
+      "type": "string",
+      "title": "TypeSafe API key",
+      "description": "API key for TypeSafe (Jev). Stored in your system credential store. Leave empty and the plugin stays inert: every judgement fails open.",
+      "sensitive": true
+    }
+  }
 }
