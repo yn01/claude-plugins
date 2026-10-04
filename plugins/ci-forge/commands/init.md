@@ -8,7 +8,7 @@ argument-hint: "[marketplace|hygiene|both]"
 Install ready-to-run GitHub Actions workflows into the current repository's `.github/workflows/`. The workflow definitions are embedded in this command (see the Templates section below) — they are fully self-contained: no reusable-workflow references, no third-party actions beyond `actions/checkout` and `actions/setup-node`, and no secrets required.
 
 **Profiles:**
-- `marketplace` — `marketplace-validate.yml`: CI for Claude Code plugin marketplace repos (plugin validation, JSON syntax, marketplace completeness, version-consistency on PRs)
+- `marketplace` — `marketplace-validate.yml`: CI for Claude Code plugin marketplace repos (strict plugin validation, JSON syntax, marketplace completeness, version-consistency on PRs)
 - `hygiene` — `repo-hygiene.yml`: generic hygiene (shellcheck, Conventional Commits PR title check)
 - `both` — install both files
 
@@ -69,7 +69,14 @@ Tell the user:
 # marketplace-validate — CI for Claude Code plugin marketplace repositories.
 #
 # Jobs:
-#   plugin-validate     : `claude plugin validate .` (official validator, no API key needed)
+#   plugin-validate     : `claude plugin validate --strict` on the marketplace and on every
+#                         plugins/<dir>/ (official validator, no API key needed). Plugins
+#                         listed in .github/validate-strict-exempt.txt (optional) are known
+#                         failures with a deferred fix: they are reported as EXEMPT and never
+#                         block the job, but the job fails if an exempt plugin now passes
+#                         --strict (stale exemption). The Claude Code CLI is installed unpinned
+#                         (latest) on purpose, so results can change with new Claude Code
+#                         releases; the CLI version is printed at the start of the job.
 #   json-syntax         : jq syntax check on marketplace.json / plugin.json / hooks.json
 #   completeness        : every plugins/<dir>/ must have a marketplace.json entry
 #   version-consistency : on PRs, plugin changes must bump the version in BOTH the
@@ -97,9 +104,65 @@ jobs:
         with:
           node-version: 20
       - name: Install Claude Code CLI
-        run: npm install -g @anthropic-ai/claude-code
-      - name: Validate marketplace
-        run: claude plugin validate .
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version
+      - name: Validate marketplace (--strict)
+        run: claude plugin validate --strict .
+      - name: Validate each plugin (--strict)
+        run: |
+          # Optional allowlist: .github/validate-strict-exempt.txt
+          #   one plugin name per line; '#' starts a comment; every entry MUST carry a
+          #   reason comment. Exempt plugins are known failures (deferred fixes): their
+          #   validator output is shown in a collapsed group and they never fail the job,
+          #   but the job fails if an exempt plugin now passes --strict, so the
+          #   exemption list stays honest.
+          EXEMPT_FILE=.github/validate-strict-exempt.txt
+          exempt=""
+          fail=0
+          if [ -f "$EXEMPT_FILE" ]; then
+            while IFS= read -r line; do
+              entry=$(echo "${line%%#*}" | xargs)
+              [ -n "$entry" ] || continue
+              case "$line" in
+                *'#'*[![:space:]]*) exempt="$exempt $entry " ;;
+                *)
+                  echo "::error file=$EXEMPT_FILE::'$entry' has no reason comment (use: name  # reason)"
+                  fail=1
+                  ;;
+              esac
+            done < "$EXEMPT_FILE"
+          fi
+
+          summary=""
+          for d in plugins/*/; do
+            [ -f "$d.claude-plugin/plugin.json" ] || continue
+            p=$(basename "$d")
+            if case "$exempt" in *" $p "*) true ;; *) false ;; esac; then
+              if claude plugin validate --strict "$d" >"/tmp/validate-$p.log" 2>&1; then
+                echo "::error::$p is listed in $EXEMPT_FILE but now passes --strict. Remove it from the list."
+                summary="$summary\nFAIL    $p (exempt, but now passes --strict: remove the exemption)"
+                fail=1
+              else
+                echo "::group::$p validator output (exempt)"
+                cat "/tmp/validate-$p.log"
+                echo "::endgroup::"
+                summary="$summary\nEXEMPT  $p (known failures, not blocking)"
+              fi
+            elif claude plugin validate --strict "$d" >"/tmp/validate-$p.log" 2>&1; then
+              summary="$summary\nPASS    $p"
+            else
+              cat "/tmp/validate-$p.log"
+              echo "::error::$p failed 'claude plugin validate --strict'"
+              summary="$summary\nFAIL    $p"
+              fail=1
+            fi
+          done
+
+          echo
+          echo "=== plugin validation summary ==="
+          printf '%b\n' "$summary" | sed '/^$/d'
+          exit "$fail"
 
   json-syntax:
     runs-on: ubuntu-latest
