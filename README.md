@@ -4,7 +4,7 @@ A collection of Claude Code plugins by Yohei Nakanishi. New plugins are added ov
 
 ## Plugins
 
-### [ci-forge](./plugins/ci-forge) `v1.0.0`
+### [ci-forge](./plugins/ci-forge) `v1.1.0`
 
 Install self-contained GitHub Actions CI into any repository with one command.
 
@@ -182,6 +182,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 - Update **git-flow** to v1.0.1 — docs: README no longer lists planned features
 - Update **obsidian-archive** to v1.0.1 — docs: README describes only the working manual commands; the auto-save hook claims are removed
 - Update **jev-gate** to v0.9.3 — docs: README and implementation plan no longer carry unbuilt-gate specs
+- Update **ci-forge** to v1.1.0 — marketplace-validate now runs `claude plugin validate --strict` on the marketplace and every plugin, with an optional `.github/validate-strict-exempt.txt` allowlist (exempt plugins are known failures: reported as EXEMPT, never blocking; CI fails once an exempt plugin passes); the Claude Code CLI version is printed
 
 ### 2026-10-04
 - Update **jev-dispatch** to v0.2.0 — subagent routing: a `PreToolUse` hook on the Agent tool asks Jev how hard the subagent's brief is and, in apply mode, rewrites the call's `model` up or down to match (shadow by default; `spawn.respectExplicit`, `spawn.maxTier`, `spawn.subagentTypes`)

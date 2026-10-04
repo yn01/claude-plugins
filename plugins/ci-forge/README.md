@@ -16,7 +16,7 @@ This repository ([yn01/claude-plugins](https://github.com/yn01/claude-plugins)) 
 
 | Profile | File | Jobs |
 |---|---|---|
-| `marketplace` | `marketplace-validate.yml` | `claude plugin validate .` / JSON syntax (`jq`) on marketplace.json, plugin.json, hooks.json / marketplace completeness (every `plugins/<dir>/` listed) / version-consistency on PRs (plugin changes must bump the version in both the plugin README and the root README) |
+| `marketplace` | `marketplace-validate.yml` | `claude plugin validate --strict` on the marketplace and each plugin (optional `.github/validate-strict-exempt.txt`) / JSON syntax (`jq`) on marketplace.json, plugin.json, hooks.json / marketplace completeness (every `plugins/<dir>/` listed) / version-consistency on PRs (plugin changes must bump the version in both the plugin README and the root README) |
 | `hygiene` | `repo-hygiene.yml` | shellcheck on all tracked shell scripts (including extensionless scripts detected by first-line shebang, `archive/` excluded) / Conventional Commits PR title check (`feat|fix|docs|chore|refactor|ci: ...`) |
 
 The `marketplace` profile is meant for Claude Code plugin marketplace repositories. `hygiene` works anywhere.
@@ -54,6 +54,11 @@ Installed workflows are snapshots — they do not change when this plugin update
 - The version-consistency job is a server-side port of this repository's local `hooks/pre-commit` check, diffing against the PR base branch.
 
 ## Changelog
+
+### v1.1.0
+
+- `marketplace-validate`: the `plugin-validate` job now runs `claude plugin validate --strict` on the marketplace and on every `plugins/<dir>/` (so warnings such as unknown hook events fail the build) and prints a per-plugin PASS/EXEMPT/FAIL summary. The Claude Code CLI is installed unpinned (latest) and its version is printed, since results can change with new Claude Code releases.
+- Optional `.github/validate-strict-exempt.txt` allowlist (`name  # reason`, reason required). Exempt plugins are known failures with a deferred fix: they are reported as `EXEMPT` (validator output in a collapsed log group) and never block the job, but the job fails if an exempt plugin starts passing `--strict` (stale exemption). No file means no exemptions. Re-run `/ci-forge:init` to pick this up.
 
 ### v1.0.0
 
