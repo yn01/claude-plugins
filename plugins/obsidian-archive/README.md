@@ -1,13 +1,11 @@
 # obsidian-archive
 
-A Claude Code plugin that automatically generates session summaries and saves them to Obsidian.
+A Claude Code plugin that generates session summaries and saves them to Obsidian.
 
 ## Overview
 
 `obsidian-archive` provides the following features:
 
-- **Auto-save**: Automatically generates and saves a summary to Obsidian when a Claude Code session ends
-- **Periodic checkpoints**: Saves intermediate summaries at a configured interval (default: 30 minutes)
 - **Manual save**: Save at any time using the `/obsidian-archive:archive` command
 - **Configuration management**: View and update settings with the `/obsidian-archive:config` command
 
@@ -63,7 +61,6 @@ View or update configuration settings.
 ```
 /obsidian-archive:config vault_path ~/Documents/Obsidian/MyVault
 /obsidian-archive:config folder WorkSessions
-/obsidian-archive:config auto_save_interval_minutes 60
 /obsidian-archive:config include_git_diff false
 ```
 
@@ -76,7 +73,6 @@ Settings are managed in `obsidian-archive.json` in the plugin directory.
   "vault_path": "~/Documents/Obsidian/Claude-Dev",
   "folder": "Sessions",
   "filename_format": "YYYY-MM-DD_HH-mm_{project}",
-  "auto_save_interval_minutes": 30,
   "include_git_diff": true,
   "tags": ["claude-code", "session"]
 }
@@ -87,7 +83,6 @@ Settings are managed in `obsidian-archive.json` in the plugin directory.
 | `vault_path` | string | `~/Documents/Obsidian/Claude-Dev` | Path to your Obsidian Vault (`~` expansion supported) |
 | `folder` | string | `Sessions` | Folder inside the Vault where session notes are saved |
 | `filename_format` | string | `YYYY-MM-DD_HH-mm_{project}` | Filename format |
-| `auto_save_interval_minutes` | number | `30` | Interval in minutes for automatic checkpoints. Set to `0` to disable |
 | `include_git_diff` | boolean | `true` | Whether to include a git diff summary in the note |
 | `tags` | array | `["claude-code", "session"]` | Tags added to the Obsidian note |
 
@@ -129,14 +124,6 @@ tags: ["claude-code", "session"]
 ...
 ```
 
-### Intermediate save files
-
-Intermediate saves are stored under `{vault_path}/{folder}/intermediate/`:
-
-```
-YYYY-MM-DD_HH-mm_{project}_autosave.md
-```
-
 ## Using with devteam
 
 `obsidian-archive` works independently but pairs well with the `devteam` plugin for a more powerful workflow.
@@ -155,32 +142,16 @@ YYYY-MM-DD_HH-mm_{project}_autosave.md
 
 # 4. Stop devteam
 /devteam:stop
-
-# → obsidian-archive automatically saves a summary when the session ends
 ```
 
 ### Archiving devteam agent output
 
 Since the work done by each devteam agent is part of the session, their outputs are automatically captured in the session summary — giving you a complete record of multi-agent work with no extra effort.
 
-## Hook behavior
-
-### SessionStop hook
-
-Runs automatically when the Claude Code session ends:
-1. Reads configuration from `obsidian-archive.json`
-2. Launches the `obsidian-archive:summarizer` agent
-3. Generates a full session summary
-4. Saves to `{vault_path}/{folder}/{filename}.md`
-
-### PostToolUse hook (periodic checkpoints)
-
-After each tool use, checks the time elapsed since the last save. If it exceeds `auto_save_interval_minutes`, an intermediate save is triggered:
-1. Tracks the last save time via `/tmp/obsidian-archive-last-save`
-2. Only runs when the interval has elapsed — not after every tool use
-3. Saves to `{vault_path}/{folder}/intermediate/{filename}_autosave.md`
-
 ## Changelog
+
+### v1.0.1 — 2026-10-05
+- Docs: the README describes only the working manual commands (`archive`, `config`); the auto-save hook claims are removed.
 
 ### v1.0.0 — 2026-03-17
 - Initial release

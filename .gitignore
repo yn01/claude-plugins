@@ -3,7 +3,7 @@ output/
 plugin-request-template.md
 plugins/dev-forge/docs/features.md
 plugins/dev-forge/docs/PLAN.md
-plugins/*/features.md
+plugins/*/BACKLOG.md
 archive/
 
 # third-party papers kept locally for reference, not redistributed

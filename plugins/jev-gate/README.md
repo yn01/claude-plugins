@@ -58,7 +58,7 @@ The division is strict:
 | `/jev-gate:mode [shadow\|enforce\|off]` | Show the resolved mode and its source layer, or write a new one to `.jev-gate/config.json`. Refuses to recommend Enforce on a thin journal. |
 | `/jev-gate:doctor` | Print the resolved configuration and send one small real request. Reports latency, serving model and token usage. Never prints the key. |
 
-Labelling verdicts — the step between Shadow and Enforce — is specified in [`docs/labeling.md`](docs/labeling.md) and not yet built.
+Labelling verdicts — the step between Shadow and Enforce — is specified in [`docs/labeling.md`](docs/labeling.md).
 
 ## Tests
 
@@ -236,7 +236,7 @@ Only one verdict ever stops work: **`block`**, reached through `claims_verified`
    ```
 
    Messages read `jev-gate (advisory, nothing is blocked): …`, and `/jev-gate:status` shows `delivery: advisory` once the file has been read. This is where you first see the gate's judgement live, and each verdict you disagree with is a spot-check done for free. It also runs the Enforce code path for real with nothing at stake.
-3. **Label.** Collect about 100 labels on the `claims_verified` branch — the only one that blocks. See [`docs/labeling.md`](docs/labeling.md); not yet built.
+3. **Label.** Collect about 100 labels on the `claims_verified` branch — the only one that blocks. See [`docs/labeling.md`](docs/labeling.md).
 4. **Enforce.** Set `claimsVerified` from the lower confidence bound of those labels, then restore a block budget. Watch the first blocks closely: what an agent does when it is sent back has not been observed yet, and no amount of Shadow data can show it.
 
 `/jev-gate:status` counts each branch by the rows it actually decided:
@@ -264,16 +264,11 @@ Danger classification belongs to Claude Code's auto-mode classifier; messaging a
 
 Teaching an agent how to *write* Jev code is also a different job, already covered by the official TypeSafe agent skill (`npx skills add typesafe-ai/skills --skill typesafe-ai`). The two complement each other and are not meant to overlap.
 
-## Roadmap
-
-Further gates are specified in [`docs/implementation-plan.md`](docs/implementation-plan.md) and deliberately not built — each one waits for the gate before it to earn its thresholds:
-
-- **Idle teammate** (`TeammateIdle`) — the team-shaped remainder of early-stop detection, now that the single-session case is handled here.
-- **Task quality** (`TaskCreated`) — a task too broad or too vague to start.
-- **Failure classification** (`PostToolUseFailure`) — transient vs. missing dependency vs. genuine defect, injected as context rather than as a block.
-- **Approach advice** (`UserPromptSubmit`) — which execution vessel suits a request. Not a gate, and likely a separate plugin if it is built at all.
-
 ## Changelog
+
+### v0.9.3
+
+- Docs: the README and the implementation plan no longer carry specs for unbuilt gates; the README roadmap is removed. No behaviour change.
 
 ### v0.9.2
 
