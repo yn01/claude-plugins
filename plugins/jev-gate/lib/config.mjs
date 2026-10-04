@@ -101,7 +101,7 @@ export function loadConfig(cwd = process.cwd()) {
   cfg.sessionsPath = join(dir, 'sessions');
   const legacyJournal = legacyDir() ? join(LEGACY_DIR, 'journal.jsonl') : null;
   cfg.legacyJournalPath = legacyJournal === cfg.journalPath ? null : legacyJournal;
-  cfg.apiKey = process.env.TYPESAFE_API_KEY || '';
+  cfg.apiKey = process.env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY || '';
   return cfg;
 }
 

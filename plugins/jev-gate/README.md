@@ -43,6 +43,7 @@ The division is strict:
 
 ## Features
 
+- **Health check (hook)** — on `SessionStart`, sends one small request to Jev and records whether the key works, for `/jev-gate:doctor`. Prints nothing into the session.
 - **Completion gate (hook)** — fires on `TaskCompleted`, `SubagentStop` and `Stop`. A verification run that failed and was never re-run is caught by code alone. Otherwise Jev reads what the message *says* — completed? claims a check passed? — and code compares that with what the transcript *records*. A block is the contradiction between the two: a message asserting a check passed, with no check in the log.
 - **Early-stop detection** — distinguishes a legitimate check-in from a task that stalled into a status report. Advisory by default; the playbook's own remedy for this is a CLAUDE.md rule, not a hard stop.
 - **Shadow Mode by default** — every verdict exits 0 and lands in a JSONL journal alongside the probabilities that produced it.
@@ -56,7 +57,7 @@ The division is strict:
 |---|---|
 | `/jev-gate:status [gate]` | Verdict distribution, probability histograms, latency percentiles and token spend — then a threshold recommendation drawn from the histogram, not from intuition. |
 | `/jev-gate:mode [shadow\|enforce\|off]` | Show the resolved mode and its source layer, or write a new one to `.jev-gate/config.json`. Refuses to recommend Enforce on a thin journal. |
-| `/jev-gate:doctor` | Print the resolved configuration and send one small real request. Reports latency, serving model and token usage. Never prints the key. |
+| `/jev-gate:doctor` | Print the resolved configuration and the result of the session-start health check: whether a key is set, when the check ran, whether the request succeeded, latency and serving model. Never prints the key. |
 
 Labelling verdicts — the step between Shadow and Enforce — is specified in [`docs/labeling.md`](docs/labeling.md).
 
@@ -70,13 +71,13 @@ No network and no key: the decision contract is a pure function and is tested ro
 
 ## Setup
 
-jev-gate needs an API key in the environment. It is read at hook time and never written to the journal or printed by any command.
+jev-gate needs a TypeSafe API key. When you install or enable the plugin, Claude Code asks for it and stores it in your system keychain / credential store — never in a settings file. It is read at hook time and never written to the journal or printed by any command.
 
-```bash
-export TYPESAFE_API_KEY=...    # in your shell profile, not in a config file
-```
+To set or change it later, run `/plugin`, open the **Installed** tab, select jev-gate, and choose **Configure options**. Then start a new session.
 
-Without it the plugin installs and runs, but every event fails open — `/jev-gate:doctor` says so in as many words.
+Without a key the plugin installs and runs, but every event fails open — `/jev-gate:doctor` says so in as many words.
+
+**Migration (v0.10.0).** The key is no longer read from `TYPESAFE_API_KEY`. If you set it in a shell profile or in the `env` block of `.claude/settings*.json`, configure it through the plugin as above and remove the old entry.
 
 `TaskCompleted` additionally requires `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`. Without it that event never fires and only `SubagentStop` and `Stop` are live.
 
@@ -265,6 +266,11 @@ Danger classification belongs to Claude Code's auto-mode classifier; messaging a
 Teaching an agent how to *write* Jev code is also a different job, already covered by the official TypeSafe agent skill (`npx skills add typesafe-ai/skills --skill typesafe-ai`). The two complement each other and are not meant to overlap.
 
 ## Changelog
+
+### v0.10.0
+
+- **Breaking: the API key now comes from the plugin's `userConfig`, not from the environment.** Claude Code asks for it when the plugin is enabled and keeps it in the system credential store (the option is marked `sensitive`). Migration: the key is no longer read from `TYPESAFE_API_KEY`; if you set it in a shell profile or in `.claude/settings*.json` `env`, configure it through the plugin (`/plugin` > **Installed** > jev-gate > **Configure options**) and remove the old entry. Until you do, every event fails open with `no_api_key`.
+- **Session-start health check.** A new `SessionStart` hook sends one small request to Jev and records the outcome in `health.json` in the plugin data directory (key set, time, ok or failure reason, latency, model, token usage — never the key). The key is passed to hooks but not to commands run through the Bash tool, so `/jev-gate:doctor` can no longer test it directly; it now reports this record instead, and says so when it is missing or over 24 hours old.
 
 ### v0.9.3
 

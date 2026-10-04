@@ -59,7 +59,7 @@ after(() => {
 // `config` gives the run its own project directory, so a test can switch to
 // Enforce or change the block budget without touching the others. `pd` lets a
 // test reuse a plugin data dir, which is where the block budget is counted.
-function runHook(input, { key = 'dummy', config = null, pd = null } = {}) {
+function runHook(input, { key = 'dummy', legacyKey, config = null, pd = null } = {}) {
   const tag = Math.random().toString(36).slice(2);
   const journal = join(dir, `j-${tag}.jsonl`);
   let cwd = join(dir, 'proj');
@@ -72,7 +72,8 @@ function runHook(input, { key = 'dummy', config = null, pd = null } = {}) {
   }
   return new Promise((resolve) => {
     const env = { ...process.env, JEV_GATE_JOURNAL: journal, CLAUDE_PLUGIN_DATA: pd ?? join(dir, `pd-${tag}`) };
-    if (key) env.TYPESAFE_API_KEY = key; else delete env.TYPESAFE_API_KEY;
+    if (key) env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY = key; else delete env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY;
+    if (legacyKey) env.TYPESAFE_API_KEY = legacyKey; else delete env.TYPESAFE_API_KEY;
     const child = spawn(process.execPath, [HOOK], { env });
     let stdout = '';
     let stderr = '';
@@ -106,6 +107,17 @@ for (const [name, input, opts, decidedBy] of paths) {
     assert.equal(rows[0].decidedBy, decidedBy);
   });
 }
+
+test('TYPESAFE_API_KEY alone is ignored: no request, fail open', async () => {
+  const before = calls;
+  const { code, rows } = await runHook({
+    hook_event_name: 'Stop', transcript_path: join(dir, 'ran.jsonl'), last_assistant_message: '完了しました。',
+  }, { key: null, legacyKey: 'legacy' });
+  assert.equal(code, 0);
+  assert.equal(calls, before, 'no request was sent');
+  assert.equal(rows[0].decidedBy, 'failopen');
+  assert.equal(rows[0].reason, 'no_api_key');
+});
 
 test('an excluded agent type is skipped before Jev is asked', async () => {
   const before = calls;

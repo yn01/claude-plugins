@@ -52,8 +52,8 @@ function run(input, { spawnMode, mode, key = 'k', timeoutMs = 3000, name, projec
   }));
 
   const env = { ...process.env, CLAUDE_PLUGIN_DATA: data };
-  for (const k of ['TYPESAFE_API_KEY', 'JEV_DISPATCH_MODE', 'JEV_DISPATCH_SPAWN_MODE']) delete env[k];
-  if (key) env.TYPESAFE_API_KEY = key;
+  for (const k of ['CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY', 'JEV_DISPATCH_MODE', 'JEV_DISPATCH_SPAWN_MODE']) delete env[k];
+  if (key) env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY = key;
   if (spawnMode) env.JEV_DISPATCH_SPAWN_MODE = spawnMode;
   if (mode) env.JEV_DISPATCH_MODE = mode;
 

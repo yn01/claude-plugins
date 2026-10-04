@@ -1,9 +1,17 @@
 {
   "name": "jev-gate",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "Stop-event gate for Claude Code — asks Jev (TypeSafe System One) whether a completion claim has evidence behind it, and whether a mid-task pause really needed you",
   "author": {
     "name": "Yohei Nakanishi"
   },
-  "commands": "./commands"
+  "commands": "./commands",
+  "userConfig": {
+    "typesafe_api_key": {
+      "type": "string",
+      "title": "TypeSafe API key",
+      "description": "API key for TypeSafe (Jev). Stored in your system credential store. Leave empty and the plugin stays inert: every judgement fails open.",
+      "sensitive": true
+    }
+  }
 }

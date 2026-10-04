@@ -129,13 +129,13 @@ A brief written by the main agent is detailed, and Jev reads detail as difficult
 /plugin install jev-dispatch
 ```
 
-jev-dispatch needs an API key in the environment. It is read at hook time and never written to the journal.
+jev-dispatch needs a TypeSafe API key. When you install or enable the plugin, Claude Code asks for it and stores it in your system keychain / credential store — never in a settings file. It is read at hook time and never written to the journal.
 
-```bash
-export TYPESAFE_API_KEY=...    # in your shell profile, not in a config file
-```
+To set or change it later, run `/plugin`, open the **Installed** tab, select jev-dispatch, and choose **Configure options**. Then start a new session.
 
-Without it the plugin installs and runs, but every judgement fails open and is journaled as `judge_unavailable` with `error: "no_api_key"`.
+Without a key the plugin installs and runs, but every judgement fails open and is journaled as `judge_unavailable` with `error: "no_api_key"`.
+
+**Migration (v0.3.0).** The key is no longer read from `TYPESAFE_API_KEY`. If you set it in a shell profile or in the `env` block of `.claude/settings*.json`, configure it through the plugin as above and remove the old entry.
 
 ## How it works
 
@@ -294,6 +294,7 @@ Subagent rows (`hook: "spawn"`, `contract: "spawn@1"`) share `ts`, `session_id`,
 
 ## Privacy and cost
 
+- **Your API key** is read from the plugin option (`CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY`, which Claude Code sets for hooks from the system credential store). It is sent only to the configured endpoint as a bearer token, and is never written to the journal.
 - **Your prompt leaves your machine.** Up to `maxPromptChars` characters of every non-skipped prompt are sent to TypeSafe (`api.typesafe.ai`). Skipped prompts (machine-generated messages, slash commands, short or stock replies) are not. If prompts may contain material that must not leave, set `mode` to `off` for that project or lower `maxPromptChars`.
 - **Subagent briefs leave your machine too.** Up to `maxPromptChars` characters of the brief of each targeted Agent call are sent to TypeSafe. Only the call's `description` (up to `journal.promptChars` characters) is stored locally, not the brief. Set `spawn.mode` to `off` to stop this.
 - **The journal stores part of your prompt** — the first `journal.promptChars` characters as `promptHead`, for every row including skipped ones. It stays local. Set `journal.promptChars` to `0` to store none.
@@ -318,6 +319,10 @@ node --test plugins/jev-dispatch/test/*.test.mjs
 Pass the glob, not the directory: handing `node --test` a directory fails on Node 25. No network and no key: the policy is a pure function tested branch by branch, and the harness is run end to end against a local stand-in for the API.
 
 ## Changelog
+
+### v0.3.0 — 2026-10-05
+
+- **Breaking: the API key now comes from the plugin's `userConfig`, not from the environment.** Claude Code asks for it when the plugin is enabled and keeps it in the system credential store (the option is marked `sensitive`). Migration: the key is no longer read from `TYPESAFE_API_KEY`; if you set it in a shell profile or in `.claude/settings*.json` `env`, configure it through the plugin (`/plugin` > **Installed** > jev-dispatch > **Configure options**) and remove the old entry. Until you do, every judgement fails open with `no_api_key`.
 
 ### v0.2.1 — 2026-10-05
 

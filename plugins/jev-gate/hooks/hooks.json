@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/health.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Health check \u2014 send one small Jev request and record whether the API key works, for /jev-gate:doctor"
+      }
+    ],
     "TaskCompleted": [
       {
         "hooks": [
@@ -9,7 +21,7 @@
             "timeout": 10
           }
         ],
-        "description": "Evidence gate — check a completed task's claim against the verification runs in the session"
+        "description": "Evidence gate \u2014 check a completed task's claim against the verification runs in the session"
       }
     ],
     "SubagentStop": [
@@ -21,7 +33,7 @@
             "timeout": 10
           }
         ],
-        "description": "Evidence gate — same check when a subagent stops"
+        "description": "Evidence gate \u2014 same check when a subagent stops"
       }
     ],
     "Stop": [
@@ -33,7 +45,7 @@
             "timeout": 10
           }
         ],
-        "description": "Evidence gate — same check when the main session stops"
+        "description": "Evidence gate \u2014 same check when the main session stops"
       }
     ]
   }
