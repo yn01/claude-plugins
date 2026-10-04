@@ -5,7 +5,7 @@ argument-hint: "[marketplace|hygiene|both]"
 ---
 # /ci-forge:init
 
-Install ready-to-run GitHub Actions workflows into the current repository's `.github/workflows/`. The workflow definitions are embedded in this command (see the Templates section below) — they are fully self-contained: no reusable-workflow references, no third-party actions beyond `actions/checkout` and `actions/setup-node`, and no secrets required.
+Install ready-to-run GitHub Actions workflows into the current repository's `.github/workflows/`. The workflow definitions are embedded in this command (see the Templates section below) — they are fully self-contained: no reusable-workflow references, no third-party actions beyond `actions/checkout`, and no secrets required.
 
 **Profiles:**
 - `marketplace` — `marketplace-validate.yml`: CI for Claude Code plugin marketplace repos (strict plugin validation, JSON syntax, marketplace completeness, version-consistency on PRs)
@@ -74,9 +74,10 @@ Tell the user:
 #                         listed in .github/validate-strict-exempt.txt (optional) are known
 #                         failures with a deferred fix: they are reported as EXEMPT and never
 #                         block the job, but the job fails if an exempt plugin now passes
-#                         --strict (stale exemption). The Claude Code CLI is installed unpinned
-#                         (latest) on purpose, so results can change with new Claude Code
-#                         releases; the CLI version is printed at the start of the job.
+#                         --strict (stale exemption). The Claude Code CLI is installed with
+#                         the native installer (claude.ai/install.sh), unpinned (latest release)
+#                         on purpose, so results can change with new Claude Code releases; the
+#                         CLI version is printed at the start of the job.
 #   json-syntax         : jq syntax check on marketplace.json / plugin.json / hooks.json
 #   completeness        : every plugins/<dir>/ must have a marketplace.json entry
 #   version-consistency : on PRs, plugin changes must bump the version in BOTH the
@@ -100,12 +101,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - name: Install Claude Code CLI
         run: |
-          npm install -g @anthropic-ai/claude-code
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
           claude --version
       - name: Validate marketplace (--strict)
         run: claude plugin validate --strict .
