@@ -59,15 +59,11 @@ The branch-first guard is **advisory only** — it prints a warning on `git comm
 
 Plugins can't install files into your project, so `/git-flow:pr` generates the PR body (概要 / 変更内容 / 検証手順) directly. If you also want a template for human-authored PRs, copy that same structure into your repo's `.github/PULL_REQUEST_TEMPLATE.md`.
 
-## Roadmap
-
-Planned for future releases:
-
-- `/git-flow:sync` — fetch and rebase the latest `main`, with conflict guidance.
-- `/git-flow:commit` — standalone Conventional Commits message generation.
-- Commit-message format guard hook.
-
 ## Changelog
+
+### v1.0.1
+
+- Docs: the README no longer lists planned features.
 
 ### v1.0.0
 

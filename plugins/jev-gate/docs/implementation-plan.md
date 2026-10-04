@@ -1,6 +1,6 @@
 # jev-gate — implementation plan
 
-Five gates were identified. **Gate 1 is implemented (Shadow only); gates 2–5 are recorded here and not built.**
+**Gate 1 is implemented (Shadow only).** The design rules, measurements and notes below apply to any further gate.
 
 Revised 2026-09-23 against Anthropic's Opus 5.5 playbook (*Getting the most out of Opus 5.5 in Claude and Claude Code*). Two things moved as a result: the single-session half of gate 2 was pulled forward into gate 1, and the custom-runner gap in gate 1 was closed.
 
@@ -195,117 +195,6 @@ Plus, for each: a distribution with a visible gap where the threshold sits, and 
 The two branches fill at very different rates, so they are ready at different times. That is expected and they should be turned on separately, in line with rule 9 — a gate is enabled per branch, not because the journal is large.
 
 ---
-
-## Gate 2 — Idle teammate · not built
-
-**Event:** `TeammateIdle`
-**Question:** did a teammate go idle with work still outstanding?
-
-**Scope reduced in v0.2.0.** This gate originally owned early-stop detection entirely. The single-session case now lives in gate 1, where the playbook says it actually occurs, leaving this gate the part that is genuinely team-shaped: a teammate who is idle while the *shared* task list still has work assigned to them.
-
-Facts from code: the shared task list (`~/.claude/` JSON files), which tasks are assigned to this teammate, and their states. Code holds the count of open tasks — Jev is never asked "how many tasks are left", since counting is a documented weakness. Jev is asked only what code cannot settle:
-
-```
-handed_off:  The last message states that the work was handed to someone else or is blocked on another party.
-```
-
-`blocked_on_user` from gate 1 is reusable here in spirit but not literally: a teammate blocks on *another agent*, not on the user.
-
-**Prerequisite:** agent teams, and `CLAUDE_CODE_ENABLE_TODO_TOOLS=1`. Until teams are in regular use there is no data to trial against.
-
-**Risk:** an idle teammate is often idle *correctly*. The false-positive cost here is higher than in gate 1, so a longer Shadow period is warranted.
-
-## Gate 3 — Task quality · not built
-
-**Event:** `TaskCreated`
-**Question:** is this task well-formed enough to be worth starting?
-
-A Choice rather than a Noul, because this gate wants the `confidence` value that a Choice carries — "the model cannot tell what this task is" is itself the signal.
-
-```
-choice: well_formed | too_broad | no_completion_criteria | ambiguous_target
-```
-
-Code checks the mechanical properties first: does the task text exist, is it above a trivial length, does it name a file or a component.
-
-**Risk of over-reach.** This gate rewrites how the user writes tasks, which is intrusive in a way gates 1 and 2 are not. It should probably ship as advisory (`systemMessage`) permanently and never gain an Enforce path.
-
----
-
-## Gate 4 — Failure classification · not built
-
-**Event:** `PostToolUseFailure`
-**Question:** what kind of failure is this?
-
-This gate never blocks. It returns `additionalContext` so the agent retries appropriately instead of thrashing.
-
-```
-choice: transient | missing_dependency | wrong_invocation | genuine_defect | permission
-```
-
-Code supplies the exit code, the command, and the stderr tail. The classification drives the advice injected: `transient` → retry once; `missing_dependency` → install before retrying; `wrong_invocation` → re-read the tool's usage rather than varying flags at random.
-
-**Frequency warning.** Tool failures are common, so this gate fires far more often than the others. Cost is still negligible, but the latency budget must be tight (1s) and the fail-open path matters more here than anywhere else.
-
----
-
-## Gate 5 — Approach advice · not built, and possibly not here
-
-**Event:** `UserPromptSubmit`
-**Original question:** which execution vessel suits this request — single session, subagent, team, or workflow?
-
-**Reframed by the @fladdict reference.** Its "アクションの適合度" asks a better question than mine: not *which vessel*, but *what should happen next with this work* — carry on, step back, investigate the cause, refactor, re-plan, ask a human, finish. Seven candidates, each asked as its own Noul so they do not compete for one probability mass, and the result **displayed** rather than injected into the prompt.
-
-Displaying beats injecting for a judgement this soft. Injected advice spends context on every prompt and is easy to be wrong about loudly; a readout the user can ignore costs nothing when it misses.
-
-This is not a gate. It stops nothing, and it does not belong under the name `jev-gate`. If built, it should be a separate plugin (`jev-advisor`), sharing `lib/` by copy. Seven probabilities do not belong in a one-line bar either, so its surface is a command the user runs — not gate 6, and not the prompt.
-
-**Deferred until** gates 1–4 have produced enough journal data to say whether Jev's judgement is worth surfacing unprompted at all.
-
-## Gate 6 — Making the gate visible · not built, surfaces surveyed
-
-**Not a gate.** Shadow Mode runs for days before anyone reads it. Somewhere, at a glance, it should be possible to see that jev-gate is alive and what it has been deciding — otherwise a plugin that quietly stopped working weeks ago still looks installed and fine.
-
-The surface is deliberately **not** decided here. Several exist, they trade off differently, and they are not mutually exclusive.
-
-### What has to be visible, whichever surface wins
-
-- **Live or inert, first.** A fail-open judge that is dead looks exactly like a judge with nothing to say. This is the single most important thing to show, and the reason the no-key case must never render as silence.
-- **The last verdict with the probability behind it,** not just its name. Shadow Mode exists to read a distribution; a tally of verdict names says nothing about where a threshold should sit.
-- **"Nothing judged yet" as `—`, never as zero.** Not-measured and measured-at-zero are different facts and must look different.
-- **Mode and model.** `shadow` versus `enforce` changes what a verdict means; a pinned model id dates the numbers.
-
-### Candidate surfaces
-
-| Surface | Always on screen | Room for detail | Cost | Catch |
-|---|---|---|---|---|
-| `statusLine` fragment | yes | one line | runs on every render | the setting is **singular** — the plugin must ship a composable segment and never claim the line |
-| `SessionStart` hook | at session start | a few lines | once per session | a snapshot, not a pulse; goes stale within the session |
-| A command (`/jev-gate:status`) | no | unlimited | on demand | already exists; needs asking for, so it is not "at a glance" |
-| A published HTML page | no (separate tab) | unlimited, live | a publish step | leaves the terminal; best when the numbers are to be shared or watched over days |
-
-**The combination that probably wins:** an ambient minimum plus a rich readout on demand. `SessionStart` is the cheapest ambient option and needs no setting from the user at all — `dev-forge` in this same repository already injects at `SessionStart`, so the pattern is proven here. A `statusLine` fragment is the genuinely continuous one but asks the user to edit their own status line. `/jev-gate:status` already covers the depth.
-
-A one-line form, whichever carries it:
-
-```
-jev-gate ● shadow · jev-1.13.0 · last: block ev 0.05 · 12↑ 3? 1▲ · 189ms
-jev-gate ○ inert — no TYPESAFE_API_KEY          ← the case that must not be silent
-jev-gate ● shadow · jev-1.13.0 · last: —        ← nothing judged yet this session
-```
-
-### Cost of rendering
-
-Anything ambient re-renders far more often than a hook fires. Reading and parsing the whole journal each time is wasteful and degrades as the journal grows, so the gate should maintain a small per-session summary file — written on the path that already writes the block budget — and the readout reads only that. It must never touch the network and never call Jev.
-
-### Open questions for the design pass
-
-- Session-scoped counters, or a rolling window across projects? Session is more honest about what just happened; rolling shows whether the thresholds are working.
-- Colour, or symbols only? A shared line should be quiet.
-- Does a stale reading — the last verdict from hours ago — look different from a fresh one?
-- When the mode is `off`, hide entirely or keep one dim character so the plugin is not invisible?
-
-**Prerequisite if `statusLine` is chosen:** its exact input payload and output contract, verified against current documentation rather than inferred from strings in the binary. Confirmed to exist in 2.1.267 (`statusLine` setting, `/statusline` command, `executeStatusLineCommand`); a separate `subagentStatusLine` reads JSON lines against a schema and is a different mechanism.
 
 ## Deliberately out of scope
 

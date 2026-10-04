@@ -317,11 +317,11 @@ node --test plugins/jev-dispatch/test/*.test.mjs
 
 Pass the glob, not the directory: handing `node --test` a directory fails on Node 25. No network and no key: the policy is a pure function tested branch by branch, and the harness is run end to end against a local stand-in for the API.
 
-## Roadmap
-
-Subagent routing shipped in v0.2.0. Not built yet: a manual `/jev-dispatch:route` command, `mode` / `status` / `doctor` commands, external executors (`claude -p`, Gemini CLI, Codex CLI), outcome recording and a calibration report, stall detection, capability pre-filtering, allow/exclude lists, and judge-backend swaps. See [`docs/roadmap.md`](docs/roadmap.md).
-
 ## Changelog
+
+### v0.2.1 — 2026-10-05
+
+Docs: the roadmap is removed from the repository (`docs/roadmap.md`). No behaviour change.
 
 ### v0.2.0 — 2026-10-04
 

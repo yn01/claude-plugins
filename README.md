@@ -34,7 +34,7 @@ Three capabilities in one plugin: **Setup** places agent team templates so the p
 /plugin install dev-forge
 ```
 
-### [git-flow](./plugins/git-flow) `v1.0.0`
+### [git-flow](./plugins/git-flow) `v1.0.1`
 
 Git workflow guardrails: warns on main-branch commits, creates PRs gated by /code-review, and sets up your GitHub noreply git identity.
 
@@ -44,7 +44,7 @@ Keep commits off `main` with an advisory branch-first hook, gate every pull requ
 /plugin install git-flow
 ```
 
-### [jev-dispatch](./plugins/jev-dispatch) `v0.2.0`
+### [jev-dispatch](./plugins/jev-dispatch) `v0.2.1`
 
 A model router judged by Jev (TypeSafe System One).
 
@@ -54,7 +54,7 @@ On every prompt, a hook asks Jev what kind of task it is, how hard, and whether 
 /plugin install jev-dispatch
 ```
 
-### [jev-gate](./plugins/jev-gate) `v0.9.2`
+### [jev-gate](./plugins/jev-gate) `v0.9.3`
 
 A stop-event gate judged by Jev (TypeSafe System One).
 
@@ -134,7 +134,7 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
-### [obsidian-archive](./plugins/obsidian-archive) `v1.0.0`
+### [obsidian-archive](./plugins/obsidian-archive) `v1.0.1`
 
 Automatically generates session summaries and saves them to an Obsidian vault.
 
@@ -176,6 +176,12 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-10-05
+- Update **jev-dispatch** to v0.2.1 — docs: roadmap removed from the repo
+- Update **git-flow** to v1.0.1 — docs: README no longer lists planned features
+- Update **obsidian-archive** to v1.0.1 — docs: README describes only the working manual commands; the auto-save hook claims are removed
+- Update **jev-gate** to v0.9.3 — docs: README and implementation plan no longer carry unbuilt-gate specs
 
 ### 2026-10-04
 - Update **jev-dispatch** to v0.2.0 — subagent routing: a `PreToolUse` hook on the Agent tool asks Jev how hard the subagent's brief is and, in apply mode, rewrites the call's `model` up or down to match (shadow by default; `spawn.respectExplicit`, `spawn.maxTier`, `spawn.subagentTypes`)
