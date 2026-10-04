@@ -1,6 +1,6 @@
 # ci-forge
 
-Install self-contained GitHub Actions CI into any repository with one command. No reusable-workflow references, no third-party actions beyond `actions/checkout` and `actions/setup-node`, no secrets.
+Install self-contained GitHub Actions CI into any repository with one command. No reusable-workflow references, no third-party actions beyond `actions/checkout`, no secrets.
 
 ```
 /plugin install ci-forge
@@ -54,6 +54,10 @@ Installed workflows are snapshots — they do not change when this plugin update
 - The version-consistency job is a server-side port of this repository's local `hooks/pre-commit` check, diffing against the PR base branch.
 
 ## Changelog
+
+### v1.1.1
+
+- `marketplace-validate`: the Claude Code CLI is now installed with the native installer (`curl -fsSL https://claude.ai/install.sh | bash`, unpinned latest release; `~/.local/bin` added to `GITHUB_PATH`) instead of `npm install -g`, because the npm package lagged behind (2.1.197 vs 2.1.285) and CI validated with an outdated validator. The `actions/setup-node` step is dropped. Re-run `/ci-forge:init` to pick this up.
 
 ### v1.1.0
 

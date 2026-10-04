@@ -4,7 +4,7 @@ A collection of Claude Code plugins by Yohei Nakanishi. New plugins are added ov
 
 ## Plugins
 
-### [ci-forge](./plugins/ci-forge) `v1.1.0`
+### [ci-forge](./plugins/ci-forge) `v1.1.1`
 
 Install self-contained GitHub Actions CI into any repository with one command.
 
@@ -178,6 +178,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-05
+- Fix **ci-forge** to v1.1.1 — marketplace-validate installs Claude Code with the native installer; the npm package lagged (2.1.197 vs 2.1.285), so CI validated with an old validator
 - Update **jev-dispatch** to v0.2.1 — docs: roadmap removed from the repo
 - Update **git-flow** to v1.0.1 — docs: README no longer lists planned features
 - Update **obsidian-archive** to v1.0.1 — docs: README describes only the working manual commands; the auto-save hook claims are removed
