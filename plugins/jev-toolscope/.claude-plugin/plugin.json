@@ -1,6 +1,6 @@
 {
   "name": "jev-toolscope",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Tool scoper — Jev reads each prompt and judges which of your MCP tools it actually needs, points the agent at those, and can block calls to the rest",
   "author": {
     "name": "Yohei Nakanishi"

@@ -12,17 +12,26 @@
 // Question ids are t0..tN rather than tool names: tool names are long and may
 // contain characters an id should not. The id -> name map stays in code.
 //
+// A short reply ("yes", "go ahead") means nothing alone: it accepts whatever
+// the agent just offered. For those, the agent's last reply goes into the state
+// as previous_assistant_message, and the questions say to read the prompt as a
+// reply to it.
+//
 // Changing a question or criteria text changes what the answers mean; do it in
 // a new contract version, not in place.
+//   scope@1  the prompt alone
+//   scope@2  short replies judged with the agent's previous message
 
 import { noul } from '../judge.mjs';
 
-export const id = 'scope@1';
+export const id = 'scope@2';
 
 const criteria = {
   true: 'The task cannot be done well without calling this tool.',
   false: 'The task can be done without it, or the tool serves an unrelated purpose.',
 };
+
+const subject = 'Completing the user_prompt (read as a reply to previous_assistant_message, when one is given)';
 
 const clip = (text, max) => {
   const t = String(text ?? '').replace(/\s+/g, ' ').trim();
@@ -41,8 +50,8 @@ export function questions(tools, config) {
     out[qid] = {
       type: 'noul',
       instructions: desc
-        ? `Completing the user_prompt needs the MCP tool "${t.server}/${t.tool}": ${desc}`
-        : `Completing the user_prompt needs the MCP tool "${t.server}/${t.tool}" (no description available; judge by its name).`,
+        ? `${subject} needs the MCP tool "${t.server}/${t.tool}": ${desc}`
+        : `${subject} needs the MCP tool "${t.server}/${t.tool}" (no description available; judge by its name).`,
       criteria: { ...criteria },
     };
   });
@@ -51,11 +60,13 @@ export function questions(tools, config) {
 
 /**
  * The state is the prompt, plus one line per server saying what it is for, so
- * a terse tool description can be read in its server's context.
+ * a terse tool description can be read in its server's context, plus — for a
+ * short reply only — the agent's message it answers.
  */
-export function stateOf(prompt, servers, config) {
+export function stateOf(prompt, servers, config, previous) {
   const lines = Object.entries(servers ?? {}).map(([s, text]) => `${s}: ${clip(text, 200)}`);
   const state = { user_prompt: prompt.slice(0, config?.maxPromptChars ?? 4000) };
+  if (previous) state.previous_assistant_message = previous;
   if (lines.length) state.mcp_servers = lines.join('\n');
   return state;
 }

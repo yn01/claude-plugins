@@ -7,8 +7,11 @@
 // for the network.
 //
 // Order of business:
-//   1. skip rules, in code — Jev is not asked about a "yes"; the previous
-//      prompt's scope carries over (status "carry")
+//   1. skip rules, in code. A short reply ("yes", "go ahead") that answers
+//      a known agent message is judged together with that message (context
+//      "reply"); any other skipped prompt — a slash command, a machine-made
+//      message, a reply with no message to read it against — carries the
+//      previous prompt's scope over (status "carry")
 //   2. nothing to judge, or more tools than maxTools          -> status "open"
 //   3. one Noul per tool, one request
 //   4. p >= minRelevance, plus alwaysAllow, is the scope      -> status "scoped"
@@ -49,7 +52,11 @@ export function withinScope(tool, selected, config) {
 /** The servers a server-level scope allows, for messages. */
 export const scopeServers = (selected) => [...new Set((selected ?? []).map((t) => splitToolName(t)?.server).filter(Boolean))].sort();
 
-export async function decide({ prompt, catalog, config, ask = jevAsk }) {
+// Skip reasons that are the user answering the agent, rather than not talking
+// to it at all.
+const REPLY_SKIPS = new Set(['too_short', 'pattern']);
+
+export async function decide({ prompt, catalog, config, previous = '', ask = jevAsk }) {
   const text = typeof prompt === 'string' ? prompt : '';
   const tools = Array.isArray(catalog?.tools) ? catalog.tools : [];
   const base = {
@@ -63,13 +70,15 @@ export async function decide({ prompt, catalog, config, ask = jevAsk }) {
     selected: [],
     scores: null,
     unanswered: 0,
+    context: null,
     latencyMs: null,
     usage: null,
     error: null,
   };
 
   const skipped = skipReason(text, config?.skip);
-  if (skipped) return { ...base, status: 'carry', reason: `skip:${skipped}` };
+  const reply = Boolean(skipped) && REPLY_SKIPS.has(skipped) && typeof previous === 'string' && previous.trim() !== '';
+  if (skipped && !reply) return { ...base, status: 'carry', reason: `skip:${skipped}` };
   if (!tools.length) return { ...base, reason: 'no_tools' };
 
   const maxTools = config?.maxTools ?? 150;
@@ -80,13 +89,13 @@ export async function decide({ prompt, catalog, config, ask = jevAsk }) {
     endpoint: config.endpoint,
     apiKey: config.apiKey,
     model: config.model,
-    state: contract.stateOf(text, catalog.servers, config),
+    state: contract.stateOf(text, catalog.servers, config, reply ? previous : null),
     questions,
     timeoutMs: config.timeoutMs ?? 3000,
   });
 
   if (!answer?.ok) {
-    return { ...base, reason: 'judge_unavailable', error: answer?.reason ?? 'unknown', latencyMs: answer?.latencyMs ?? null };
+    return { ...base, context: reply ? 'reply' : null, reason: 'judge_unavailable', error: answer?.reason ?? 'unknown', latencyMs: answer?.latencyMs ?? null };
   }
 
   const min = config?.minRelevance ?? 0.4;
@@ -100,7 +109,8 @@ export async function decide({ prompt, catalog, config, ask = jevAsk }) {
   return {
     ...base,
     status: 'scoped',
-    reason: 'judged',
+    reason: reply ? 'judged_reply' : 'judged',
+    context: reply ? 'reply' : null,
     selected,
     scores,
     unanswered: scores.filter((s) => s.p === null).length,

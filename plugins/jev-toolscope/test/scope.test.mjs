@@ -10,7 +10,7 @@ const tools = [
   { name: 'mcp__chrome__navigate', server: 'chrome', tool: 'navigate', description: '' },
 ];
 const catalog = { source: 'scan+transcript', tools, servers: { github: 'GitHub API' } };
-const config = { minRelevance: 0.4, maxTools: 150, skip: { minChars: 6 } };
+const config = { minRelevance: 0.4, maxTools: 150, skip: { minChars: 6, skipPatterns: ['^(yes|ok|お願いします)$'] } };
 
 const answering = (ps) => async ({ questions, state }) => {
   answering.last = { questions, state };
@@ -35,12 +35,14 @@ test('long descriptions are clipped', () => {
   const long = [{ ...tools[0], description: 'x'.repeat(500) }];
   const { questions } = contract.questions(long, { maxDescriptionChars: 50 });
   assert.ok(questions.t0.instructions.endsWith('…'));
-  assert.ok(questions.t0.instructions.length < 120);
+  assert.ok(questions.t0.instructions.length < 220);
 });
 
-test('state carries the prompt and one line per server', () => {
+test('state carries the prompt, one line per server, and the previous message only when given', () => {
   assert.deepEqual(contract.stateOf('abcdef', { github: 'GitHub API' }, { maxPromptChars: 3 }), { user_prompt: 'abc', mcp_servers: 'github: GitHub API' });
   assert.deepEqual(contract.stateOf('abc', {}, {}), { user_prompt: 'abc' });
+  assert.deepEqual(contract.stateOf('yes', {}, {}, 'Close the tab?'), { user_prompt: 'yes', previous_assistant_message: 'Close the tab?' });
+  assert.match(contract.questions(tools, {}).questions.t0.instructions, /read as a reply to previous_assistant_message/);
 });
 
 test('interpret sorts by p, unanswered first (they are kept in scope)', () => {
@@ -64,6 +66,26 @@ test('an unanswered tool stays in scope; alwaysAllow adds tools', async () => {
   const d = await decide({ prompt: 'Open an issue', catalog, config: { ...config, alwaysAllow: ['mcp__chrome__*'] }, ask: answering([0.1]) });
   assert.deepEqual(d.selected.sort(), ['mcp__chrome__navigate', 'mcp__github__list_pull_requests']);
   assert.equal(d.unanswered, 2);
+});
+
+test('a short reply with an agent message before it is judged with that message', async () => {
+  const d = await decide({ prompt: 'お願いします', previous: 'Shall I open the GitHub issue now?', catalog, config, ask: answering([0.9, 0.1, 0.1]) });
+  assert.deepEqual([d.status, d.reason, d.context], ['scoped', 'judged_reply', 'reply']);
+  assert.deepEqual(d.selected, ['mcp__github__create_issue']);
+  assert.equal(answering.last.state.previous_assistant_message, 'Shall I open the GitHub issue now?');
+  assert.equal(answering.last.state.user_prompt, 'お願いします');
+});
+
+test('a normal prompt is judged alone, even when a previous message exists', async () => {
+  const d = await decide({ prompt: 'Open an issue for the login bug', previous: 'Done.', catalog, config, ask: answering([0.9]) });
+  assert.deepEqual([d.reason, d.context], ['judged', null]);
+  assert.equal(answering.last.state.previous_assistant_message, undefined);
+});
+
+test('slash commands carry even with a previous message', async () => {
+  let asked = false;
+  const d = await decide({ prompt: '/jev-toolscope:doctor', previous: 'Shall I?', catalog, config, ask: async () => { asked = true; } });
+  assert.deepEqual([d.status, d.reason, asked], ['carry', 'skip:slash_command', false]);
 });
 
 test('skips carry the scope over without asking', async () => {

@@ -167,7 +167,7 @@ export function probeStdio(config, { cwd, timeoutMs = 10000 } = {}) {
 }
 
 async function main() {
-  const cwd = resolve(argValue('--cwd') ?? process.cwd());
+  const cwd = resolve(argValue('--cwd') ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
   const only = argValue('--server');
   const config = loadConfig(cwd);
   const timeoutMs = config.scan?.serverTimeoutMs ?? 10000;

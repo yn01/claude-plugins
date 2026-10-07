@@ -14,7 +14,8 @@
 //               defensively, and when it yields nothing the scan alone is used.
 //
 // The transcript says what is live in this session; the scan says what each
-// tool does. mergeCatalog() joins them.
+// tool does. mergeCatalog() joins them. The transcript also gives the agent's
+// last reply, which a short user reply ("yes, do it") is judged against.
 
 import { closeSync, fstatSync, openSync, readFileSync, readSync } from 'node:fs';
 
@@ -60,22 +61,53 @@ export function applyTranscriptRow(row, live) {
   return true;
 }
 
+// How much of the agent's last reply is kept. A short user reply ("yes",
+// "go ahead") answers its end, where the offer or question usually is.
+const ASSISTANT_TAIL = 2000;
+
+const textOf = (content) =>
+  typeof content === 'string'
+    ? content
+    : Array.isArray(content)
+      ? content.filter((b) => b?.type === 'text' && typeof b.text === 'string').map((b) => b.text).join('\n')
+      : '';
+
 /**
- * Read the transcript from `cursor.offset` on and fold new rows into the live
- * set. Only whole lines are consumed; a half-written last line is left for the
- * next call. A transcript shorter than the saved offset (rewritten, or a
- * different file) is read again from the start.
+ * Track the agent's last reply. A user row that is a message (not a tool
+ * result) starts a new turn and clears it; assistant text rows in a turn are
+ * joined. Subagent (sidechain) rows are ignored.
+ */
+export function applyMessageRow(row, state) {
+  if (row?.isSidechain === true) return;
+  const content = row?.message?.content;
+  if (row?.type === 'user') {
+    const isToolResult = Array.isArray(content) && content.some((b) => b?.type === 'tool_result');
+    if (!isToolResult) state.lastAssistant = '';
+  } else if (row?.type === 'assistant') {
+    const text = textOf(content).trim();
+    if (text) state.lastAssistant = `${state.lastAssistant ? `${state.lastAssistant}\n` : ''}${text}`.slice(-ASSISTANT_TAIL);
+  }
+}
+
+/**
+ * Read the transcript from `cursor.offset` on and fold new rows into the
+ * cursor: the live MCP tool names, and the agent's last reply. Only whole
+ * lines are consumed; a half-written last line is left for the next call. A
+ * transcript shorter than the saved offset (rewritten, or a different file) is
+ * read again from the start.
  *
- *   cursor: { path, offset, live: string[], sawDelta } | null
+ *   cursor: { path, offset, live: string[], sawDelta, lastAssistant } | null
  *   -> the next cursor, or the old one unchanged when the file cannot be read
  */
-export function readLiveTools(transcriptPath, cursor) {
+export function readTranscript(transcriptPath, cursor) {
   if (typeof transcriptPath !== 'string' || !transcriptPath) return cursor ?? null;
 
   const same = cursor && cursor.path === transcriptPath;
   let offset = same && Number.isInteger(cursor.offset) ? cursor.offset : 0;
   const live = new Set(same && Array.isArray(cursor.live) ? cursor.live : []);
   let sawDelta = same ? Boolean(cursor.sawDelta) : false;
+  const msg = { lastAssistant: same && typeof cursor.lastAssistant === 'string' ? cursor.lastAssistant : '' };
+  const out = () => ({ path: transcriptPath, offset, live: [...live], sawDelta, lastAssistant: msg.lastAssistant });
 
   let fd;
   try {
@@ -85,25 +117,29 @@ export function readLiveTools(transcriptPath, cursor) {
       offset = 0;
       live.clear();
       sawDelta = false;
+      msg.lastAssistant = '';
     }
-    if (size === offset) return { path: transcriptPath, offset, live: [...live], sawDelta };
+    if (size === offset) return out();
 
     const buf = Buffer.alloc(size - offset);
     readSync(fd, buf, 0, buf.length, offset);
     const end = buf.lastIndexOf(0x0a);
-    if (end < 0) return { path: transcriptPath, offset, live: [...live], sawDelta };
+    if (end < 0) return out();
 
     for (const line of buf.subarray(0, end).toString('utf8').split('\n')) {
-      // Cheap pre-filter: most rows are messages, and parsing them all would
-      // cost real time on a long transcript.
-      if (!line.includes('deferred_tools_delta')) continue;
+      // Cheap pre-filter: only tool records and message rows are parsed.
+      const isDelta = line.includes('deferred_tools_delta');
+      if (!isDelta && !line.includes('"type":"assistant"') && !line.includes('"type":"user"')) continue;
       try {
-        if (applyTranscriptRow(JSON.parse(line), live)) sawDelta = true;
+        const row = JSON.parse(line);
+        if (isDelta && applyTranscriptRow(row, live)) sawDelta = true;
+        else applyMessageRow(row, msg);
       } catch {
         // a malformed row is skipped, never fatal
       }
     }
-    return { path: transcriptPath, offset: offset + end + 1, live: [...live], sawDelta };
+    offset += end + 1;
+    return out();
   } catch {
     return cursor ?? null;
   } finally {

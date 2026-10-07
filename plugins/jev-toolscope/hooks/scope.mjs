@@ -19,8 +19,8 @@
 // scope is left open so the guard allows every call.
 
 import { readFileSync } from 'node:fs';
-import { loadConfig } from '../lib/config.mjs';
-import { readCatalog, readLiveTools, mergeCatalog } from '../lib/catalog.mjs';
+import { loadConfig, projectDir } from '../lib/config.mjs';
+import { readCatalog, readTranscript, mergeCatalog } from '../lib/catalog.mjs';
 import { decide, adviceFor, summaryFor } from '../lib/scope.mjs';
 import { readSession, writeSession } from '../lib/session.mjs';
 import { record } from '../lib/journal.mjs';
@@ -41,20 +41,22 @@ function finish(output) {
 async function main() {
   const input = readStdin();
   const cwd = input.cwd || process.cwd();
-  const config = loadConfig(cwd);
+  const project = projectDir(input);
+  const config = loadConfig(project);
   if (config.mode === 'off') return finish();
 
   const sessionId = input.session_id ?? null;
   const state = readSession(config.sessionsDir, sessionId) ?? {};
 
-  const cursor = readLiveTools(input.transcript_path, state.cursor ?? null);
+  const cursor = readTranscript(input.transcript_path, state.cursor ?? null);
   const live = cursor?.sawDelta ? cursor.live : [];
-  const catalog = mergeCatalog(readCatalog(config.catalogPath), live, cwd);
+  const catalog = mergeCatalog(readCatalog(config.catalogPath), live, project);
 
-  const decision = await decide({ prompt: input.prompt, catalog, config });
+  const decision = await decide({ prompt: input.prompt, catalog, config, previous: cursor?.lastAssistant ?? '' });
 
-  // A skipped prompt ("yes", "continue") carries the previous scope over: it
-  // is the same task, and resetting it would open every tool mid-task.
+  // A carried prompt (a slash command, a machine-made message, a short reply
+  // with no agent message to read it against) keeps the previous scope:
+  // resetting it would open every tool mid-task.
   const scope = decision.status === 'carry'
     ? state.scope ?? null
     : { status: decision.status, selected: decision.selected, catalogSize: decision.catalogSize, ts: Date.now() };
@@ -70,11 +72,13 @@ async function main() {
     contract: decision.contract,
     session_id: sessionId,
     cwd,
+    project,
     mode: config.mode,
     promptChars: decision.promptChars,
     promptHead: typeof input.prompt === 'string' ? input.prompt.slice(0, head) : null,
     status: decision.status,
     reason: decision.reason,
+    context: decision.context,
     catalogSource: decision.catalogSource,
     catalogSize: decision.catalogSize,
     servers: decision.servers,

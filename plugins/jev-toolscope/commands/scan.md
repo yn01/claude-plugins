@@ -18,8 +18,10 @@ Build the catalog the prompt hook judges against: tool names, descriptions and s
 ### 1. Run the scan
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/scan.mjs" --cwd "$PWD" $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/scripts/scan.mjs" --cwd "${CLAUDE_PROJECT_DIR:-$PWD}" $ARGUMENTS
 ```
+
+Run it from the project root: the catalog tags project-scoped servers with this directory, and the hooks match them against the session's project root. If you or the agent have `cd`-ed elsewhere, pass `--cwd <project root>`.
 
 This starts each stdio server with the command and env from its config, asks it for its tools, and stops it. HTTP / SSE servers, plugin-provided servers and claude.ai connectors are reported as `skipped`: their tools are still judged, by name only, from the session transcript.
 

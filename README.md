@@ -64,7 +64,7 @@ When an agent stops, a hook on `TaskCompleted`/`SubagentStop`/`Stop` asks what k
 /plugin install jev-gate
 ```
 
-### [jev-toolscope](./plugins/jev-toolscope) `v0.1.0`
+### [jev-toolscope](./plugins/jev-toolscope) `v0.1.1`
 
 A tool scoper judged by Jev (TypeSafe System One).
 
@@ -188,6 +188,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-07
+- Fix **jev-toolscope** to v0.1.1 — a short reply ("yes", "お願いします") is judged together with the agent's last message instead of keeping the previous scope, so approving an offered action is no longer blocked in `enforce` (contract `scope@2`); the project config is read from the session's project root (`CLAUDE_PROJECT_DIR`), so a `cd` by the agent no longer drops it
 - Add **jev-toolscope** v0.1.0 — Jev judges which MCP tools each prompt needs (one Noul per tool, one request), hints them to the agent in `advise` mode and denies calls to out-of-scope MCP servers in `enforce` mode; tool catalog from `/jev-toolscope:scan` plus the session transcript; Shadow Mode by default
 
 ### 2026-10-05

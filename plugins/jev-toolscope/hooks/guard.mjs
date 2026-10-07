@@ -22,7 +22,7 @@
 // read how often the scope held the tool that was actually used.
 
 import { readFileSync } from 'node:fs';
-import { loadConfig } from '../lib/config.mjs';
+import { loadConfig, projectDir } from '../lib/config.mjs';
 import { readSession } from '../lib/session.mjs';
 import { withinScope, scopeServers } from '../lib/scope.mjs';
 import { record } from '../lib/journal.mjs';
@@ -43,7 +43,8 @@ function finish(output) {
 function main() {
   const input = readStdin();
   const cwd = input.cwd || process.cwd();
-  const config = loadConfig(cwd);
+  const project = projectDir(input);
+  const config = loadConfig(project);
   if (config.mode === 'off') return finish();
 
   const tool = typeof input.tool_name === 'string' ? input.tool_name : null;
@@ -69,6 +70,7 @@ function main() {
     hook: 'guard',
     session_id: sessionId,
     cwd,
+    project,
     mode: config.mode,
     tool,
     inScope,
@@ -89,7 +91,7 @@ function main() {
       permissionDecision: 'deny',
       permissionDecisionReason:
         `[jev-toolscope] ${tool} is outside this prompt's MCP tool scope (${level === 'tool' ? 'tools' : 'servers'} in scope: ${allowed}). ` +
-        'Do not retry it. If it is truly needed, tell the user which tool and why; the scope is judged again on their next prompt.',
+        'Do not retry it. If it is truly needed, tell the user which tool and why, and ask them to confirm; their reply is judged again together with your message.',
     },
   });
 }

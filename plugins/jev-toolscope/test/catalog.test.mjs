@@ -10,7 +10,7 @@ import { appendFileSync, copyFileSync, mkdtempSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { splitToolName, normalizeServer, fullName, readLiveTools, mergeCatalog, applyTranscriptRow } from '../lib/catalog.mjs';
+import { splitToolName, normalizeServer, fullName, readTranscript, mergeCatalog, applyTranscriptRow, applyMessageRow } from '../lib/catalog.mjs';
 
 const FIXTURE = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'transcript.jsonl');
 
@@ -28,7 +28,7 @@ test('server names are normalized the way Claude Code prefixes tools', () => {
 });
 
 test('the transcript yields live MCP names, removals applied, built-ins ignored', () => {
-  const c = readLiveTools(FIXTURE, null);
+  const c = readTranscript(FIXTURE, null);
   assert.equal(c.sawDelta, true);
   assert.deepEqual(c.live.sort(), ['mcp__claude_ai_Gmail__search', 'mcp__github__create_issue', 'mcp__github__list_pull_requests']);
   assert.ok(c.offset > 0);
@@ -38,16 +38,16 @@ test('reading resumes from the cursor and only consumes whole lines', () => {
   const dir = mkdtempSync(join(tmpdir(), 'jts-cat-'));
   const path = join(dir, 't.jsonl');
   copyFileSync(FIXTURE, path);
-  const first = readLiveTools(path, null);
+  const first = readTranscript(path, null);
 
   const row = JSON.stringify({ type: 'attachment', attachment: { type: 'deferred_tools_delta', addedNames: ['mcp__slack__post'] } });
   appendFileSync(path, row.slice(0, 20)); // half a line, still being written
-  const second = readLiveTools(path, first);
+  const second = readTranscript(path, first);
   assert.equal(second.offset, first.offset);
   assert.ok(!second.live.includes('mcp__slack__post'));
 
   appendFileSync(path, row.slice(20) + '\n');
-  const third = readLiveTools(path, second);
+  const third = readTranscript(path, second);
   assert.ok(third.live.includes('mcp__slack__post'));
   assert.ok(third.live.includes('mcp__github__create_issue'), 'earlier names are kept from the cursor');
 });
@@ -56,21 +56,21 @@ test('a transcript shorter than the cursor is read again from the start', () => 
   const dir = mkdtempSync(join(tmpdir(), 'jts-cat-'));
   const path = join(dir, 't.jsonl');
   copyFileSync(FIXTURE, path);
-  const first = readLiveTools(path, null);
+  const first = readTranscript(path, null);
   writeFileSync(path, JSON.stringify({ attachment: { type: 'deferred_tools_delta', addedNames: ['mcp__x__y'] } }) + '\n');
-  const again = readLiveTools(path, first);
+  const again = readTranscript(path, first);
   assert.deepEqual(again.live, ['mcp__x__y']);
 });
 
 test('a missing transcript keeps the old cursor; no record means sawDelta false', () => {
   const kept = { path: '/nope', offset: 5, live: ['mcp__a__b'], sawDelta: true };
-  assert.equal(readLiveTools('/definitely/not/here.jsonl', kept), kept);
-  assert.equal(readLiveTools(undefined, null), null);
+  assert.equal(readTranscript('/definitely/not/here.jsonl', kept), kept);
+  assert.equal(readTranscript(undefined, null), null);
 
   const dir = mkdtempSync(join(tmpdir(), 'jts-cat-'));
   const path = join(dir, 'plain.jsonl');
   writeFileSync(path, JSON.stringify({ type: 'user', message: { content: 'hi' } }) + '\nnot json\n');
-  const c = readLiveTools(path, null);
+  const c = readTranscript(path, null);
   assert.equal(c.sawDelta, false);
   assert.deepEqual(c.live, []);
 });
@@ -80,6 +80,33 @@ test('applyTranscriptRow treats readdedNames as added and ignores other rows', (
   assert.equal(applyTranscriptRow({ attachment: { type: 'something_else', addedNames: ['mcp__a__b'] } }, live), false);
   assert.equal(applyTranscriptRow({ attachment: { type: 'deferred_tools_delta', readdedNames: ['mcp__a__b'] } }, live), true);
   assert.deepEqual([...live], ['mcp__a__b']);
+});
+
+test('the agent\'s last reply: joined within a turn, kept across tool results, cleared by a user message', () => {
+  const st = { lastAssistant: '' };
+  const say = (text) => applyMessageRow({ type: 'assistant', message: { content: [{ type: 'text', text }] } }, st);
+  say('Looking.');
+  applyMessageRow({ type: 'user', message: { content: [{ type: 'tool_result', tool_use_id: 'a', content: 'x' }] } }, st);
+  say('Close the tab?');
+  assert.equal(st.lastAssistant, 'Looking.\nClose the tab?');
+  applyMessageRow({ type: 'assistant', isSidechain: true, message: { content: [{ type: 'text', text: 'sub' }] } }, st);
+  assert.equal(st.lastAssistant, 'Looking.\nClose the tab?', 'sidechain rows are ignored');
+  applyMessageRow({ type: 'user', message: { content: 'next request' } }, st);
+  assert.equal(st.lastAssistant, '');
+  say('x'.repeat(3000));
+  assert.equal(st.lastAssistant.length, 2000, 'only the tail is kept');
+});
+
+test('readTranscript carries the last reply in the cursor across reads', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'jts-cat-'));
+  const path = join(dir, 't.jsonl');
+  writeFileSync(path, JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: 'Shall I?' }] } }) + '\n');
+  const first = readTranscript(path, null);
+  assert.equal(first.lastAssistant, 'Shall I?');
+  appendFileSync(path, JSON.stringify({ type: 'attachment', attachment: { type: 'deferred_tools_delta', addedNames: ['mcp__a__b'] } }) + '\n');
+  const second = readTranscript(path, first);
+  assert.equal(second.lastAssistant, 'Shall I?');
+  assert.deepEqual(second.live, ['mcp__a__b']);
 });
 
 const catalog = {
