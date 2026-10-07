@@ -1,0 +1,17 @@
+{
+  "name": "jev-toolscope",
+  "version": "0.1.0",
+  "description": "Tool scoper — Jev reads each prompt and judges which of your MCP tools it actually needs, points the agent at those, and can block calls to the rest",
+  "author": {
+    "name": "Yohei Nakanishi"
+  },
+  "commands": "./commands",
+  "userConfig": {
+    "typesafe_api_key": {
+      "type": "string",
+      "title": "TypeSafe API key",
+      "description": "API key for TypeSafe (Jev). Stored in your system credential store. Leave empty and the plugin stays inert: every judgement fails open.",
+      "sensitive": true
+    }
+  }
+}

@@ -236,6 +236,22 @@
         "hook",
         "shadow-mode"
       ]
+    },
+    {
+      "name": "jev-toolscope",
+      "source": "./plugins/jev-toolscope",
+      "description": "Tool scoper — Jev reads each prompt and judges which of your MCP tools it actually needs, points the agent at those, and can block calls to the rest",
+      "author": {
+        "name": "Yohei Nakanishi"
+      },
+      "keywords": [
+        "jev",
+        "typesafe",
+        "mcp",
+        "tool-selection",
+        "hook",
+        "shadow-mode"
+      ]
     }
   ]
 }

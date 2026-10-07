@@ -1,0 +1,4 @@
+{"type": "user", "message": {"role": "user", "content": "hello"}, "sessionId": "s1"}
+{"type": "attachment", "isSidechain": false, "sessionId": "s1", "attachment": {"type": "deferred_tools_delta", "addedNames": ["WebFetch", "TaskCreate", "mcp__github__create_issue", "mcp__github__list_pull_requests", "mcp__chrome__navigate", "mcp__claude_ai_Gmail__search"], "addedLines": [], "removedNames": [], "readdedNames": [], "pendingMcpServers": [], "failedMcpServers": [], "surfacedNames": [], "surfacedDefinitions": [], "wireHiddenNames": []}}
+{"type": "assistant", "message": {"role": "assistant", "content": "mentions deferred_tools_delta in text only"}}
+{"type": "attachment", "attachment": {"type": "deferred_tools_delta", "addedNames": [], "removedNames": ["mcp__chrome__navigate"], "readdedNames": []}}

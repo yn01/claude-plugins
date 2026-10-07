@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scope.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Ask Jev which MCP tools the prompt needs, record the scope, and (advise / enforce) point the agent at those tools"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs\"",
+            "timeout": 5
+          }
+        ],
+        "description": "Check each MCP call against the prompt's scope; record out-of-scope calls and, in enforce mode only, deny them"
+      }
+    ]
+  }
+}
