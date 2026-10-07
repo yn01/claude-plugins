@@ -1,0 +1,26 @@
+{
+  "mode": "shadow",
+  "model": "jev-1.13.0",
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "timeoutMs": 3000,
+  "maxPromptChars": 4000,
+  "minRelevance": 0.4,
+  "maxTools": 150,
+  "maxDescriptionChars": 300,
+  "alwaysAllow": [],
+  "guardLevel": "server",
+  "summary": true,
+  "skip": {
+    "minChars": 6,
+    "systemPrefixes": ["<task-notification", "<agent-message", "<teammate-message", "<system-reminder", "<local-command-", "<command-name"],
+    "skipPatterns": [
+      "^(y|yes|yep|ok|okay|sure|go|go ahead|continue|proceed|thanks|thank you|lgtm|はい|ええ|お願い|お願いします|ありがとう|続けて|進めて)[\\s.!。！]*$"
+    ]
+  },
+  "scan": {
+    "serverTimeoutMs": 10000
+  },
+  "journal": {
+    "promptChars": 200
+  }
+}

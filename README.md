@@ -64,6 +64,16 @@ When an agent stops, a hook on `TaskCompleted`/`SubagentStop`/`Stop` asks what k
 /plugin install jev-gate
 ```
 
+### [jev-toolscope](./plugins/jev-toolscope) `v0.1.0`
+
+A tool scoper judged by Jev (TypeSafe System One).
+
+On every prompt, a hook asks Jev one yes/no question per MCP tool in the session — "does this request need this tool?" — in a single request (150 tools in about 250 ms), and stores the answer as the prompt's scope. In `advise` mode the agent is pointed at the in-scope tools (with a ready `ToolSearch select:` query) and you see a one-line summary; in `enforce` mode a `PreToolUse` guard also denies calls to MCP servers outside the scope (per tool with `guardLevel: "tool"`). Ships in Shadow Mode: scopes and would-be denials are only journaled, and `/jev-toolscope:status` reports how often the scope held the tool the agent actually called.
+
+```
+/plugin install jev-toolscope
+```
+
 ### [genpptx](./plugins/genpptx) `v1.4.4`
 
 Generates PowerPoint presentations from content files (meeting notes, memos).
@@ -176,6 +186,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-10-07
+- Add **jev-toolscope** v0.1.0 — Jev judges which MCP tools each prompt needs (one Noul per tool, one request), hints them to the agent in `advise` mode and denies calls to out-of-scope MCP servers in `enforce` mode; tool catalog from `/jev-toolscope:scan` plus the session transcript; Shadow Mode by default
 
 ### 2026-10-05
 - Update **jev-dispatch** to v0.3.0 — breaking: the TypeSafe API key now comes from the plugin's `userConfig` (sensitive, stored in the system credential store) instead of `TYPESAFE_API_KEY`; migration: configure the key via `/plugin` > Installed > Configure options and remove the old env entry
