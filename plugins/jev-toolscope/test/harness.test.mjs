@@ -8,7 +8,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -60,11 +60,13 @@ function sandbox(name, { catalog } = {}) {
   return { name, data, proj, transcript };
 }
 
-function run(hook, sb, input, { mode, key = 'k', config } = {}) {
+function run(hook, sb, input, { mode, key = 'k', config, projectDir } = {}) {
   if (config) writeFileSync(join(sb.proj, '.jev-toolscope', 'config.json'), JSON.stringify({ endpoint: `http://127.0.0.1:${port}/v1/systemone`, ...config }));
   const env = { ...process.env, CLAUDE_PLUGIN_DATA: sb.data };
   delete env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY;
   delete env.JEV_TOOLSCOPE_MODE;
+  delete env.CLAUDE_PROJECT_DIR;
+  if (projectDir) env.CLAUDE_PROJECT_DIR = projectDir;
   if (key) env.CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY = key;
   if (mode) env.JEV_TOOLSCOPE_MODE = mode;
 
@@ -97,7 +99,8 @@ test('shadow: judges the live tools, journals, prints nothing; guard records wou
   assert.equal(r.stdout, '');
   const row = r.last;
   assert.equal(row.hook, 'scope');
-  assert.equal(row.contract, 'scope@1');
+  assert.equal(row.contract, 'scope@2');
+  assert.equal(row.context, null);
   assert.equal(row.mode, 'shadow');
   assert.equal(row.status, 'scoped');
   assert.equal(row.catalogSource, 'scan+transcript');
@@ -185,16 +188,59 @@ test('guardLevel tool: only the selected tools themselves are allowed', async ()
   assert.equal(sibling.last.guardLevel, 'tool');
 });
 
-test('a skipped prompt carries the previous scope over', async () => {
+test('after the agent cds into a subdirectory, the project config still applies via CLAUDE_PROJECT_DIR', async () => {
+  behavior = { kind: 'ok', p: { create_issue: 0.91 } };
+  const sb = sandbox('moved', { catalog });
+  writeFileSync(join(sb.proj, '.jev-toolscope', 'config.json'), JSON.stringify({ endpoint: `http://127.0.0.1:${port}/v1/systemone`, guardLevel: 'tool' }));
+  const sub = join(sb.proj, 'packages', 'app');
+  mkdirSync(sub, { recursive: true });
+
+  await run(SCOPE, sb, { ...prompt, cwd: sub }, { mode: 'enforce', projectDir: sb.proj });
+  const g = await run(GUARD, sb, call('mcp__github__list_pull_requests', { cwd: sub }), { mode: 'enforce', projectDir: sb.proj });
+  assert.equal(JSON.parse(g.stdout).hookSpecificOutput.permissionDecision, 'deny', 'guardLevel "tool" from the project root config');
+  assert.deepEqual([g.last.cwd, g.last.project, g.last.guardLevel], [sub, sb.proj, 'tool']);
+
+  // without the variable, the moved cwd loses the project config: the old behaviour
+  const lost = await run(GUARD, sb, call('mcp__github__list_pull_requests', { cwd: sub }), { mode: 'enforce' });
+  assert.equal(lost.last.guardLevel, 'server');
+});
+
+test('a slash command carries the previous scope over', async () => {
   behavior = { kind: 'ok', p: { create_issue: 0.91 } };
   const sb = sandbox('carry', { catalog });
   await run(SCOPE, sb, prompt, { mode: 'enforce' });
   behavior = { kind: 'error' };
-  const r = await run(SCOPE, sb, { prompt: 'continue' }, { mode: 'enforce' });
+  const r = await run(SCOPE, sb, { prompt: '/jev-toolscope:status' }, { mode: 'enforce' });
   assert.equal(r.stdout, '');
-  assert.deepEqual([r.last.status, r.last.reason, r.last.error], ['carry', 'skip:pattern', null]);
+  assert.deepEqual([r.last.status, r.last.reason, r.last.error], ['carry', 'skip:slash_command', null]);
   const g = await run(GUARD, sb, call('mcp__claude_ai_Gmail__search'), { mode: 'enforce' });
   assert.equal(JSON.parse(g.stdout).hookSpecificOutput.permissionDecision, 'deny');
+});
+
+test('a short reply is judged with the agent message it answers, and opens the offered tool', async () => {
+  behavior = { kind: 'ok', p: { create_issue: 0.91 } };
+  const sb = sandbox('reply', { catalog });
+  await run(SCOPE, sb, prompt, { mode: 'enforce' });
+
+  // the agent offers something outside the first scope; the user says yes
+  appendFileSync(sb.transcript, [
+    { type: 'user', message: { role: 'user', content: prompt.prompt } },
+    { type: 'assistant', message: { role: 'assistant', content: [{ type: 'tool_use', id: 'x', name: 'mcp__github__create_issue', input: {} }] } },
+    { type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'x', content: 'ok' }] } },
+    { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: 'Issue opened. Shall I also list the open pull requests to link the failing one?' }] } },
+    { type: 'assistant', isSidechain: true, message: { role: 'assistant', content: [{ type: 'text', text: 'subagent chatter' }] } },
+  ].map((r) => JSON.stringify(r)).join('\n') + '\n');
+
+  behavior = { kind: 'ok', p: { list_pull_requests: 0.88 } };
+  const r = await run(SCOPE, sb, { prompt: 'お願いします' }, { mode: 'enforce' });
+  assert.deepEqual([r.last.status, r.last.reason, r.last.context], ['scoped', 'judged_reply', 'reply']);
+  assert.deepEqual(r.last.selected, ['mcp__github__list_pull_requests']);
+  assert.equal(lastBody.state.user_prompt, 'お願いします');
+  assert.equal(lastBody.state.previous_assistant_message, 'Issue opened. Shall I also list the open pull requests to link the failing one?');
+
+  const g = await run(GUARD, sb, call('mcp__github__list_pull_requests'), { mode: 'enforce', config: { guardLevel: 'tool' } });
+  assert.equal(g.stdout, '');
+  assert.equal(g.last.reason, 'in_scope');
 });
 
 for (const [name, setup, error] of [

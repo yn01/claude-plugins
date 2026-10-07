@@ -80,13 +80,16 @@ Then build the catalog:
 UserPromptSubmit  {prompt, session_id, cwd, transcript_path}
   │
   ├─ mode off?                                              ──▶ exit
-  ├─ code: skip rules (empty, machine-generated message,
-  │        "/command", too short, "yes" / "ok" / "continue") ──▶ keep the previous scope, exit
+  ├─ code: skip rules
+  │    empty, machine-generated message, "/command"        ──▶ keep the previous scope, exit
+  │    a short reply ("yes", "go ahead", "お願いします")
+  │      with the agent's last message in the transcript   ──▶ judged together with that message
+  │      without one                                       ──▶ keep the previous scope, exit
   ├─ catalog: live MCP tool names from the transcript
   │           × names and descriptions from /jev-toolscope:scan
   ├─ no tools, or more than maxTools                        ──▶ open scope, exit
   ▼
-  Jev: scope@1 — one noul per tool, one request
+  Jev: scope@2 — one noul per tool, one request
        "Completing the user_prompt needs the MCP tool "<server>/<tool>": <description>"
   ▼
   code: p ≥ minRelevance, plus alwaysAllow, plus any tool left unanswered ──▶ scope
@@ -103,9 +106,10 @@ PreToolUse  mcp__.*   (no Jev call — a local file read)
 
 "Allow" means the guard stays silent and the normal permission flow decides; it never grants a permission you have not given.
 
-- **A skipped prompt keeps the scope.** "continue" is the same task; resetting would open every tool mid-task.
+- **A short reply is judged against what it answers.** "Yes, please" means nothing alone: it accepts whatever the agent just offered. So the agent's last message (its last 2,000 characters, read from the transcript) is sent with the reply, and the scope follows the offer. In a live run, a carried-over scope blocked the very tab-closing the user had just approved; this is the fix.
+- **Slash commands and machine-made messages keep the scope.** They are not a new request; resetting would open every tool mid-task.
 - **Subagents are not guarded.** The scope was judged from your prompt; a subagent's brief may legitimately need tools the prompt never mentioned.
-- **A denied call is not retried.** The deny reason tells the agent to say which tool it needs and why, and the scope is judged again on your next prompt.
+- **A denied call is not retried.** The deny reason tells the agent to say which tool it needs and why and ask you to confirm; your reply is judged together with that message, so confirming brings the tool into scope.
 
 ### The catalog
 
@@ -138,7 +142,7 @@ Layers, later wins. Each is merged key by key; an unreadable or malformed file i
 
 1. Plugin default — `config.json` in the plugin
 2. Per user — `<data dir>/config.json`
-3. Per project — `<project>/.jev-toolscope/config.json`
+3. Per project — `<project>/.jev-toolscope/config.json`, where `<project>` is the directory the session started in (`CLAUDE_PROJECT_DIR`), not the agent's current directory: a `cd` mid-session does not drop the project config. The commands, which run through the Bash tool and do not get that variable, use the working directory.
 4. Environment — `JEV_TOOLSCOPE_MODE`
 
 The data dir is `CLAUDE_PLUGIN_DATA` if set, else the first `~/.claude/plugins/data/jev-toolscope-*` directory, else `~/.claude/jev-toolscope/`.
@@ -156,7 +160,7 @@ The data dir is `CLAUDE_PLUGIN_DATA` if set, else the first `~/.claude/plugins/d
 | `endpoint` | `https://api.typesafe.ai/v1/systemone` | Judge endpoint. |
 | `timeoutMs` | `3000` | Abort the Jev request after this long; the scope is then left open. |
 | `maxPromptChars` | `4000` | Prompt characters sent to Jev. |
-| `skip.minChars`, `skip.systemPrefixes`, `skip.skipPatterns` | as in jev-dispatch | Prompts that are not judged; the previous scope carries over. |
+| `skip.minChars`, `skip.systemPrefixes`, `skip.skipPatterns` | as in jev-dispatch | Prompts that are not judged on their own. A prompt that is too short or matches a pattern is a reply, judged with the agent's last message; one that starts with a system prefix or a `/command` keeps the previous scope. |
 | `scan.serverTimeoutMs` | `10000` | How long the scan waits for one server. |
 | `journal.promptChars` | `200` | Prompt characters stored as `promptHead`. |
 
@@ -168,11 +172,13 @@ Scope rows (`hook: "scope"`):
 
 | Field | Meaning |
 |---|---|
-| `ts`, `session_id`, `cwd`, `mode` | When, where, and the mode in effect. |
-| `contract` | `scope@1`. Rows from different contracts should never be pooled. |
+| `ts`, `session_id`, `mode` | When, and the mode in effect. |
+| `cwd`, `project` | The agent's working directory, and the project root the config was read from. |
+| `contract` | `scope@2`. Rows from different contracts should never be pooled. |
 | `promptChars`, `promptHead` | Prompt length, and its first `journal.promptChars` characters. |
 | `status` | `scoped`, `open` (judged nothing; every call allowed) or `carry` (skipped; previous scope kept). |
-| `reason` | `judged`, `no_tools`, `catalog_too_large`, `judge_unavailable`, or `skip:*`. |
+| `reason` | `judged`, `judged_reply`, `no_tools`, `catalog_too_large`, `judge_unavailable`, or `skip:*`. |
+| `context` | `reply` when the prompt was judged together with the agent's last message, else `null`. |
 | `catalogSource`, `catalogSize`, `servers` | Where the tool list came from, how many tools were judged, from which servers. |
 | `selected`, `selectedCount` | The scope. |
 | `scores` | Every tool's answer, `[{tool, p}]`, most relevant first. |
@@ -181,12 +187,12 @@ Scope rows (`hook: "scope"`):
 | `latencyMs`, `usage` | Jev round-trip time and token usage. |
 | `error` | `no_api_key`, `timeout`, `network_error`, `bad_json` or `http_<status>` when the judge was unavailable. |
 
-Guard rows (`hook: "guard"`): `tool`, `inScope` (`null` when there was no scope to check against), `decision` (`allow`, `deny`, `would_deny`), `reason` (`in_scope`, `out_of_scope`, `no_scope`, `open_scope`, `subagent`), `guardLevel`, `scopeSize`, `scopeAgeMs`, `agentId`.
+Guard rows (`hook: "guard"`): `cwd`, `project`, `tool`, `inScope` (`null` when there was no scope to check against), `decision` (`allow`, `deny`, `would_deny`), `reason` (`in_scope`, `out_of_scope`, `no_scope`, `open_scope`, `subagent`), `guardLevel`, `scopeSize`, `scopeAgeMs`, `agentId`.
 
 ## Privacy and cost
 
 - **Your API key** is read from the plugin option (`CLAUDE_PLUGIN_OPTION_TYPESAFE_API_KEY`, which Claude Code sets for hooks from the system credential store). It is sent only to the configured endpoint and never written to the journal.
-- **Your prompt and your tool list leave your machine.** Up to `maxPromptChars` characters of every non-skipped prompt, plus the names and (clipped) descriptions of your MCP tools and their servers' instructions, are sent to TypeSafe (`api.typesafe.ai`). Set `mode` to `off` for a project where that must not happen.
+- **Your prompt and your tool list leave your machine.** Up to `maxPromptChars` characters of every judged prompt — and, for a short reply, the last 2,000 characters of the agent's message before it — plus the names and (clipped) descriptions of your MCP tools and their servers' instructions, are sent to TypeSafe (`api.typesafe.ai`). Set `mode` to `off` for a project where that must not happen.
 - **The scan runs your MCP servers.** It starts the same commands, with the same env, that Claude Code starts for them, and only when you run `/jev-toolscope:scan`.
 - **Latency on every judged prompt.** One Jev round trip — about 200–350 ms in measurement, from 10 to 150 tools — before the prompt reaches the model. Cut off at `timeoutMs` (3000), the hook at 5 seconds. The guard makes no network call.
 - **Fail-open** on every error path: no key, no catalog, a slow or failed request, a thrown error. The scope is then open and every call is allowed.
@@ -196,7 +202,8 @@ Guard rows (`hook: "guard"`): `tool`, `inScope` (`null` when there was no scope 
 - **The tool list the model sees cannot be changed** by a hook. The hint is advisory; only `enforce` makes the scope binding, and only for MCP tools.
 - **A wrong scope blocks a needed tool in `enforce`.** At the default `guardLevel` that takes a whole server judged irrelevant; at `tool` level, any tool missed. That is why shadow comes first and recall is reported. `alwaysAllow` covers tools that should never be blocked.
 - **Server-level guarding lets through unneeded tools of a needed server.** The hint still names only the selected tools.
-- **Judged from the prompt alone.** A short follow-up such as "now post it to Slack" is judged without the earlier conversation.
+- **Judged from the prompt alone, except short replies.** A follow-up such as "now post it to Slack" is judged without the earlier conversation. Only replies short enough to be skipped are read against the agent's last message.
+- **The agent's last message is read from the transcript**, the same undocumented storage as the live tool list. If it cannot be read, a short reply keeps the previous scope.
 - **Built-in tools are out of scope.** Only `mcp__*` tools are judged and guarded.
 - **Subagents run unscoped.**
 
@@ -209,6 +216,12 @@ node --test plugins/jev-toolscope/test/*.test.mjs
 No network and no key: the hooks are run end to end against a local stand-in for the API, and the scanner against a fake stdio MCP server.
 
 ## Changelog
+
+### v0.1.1 — 2026-10-07
+
+Fix: a short reply such as "yes" or "お願いします" was skipped and kept the previous prompt's scope, so approving something the agent had just offered could be blocked. In a live run with `guardLevel: "tool"`, the user approved closing a browser tab and the guard denied `tabs_close_mcp`. A short reply is now judged together with the agent's last message, read from the transcript (contract `scope@2`; journal rows carry `context: "reply"` and reason `judged_reply`). Slash commands and machine-made messages still keep the previous scope. The deny reason no longer claims that the next prompt is always judged again.
+
+Fix: the project config (`.jev-toolscope/config.json`) and the catalog's project match were read from the hook input's `cwd`, which follows every `cd`. After the agent changed directory in a live session, the project's `guardLevel` silently stopped applying. Both now use `CLAUDE_PROJECT_DIR`, the root the session started in, with `cwd` as the fallback. Journal rows gain `project`.
 
 ### v0.1.0 — 2026-10-07
 

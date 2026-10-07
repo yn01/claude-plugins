@@ -3,7 +3,7 @@
 // Config layers, later wins:
 //   1. the plugin default (config.json next to this package)
 //   2. <plugin data dir>/config.json        (per user)
-//   3. <cwd>/.jev-toolscope/config.json     (per project)
+//   3. <project>/.jev-toolscope/config.json (per project)
 //   4. environment override (JEV_TOOLSCOPE_MODE)
 //
 // Anything unreadable or malformed is skipped silently. A scope hook must never
@@ -53,7 +53,18 @@ export function merge(base, overlay) {
   return out;
 }
 
-export function loadConfig(cwd = process.cwd()) {
+/**
+ * The project the session belongs to. Hooks get CLAUDE_PROJECT_DIR, the root
+ * the session started in, which stays put when the agent runs `cd`; the
+ * input's `cwd` follows every `cd`, so a project config read from it would
+ * silently drop out mid-session. Commands run through the Bash tool do not get
+ * the variable and fall back to the working directory.
+ */
+export function projectDir(input) {
+  return process.env.CLAUDE_PROJECT_DIR || input?.cwd || process.cwd();
+}
+
+export function loadConfig(cwd = projectDir()) {
   const dir = dataDir();
 
   // Every layer that actually contributed, in order — the only way to confirm
