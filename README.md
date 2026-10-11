@@ -144,11 +144,11 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
-### [obsidian-archive](./plugins/obsidian-archive) `v1.0.1`
+### [obsidian-archive](./plugins/obsidian-archive) `v1.1.0`
 
-Automatically generates session summaries and saves them to an Obsidian vault.
+Summarizes a Claude Code session and saves it to an Obsidian vault.
 
-Captures what you built, decided, and carried over — at session end or on a configurable interval — as structured Markdown notes in your vault.
+Run `/obsidian-archive:archive` to capture what you built, decided, and carried over as a structured Markdown note. The agent writes the summary; a script fixes the file name, frontmatter and section headings so notes stay machine-readable.
 
 ```
 /plugin install obsidian-archive
@@ -186,6 +186,9 @@ Versions follow [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`)
 Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, Claude Code falls back to the git commit SHA.
 
 ## Changelog
+
+### 2026-10-12
+- Update **obsidian-archive** to v1.1.0 — the main agent writes the summary (the `summarizer` subagent, which could not see the conversation, is removed); file name, frontmatter (`project` = git root, `session_id`, `branch`) and fixed headings come from `scripts/write-note.mjs`; settings move to the plugin data directory; breaking: `filename_format` and `auto_save_interval_minutes` removed, default folder `Summaries`; the never-working auto-save hooks are removed and `validate --strict` passes
 
 ### 2026-10-07
 - Fix **jev-toolscope** to v0.1.1 — a short reply ("yes", "お願いします") is judged together with the agent's last message instead of keeping the previous scope, so approving an offered action is no longer blocked in `enforce` (contract `scope@2`); the project config is read from the session's project root (`CLAUDE_PROJECT_DIR`), so a `cd` by the agent no longer drops it

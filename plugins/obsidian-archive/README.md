@@ -1,154 +1,90 @@
 # obsidian-archive
 
-A Claude Code plugin that generates session summaries and saves them to Obsidian.
-
-## Overview
-
-`obsidian-archive` provides the following features:
-
-- **Manual save**: Save at any time using the `/obsidian-archive:archive` command
-- **Configuration management**: View and update settings with the `/obsidian-archive:config` command
-
-## Installation
+Summarize a Claude Code session and save it to your Obsidian vault as a structured note.
 
 ```
-/plugin marketplace add yn01/obsidian-archive
+/plugin install obsidian-archive
 ```
 
-## Initial Setup
+## How it works
 
-After installation, set `vault_path` to your Obsidian Vault path:
+`/obsidian-archive:archive` asks the agent you are working with to summarize the conversation — it is the only one that has read it. The agent writes four fixed sections; a script adds everything a later reader matches on, so it never drifts from note to note:
+
+| Written by the agent | Decided by code (`scripts/write-note.mjs`) |
+|---|---|
+| `## 作業概要` (overview) | file name, date and time |
+| `## 主な変更点` (key changes) | frontmatter: `project`, `session_id`, `branch`, `tags` |
+| `## 決定事項・学び` (decisions and learnings) | the `## git の変更` section (status and recent commits) |
+| `## 未完了・次回への持ち越し` (carry-over) | refusing a body with a missing heading |
+
+`project` is the name of the git root, so a `cd` into a subdirectory does not change it. Outside git it is the directory name.
+
+## Setup
 
 ```
 /obsidian-archive:config vault_path ~/Documents/Obsidian/MyVault
-```
-
-Verify your configuration:
-
-```
 /obsidian-archive:config
 ```
 
 ## Commands
 
-### `/obsidian-archive:archive`
+| Command | Purpose |
+|---|---|
+| `/obsidian-archive:archive` | Summarize this session and save it. Prints the note's path. |
+| `/obsidian-archive:config` | Show the resolved settings and the file they come from. |
+| `/obsidian-archive:config <key> <value>` | Set one key. Values are parsed by type. |
 
-Immediately generates a summary of the current session and saves it to Obsidian.
+## Configuration
 
-```
-/obsidian-archive:archive
-```
-
-**Example output:**
-```
-✓ Session summary saved:
-  ~/Documents/Obsidian/Claude-Dev/Sessions/2026-03-18_14-30_my-project.md
-```
-
-### `/obsidian-archive:config`
-
-View or update configuration settings.
-
-```
-# Show current settings
-/obsidian-archive:config
-
-# Update a setting
-/obsidian-archive:config <key> <value>
-```
-
-**Examples:**
-```
-/obsidian-archive:config vault_path ~/Documents/Obsidian/MyVault
-/obsidian-archive:config folder WorkSessions
-/obsidian-archive:config include_git_diff false
-```
-
-## Configuration (obsidian-archive.json)
-
-Settings are managed in `obsidian-archive.json` in the plugin directory.
-
-```json
-{
-  "vault_path": "~/Documents/Obsidian/Claude-Dev",
-  "folder": "Sessions",
-  "filename_format": "YYYY-MM-DD_HH-mm_{project}",
-  "include_git_diff": true,
-  "tags": ["claude-code", "session"]
-}
-```
+Stored in the plugin's data directory (`~/.claude/plugins/data/obsidian-archive-*/config.json`), so it survives plugin updates.
 
 | Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `vault_path` | string | `~/Documents/Obsidian/Claude-Dev` | Path to your Obsidian Vault (`~` expansion supported) |
-| `folder` | string | `Sessions` | Folder inside the Vault where session notes are saved |
-| `filename_format` | string | `YYYY-MM-DD_HH-mm_{project}` | Filename format |
-| `include_git_diff` | boolean | `true` | Whether to include a git diff summary in the note |
-| `tags` | array | `["claude-code", "session"]` | Tags added to the Obsidian note |
+|---|---|---|---|
+| `vault_path` | string | `~/Documents/Obsidian/Claude-Dev` | Path to the vault (`~` is expanded) |
+| `folder` | string | `Summaries` | Folder inside the vault |
+| `include_git_diff` | boolean | `true` | Add the `## git の変更` section |
+| `tags` | array | `["claude-code", "session-summary"]` | `["a", "b"]` or `a, b` |
 
-### filename_format variables
+## Saved note
 
-| Variable | Description |
-|----------|-------------|
-| `YYYY` | Year (4 digits) |
-| `MM` | Month (2 digits) |
-| `DD` | Day (2 digits) |
-| `HH` | Hour (2 digits) |
-| `mm` | Minute (2 digits) |
-| `{project}` | Project name (current directory name) |
-
-## Saved Note Structure
+`<vault>/<folder>/YYYY-MM-DD_HHmm_<project>.md` (`_2`, `_3` … if the name is taken):
 
 ```markdown
 ---
-date: 2026-03-18
-project: my-project
-tags: ["claude-code", "session"]
+date: "2026-10-12"
+time: "21:40"
+project: "claude-plugins"
+session_id: "b034e387-e395-4111-a4fa-0c9c5b42fcea"
+branch: "main"
+tags: ["claude-code", "session-summary"]
 ---
 
-# Session Summary: my-project (2026-03-18 14:30)
+# claude-plugins · 2026-10-12 21:40
 
-## Overview
-...
+## 作業概要
+## 主な変更点
+## 決定事項・学び
+## 未完了・次回への持ち越し
+- [ ] ...
 
-## Key Changes
-...
-
-## Decisions & Learnings
-...
-
-## Incomplete / Carry-over to Next Session
-- [ ] Unfinished task...
-
-## git diff Summary
-...
+## git の変更
 ```
 
-## Using with devteam
+The section headings are a contract: tools that read notes back find sections by these exact names.
 
-`obsidian-archive` works independently but pairs well with the `devteam` plugin for a more powerful workflow.
+## Development
 
-### Recommended workflow
-
+```bash
+node --test plugins/obsidian-archive/test/*.test.mjs
 ```
-# 1. Start the development team
-/devteam:start
-
-# 2. Work on development...
-/devteam:send orchestrator Please implement the new feature
-
-# 3. Manually save at important milestones
-/obsidian-archive:archive
-
-# 4. Stop devteam
-/devteam:stop
-```
-
-### Archiving devteam agent output
-
-Since the work done by each devteam agent is part of the session, their outputs are automatically captured in the session summary — giving you a complete record of multi-agent work with no extra effort.
 
 ## Changelog
+
+### v1.1.0 — 2026-10-12
+- The session summary is written by the main agent. The `summarizer` subagent is removed: a subagent starts with a fresh context and never saw the conversation it was asked to summarize.
+- File name, frontmatter and the git section are produced by `scripts/write-note.mjs`; a body missing one of the four headings is refused. Frontmatter gains `time`, `session_id` and `branch`; `project` is the git root's name.
+- Settings move to the plugin data directory and survive updates; `/obsidian-archive:config` reads and writes them through `scripts/config.mjs`. Breaking: `filename_format` (the name format is now fixed) and `auto_save_interval_minutes` are removed; the default `folder` is `Summaries` and the default tag `session-summary`. Settings in the old `obsidian-archive.json` are not carried over — set them again with `/obsidian-archive:config`.
+- Removed the auto-save hooks, which never ran (unknown `SessionStop` event, invalid matcher), the template and the plugin-level `.gitignore`. `claude plugin validate --strict` now passes.
 
 ### v1.0.1 — 2026-10-05
 - Docs: the README describes only the working manual commands (`archive`, `config`); the auto-save hook claims are removed.

@@ -3,4 +3,3 @@
 # Exempt plugins are known failures with a deferred fix: their validator output is shown
 # in a collapsed log group and they never fail the job. If one starts passing --strict,
 # CI fails until it is removed from this list.
-obsidian-archive  # hooks: unknown event SessionStop, object PostToolUse matcher; commands/agents lack frontmatter — fix deferred

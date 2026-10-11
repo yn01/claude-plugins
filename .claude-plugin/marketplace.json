@@ -129,7 +129,7 @@
     {
       "name": "obsidian-archive",
       "source": "./plugins/obsidian-archive",
-      "description": "Automatically archive Claude Code session summaries to Obsidian",
+      "description": "Summarize a Claude Code session and save it to Obsidian as a structured note",
       "author": {
         "name": "Yohei Nakanishi"
       },
