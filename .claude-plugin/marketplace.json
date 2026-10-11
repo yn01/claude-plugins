@@ -129,7 +129,7 @@
     {
       "name": "obsidian-archive",
       "source": "./plugins/obsidian-archive",
-      "description": "Summarize Claude Code sessions into structured Obsidian notes, on demand or automatically at session end",
+      "description": "Summarize Claude Code sessions into structured Obsidian notes, and bring open carry-over items into the next session",
       "author": {
         "name": "Yohei Nakanishi"
       },

@@ -15,6 +15,7 @@ export const DEFAULTS = Object.freeze({
   tags: ['claude-code', 'session-summary'],
   auto_save: true,
   auto_save_model: 'sonnet',
+  carry_over: true,
 });
 
 const LEGACY_DIR = join(homedir(), '.claude', 'obsidian-archive');
