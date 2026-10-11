@@ -1,6 +1,6 @@
 # obsidian-archive
 
-Summarize a Claude Code session and save it to your Obsidian vault as a structured note.
+Summarize Claude Code sessions into structured Obsidian notes — on demand, and automatically when a session ends.
 
 ```
 /plugin install obsidian-archive
@@ -10,14 +10,42 @@ Summarize a Claude Code session and save it to your Obsidian vault as a structur
 
 `/obsidian-archive:archive` asks the agent you are working with to summarize the conversation — it is the only one that has read it. The agent writes four fixed sections; a script adds everything a later reader matches on, so it never drifts from note to note:
 
-| Written by the agent | Decided by code (`scripts/write-note.mjs`) |
+| Written by the agent | Decided by code (`lib/note.mjs`) |
 |---|---|
 | `## 作業概要` (overview) | file name, date and time |
-| `## 主な変更点` (key changes) | frontmatter: `project`, `session_id`, `branch`, `tags` |
+| `## 主な変更点` (key changes) | frontmatter: `project`, `session_id`, `branch`, `source`, `part`, `tags` |
 | `## 決定事項・学び` (decisions and learnings) | the `## git の変更` section (status and recent commits) |
 | `## 未完了・次回への持ち越し` (carry-over) | refusing a body with a missing heading |
 
 `project` is the name of the git root, so a `cd` into a subdirectory does not change it. Outside git it is the directory name.
+
+## Auto-save at session end
+
+On by default. When an interactive session ends, a `SessionEnd` hook hands the session to a detached process and returns at once (Claude Code allows SessionEnd hooks 1.5 s). That process:
+
+1. Cuts the transcript down to what a summary needs — typed prompts, the agent's text, one line per tool call; no thinking, no tool output; at most 60,000 characters (the first prompt and the most recent part are kept).
+2. Skips the session if it has no typed prompt — or, when the session already has a note (say, from `/obsidian-archive:archive`), no typed prompt after that note.
+3. Runs `claude -p --model <auto_save_model>` with no tools, no MCP servers, no hooks and no saved session, and writes the result through the same code as a manual note.
+
+If the session already has a note, the new one covers only the work after it and links back: `part: 2`, `continues: "[[<earlier note>]]"`, title suffixed `（続き）`. File names come from the save time, so notes of the same day never collide; two saves in the same minute get `_2`.
+
+Not summarized: headless runs (`claude -p`, the SDK — `CLAUDE_CODE_ENTRYPOINT` `sdk-*`) and the summarizing child itself.
+
+If you declined `ANTHROPIC_API_KEY` in interactive Claude Code, the child drops it too and signs in the way your sessions do (`claude -p` would otherwise use the key).
+
+Every outcome is one line in `<plugin data dir>/auto-save.jsonl`:
+
+```bash
+tail -n 5 ~/.claude/plugins/data/obsidian-archive-*/auto-save.jsonl | jq -c '{ts, action, reason, prompts, file}'
+```
+
+| `action` | `reason` |
+|---|---|
+| `saved` | — |
+| `skipped` | `disabled`, `no_prompts`, `no_progress_since_note` |
+| `error` | `transcript_unreadable`, `claude_failed`, `timeout` (180 s), `missing_sections` |
+
+Turn it off with `/obsidian-archive:config auto_save false`; pick the model with `/obsidian-archive:config auto_save_model haiku`.
 
 ## Setup
 
@@ -44,6 +72,8 @@ Stored in the plugin's data directory (`~/.claude/plugins/data/obsidian-archive-
 | `folder` | string | `Summaries` | Folder inside the vault |
 | `include_git_diff` | boolean | `true` | Add the `## git の変更` section |
 | `tags` | array | `["claude-code", "session-summary"]` | `["a", "b"]` or `a, b` |
+| `auto_save` | boolean | `true` | Summarize and save when a session ends |
+| `auto_save_model` | string | `sonnet` | Model for the auto-save summary |
 
 ## Saved note
 
@@ -53,9 +83,12 @@ Stored in the plugin's data directory (`~/.claude/plugins/data/obsidian-archive-
 ---
 date: "2026-10-12"
 time: "21:40"
+saved_at: "2026-10-12T12:40:03.512Z"
 project: "claude-plugins"
 session_id: "b034e387-e395-4111-a4fa-0c9c5b42fcea"
 branch: "main"
+source: "manual"          # or "auto"
+part: 1                   # 2, 3 … for later notes of the same session
 tags: ["claude-code", "session-summary"]
 ---
 
@@ -79,6 +112,11 @@ node --test plugins/obsidian-archive/test/*.test.mjs
 ```
 
 ## Changelog
+
+### v1.2.0 — 2026-10-12
+- Auto-save at session end, on by default (`auto_save`, `auto_save_model`, default `sonnet`). A `SessionEnd` hook starts a detached summarizer and returns at once; the summary comes from a cut-down transcript via `claude -p` with no tools, MCP servers, hooks or saved session. Headless runs are not summarized. Outcomes are logged to `auto-save.jsonl`.
+- A session that already has a note gets a follow-up note covering only the later work: `part`, `continues`, title `（続き）`.
+- Frontmatter gains `saved_at`, `source` (`manual` / `auto`) and `part`.
 
 ### v1.1.0 — 2026-10-12
 - The session summary is written by the main agent. The `summarizer` subagent is removed: a subagent starts with a fresh context and never saw the conversation it was asked to summarize.

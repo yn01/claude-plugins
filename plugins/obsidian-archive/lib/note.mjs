@@ -5,7 +5,7 @@
 // not drift from note to note.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 // Fixed headings. A later SessionStart hook reads the carry-over section by
@@ -32,16 +32,22 @@ export function projectName(cwd) {
 
 const pad = (n) => String(n).padStart(2, '0');
 
-export function buildMeta({ cwd, now = new Date(), sessionId, tags }) {
+// `prev` is the latest note of the same session, if any: this note is then its
+// next part and links back to it.
+export function buildMeta({ cwd, now = new Date(), sessionId, tags, source = 'manual', prev = null }) {
   const meta = {
     date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
     time: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
+    saved_at: now.toISOString(),
     project: projectName(cwd),
   };
   // An unsubstituted "${CLAUDE_SESSION_ID}" is no id at all.
   if (sessionId && !sessionId.includes('${')) meta.session_id = sessionId;
   const branch = git(cwd, ['rev-parse', '--abbrev-ref', 'HEAD']);
   if (branch) meta.branch = branch;
+  meta.source = source;
+  meta.part = prev ? prev.part + 1 : 1;
+  if (prev) meta.continues = `[[${prev.name}]]`;
   meta.tags = tags;
   return meta;
 }
@@ -64,7 +70,8 @@ export function gitSection(cwd) {
 }
 
 export function render(meta, body, git = '') {
-  return `${frontmatter(meta)}\n# ${meta.project} · ${meta.date} ${meta.time}\n\n${body.trim()}\n${git}`;
+  const cont = meta.part > 1 ? '（続き）' : '';
+  return `${frontmatter(meta)}\n# ${meta.project} · ${meta.date} ${meta.time}${cont}\n\n${body.trim()}\n${git}`;
 }
 
 /** <vault>/<folder>/YYYY-MM-DD_HHmm_<project>.md, with _2, _3 … when that name is taken. */
@@ -72,5 +79,56 @@ export function notePath(dir, meta) {
   const stem = `${meta.date}_${meta.time.replace(':', '')}_${meta.project}`;
   let file = join(dir, `${stem}.md`);
   for (let n = 2; existsSync(file); n++) file = join(dir, `${stem}_${n}.md`);
+  return file;
+}
+
+function readFrontmatter(text) {
+  const m = /^---\n([\s\S]*?)\n---\n/.exec(text);
+  if (!m) return null;
+  const out = {};
+  for (const line of m[1].split('\n')) {
+    const kv = /^(\w+): (.*)$/.exec(line);
+    if (!kv) continue;
+    try { out[kv[1]] = JSON.parse(kv[2]); } catch { out[kv[1]] = kv[2]; }
+  }
+  return out;
+}
+
+/**
+ * The latest note in `dir` for this session: { name, part, savedAt }, or null.
+ * Notes from 1.1.0 have no saved_at or part; their date and time stand in, read
+ * as the end of that minute so nothing typed before the save counts as later.
+ */
+export function latestNoteFor(dir, sessionId) {
+  if (!sessionId) return null;
+  let names;
+  try {
+    names = readdirSync(dir).filter((n) => n.endsWith('.md'));
+  } catch {
+    return null;
+  }
+  let best = null;
+  for (const name of names) {
+    let fm;
+    try {
+      fm = readFrontmatter(readFileSync(join(dir, name), 'utf8').slice(0, 2000));
+    } catch {
+      continue;
+    }
+    if (!fm || fm.session_id !== sessionId) continue;
+    const savedAt = fm.saved_at ? new Date(fm.saved_at) : new Date(`${fm.date}T${fm.time}:59.999`);
+    const note = { name: name.replace(/\.md$/, ''), part: Number(fm.part) || 1, savedAt };
+    if (!best || note.savedAt > best.savedAt) best = note;
+  }
+  return best;
+}
+
+/** Write a note for a body that has all four sections. Returns its path. */
+export function writeNote({ config, cwd, sessionId, body, source, now = new Date(), vaultDir: dir }) {
+  const prev = latestNoteFor(dir, sessionId);
+  const meta = buildMeta({ cwd, now, sessionId, tags: config.tags, source, prev });
+  mkdirSync(dir, { recursive: true });
+  const file = notePath(dir, meta);
+  writeFileSync(file, render(meta, body, config.include_git_diff ? gitSection(cwd) : ''));
   return file;
 }

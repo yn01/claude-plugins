@@ -3,10 +3,10 @@
 //
 //   node write-note.mjs [--session <id>] [--data <plugin data dir>] [--cwd <dir>] < body.md
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { dataDir, expandHome, loadConfig } from '../lib/config.mjs';
-import { SECTIONS, missingSections, buildMeta, gitSection, render, notePath } from '../lib/note.mjs';
+import { SECTIONS, missingSections, writeNote } from '../lib/note.mjs';
 
 function arg(name) {
   const i = process.argv.indexOf(name);
@@ -26,10 +26,5 @@ if (missing.length) {
 
 const cwd = arg('--cwd') || process.cwd();
 const { config } = loadConfig(dataDir(arg('--data')));
-const meta = buildMeta({ cwd, sessionId: arg('--session'), tags: config.tags });
-const dir = join(expandHome(config.vault_path), config.folder);
-
-mkdirSync(dir, { recursive: true });
-const file = notePath(dir, meta);
-writeFileSync(file, render(meta, body, config.include_git_diff ? gitSection(cwd) : ''));
-console.log(file);
+const vaultDir = join(expandHome(config.vault_path), config.folder);
+console.log(writeNote({ config, cwd, sessionId: arg('--session'), body, source: 'manual', vaultDir }));
