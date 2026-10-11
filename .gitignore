@@ -5,6 +5,7 @@ plugins/dev-forge/docs/features.md
 plugins/dev-forge/docs/PLAN.md
 plugins/*/BACKLOG.md
 archive/
+/reference-assets/
 
 # third-party papers kept locally for reference, not redistributed
 plugins/jev-gate/assets/*.pdf
