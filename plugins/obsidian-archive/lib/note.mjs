@@ -82,7 +82,7 @@ export function notePath(dir, meta) {
   return file;
 }
 
-function readFrontmatter(text) {
+export function readFrontmatter(text) {
   const m = /^---\n([\s\S]*?)\n---\n/.exec(text);
   if (!m) return null;
   const out = {};
@@ -95,10 +95,15 @@ function readFrontmatter(text) {
 }
 
 /**
- * The latest note in `dir` for this session: { name, part, savedAt }, or null.
- * Notes from 1.1.0 have no saved_at or part; their date and time stand in, read
- * as the end of that minute so nothing typed before the save counts as later.
+ * When a note was saved. Notes from 1.1.0 have no saved_at; their date and time
+ * stand in, read as the end of that minute so nothing typed before the save
+ * counts as later.
  */
+export function savedAtOf(fm) {
+  return fm.saved_at ? new Date(fm.saved_at) : new Date(`${fm.date}T${fm.time}:59.999`);
+}
+
+/** The latest note in `dir` for this session: { name, part, savedAt }, or null. */
 export function latestNoteFor(dir, sessionId) {
   if (!sessionId) return null;
   let names;
@@ -116,8 +121,7 @@ export function latestNoteFor(dir, sessionId) {
       continue;
     }
     if (!fm || fm.session_id !== sessionId) continue;
-    const savedAt = fm.saved_at ? new Date(fm.saved_at) : new Date(`${fm.date}T${fm.time}:59.999`);
-    const note = { name: name.replace(/\.md$/, ''), part: Number(fm.part) || 1, savedAt };
+    const note = { name: name.replace(/\.md$/, ''), part: Number(fm.part) || 1, savedAt: savedAtOf(fm) };
     if (!best || note.savedAt > best.savedAt) best = note;
   }
   return best;

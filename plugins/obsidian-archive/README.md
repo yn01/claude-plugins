@@ -1,6 +1,6 @@
 # obsidian-archive
 
-Summarize Claude Code sessions into structured Obsidian notes — on demand, and automatically when a session ends.
+Summarize Claude Code sessions into structured Obsidian notes — on demand, and automatically when a session ends — and bring the open carry-over items back when the next session starts.
 
 ```
 /plugin install obsidian-archive
@@ -47,6 +47,21 @@ tail -n 5 ~/.claude/plugins/data/obsidian-archive-*/auto-save.jsonl | jq -c '{ts
 
 Turn it off with `/obsidian-archive:config auto_save false`; pick the model with `/obsidian-archive:config auto_save_model haiku`.
 
+## Carry-over at session start
+
+On by default. When a session starts (or after `/clear`), a `SessionStart` hook finds this project's newest note — within the last 14 days — whose `## 未完了・次回への持ち越し` section still has an unchecked `- [ ]` item, and hands those items to the agent as context, with the note's name. You see one line:
+
+```
+📌 obsidian-archive: 前回の持ち越し 6 件 — 2026-10-12_0255_claude-plugins
+```
+
+- A newer note with nothing open (a short question, a session that finished everything) does not hide older open work.
+- Tick an item in Obsidian (`- [x]`) and it is not handed over again.
+- `--resume`, `--continue` and compaction get nothing: that conversation already has it.
+- The hook is code only — no model call. The items are given as information, not instructions.
+
+Turn it off with `/obsidian-archive:config carry_over false`.
+
 ## Setup
 
 ```
@@ -74,6 +89,7 @@ Stored in the plugin's data directory (`~/.claude/plugins/data/obsidian-archive-
 | `tags` | array | `["claude-code", "session-summary"]` | `["a", "b"]` or `a, b` |
 | `auto_save` | boolean | `true` | Summarize and save when a session ends |
 | `auto_save_model` | string | `sonnet` | Model for the auto-save summary |
+| `carry_over` | boolean | `true` | Hand open carry-over items to the agent at session start |
 
 ## Saved note
 
@@ -112,6 +128,9 @@ node --test plugins/obsidian-archive/test/*.test.mjs
 ```
 
 ## Changelog
+
+### v1.3.0 — 2026-10-12
+- Carry-over at session start, on by default (`carry_over`). A `SessionStart` hook hands the agent the unchecked items of this project's newest note (≤ 14 days old) that still has any, and shows one line with the count and the note's name. Code only; skipped on resume and compaction.
 
 ### v1.2.0 — 2026-10-12
 - Auto-save at session end, on by default (`auto_save`, `auto_save_model`, default `sonnet`). A `SessionEnd` hook starts a detached summarizer and returns at once; the summary comes from a cut-down transcript via `claude -p` with no tools, MCP servers, hooks or saved session. Headless runs are not summarized. Outcomes are logged to `auto-save.jsonl`.

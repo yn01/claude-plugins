@@ -35,5 +35,6 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" --data "${CLAUDE_PLUGIN_DATA}" <
 | `tags` | array | `["claude-code", "session-summary"]` | `["a", "b"]` または `a, b` |
 | `auto_save` | boolean | `true` | セッション終了時に自動で要約を保存するか |
 | `auto_save_model` | string | `sonnet` | 自動保存の要約に使うモデル（`haiku` / `sonnet` / `opus` など） |
+| `carry_over` | boolean | `true` | セッション開始時に前回の持ち越しをエージェントに渡すか |
 
 設定ファイルはプラグインのデータフォルダ（`${CLAUDE_PLUGIN_DATA}/config.json`）にあり、プラグインを更新しても消えません。

@@ -144,11 +144,11 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
-### [obsidian-archive](./plugins/obsidian-archive) `v1.2.0`
+### [obsidian-archive](./plugins/obsidian-archive) `v1.3.0`
 
-Summarizes Claude Code sessions into an Obsidian vault — on demand, and automatically when a session ends.
+Summarizes Claude Code sessions into an Obsidian vault — on demand, and automatically when a session ends — and brings open carry-over items back into the next session.
 
-Each note captures what you built, decided, and carried over. Run `/obsidian-archive:archive` any time; at session end a background summarizer saves the rest. Code fixes the file name, frontmatter and section headings so notes stay machine-readable.
+Each note captures what you built, decided, and carried over. Run `/obsidian-archive:archive` any time; at session end a background summarizer saves the rest; at the next session start the unchecked carry-over items are handed to the agent. Code fixes the file name, frontmatter and section headings so notes stay machine-readable.
 
 ```
 /plugin install obsidian-archive
@@ -188,6 +188,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-12
+- Update **obsidian-archive** to v1.3.0 — carry-over at session start, on by default (`carry_over`): a code-only `SessionStart` hook hands the agent the unchecked `## 未完了・次回への持ち越し` items of the project's newest note (≤ 14 days) that still has any, so a newer note with nothing open does not hide older work; skipped on resume and compaction
 - Update **obsidian-archive** to v1.2.0 — auto-save at session end, on by default (`auto_save`, `auto_save_model` = `sonnet`): a `SessionEnd` hook starts a detached `claude -p` (no tools, MCP, hooks or saved session) on a cut-down transcript; headless runs are skipped; a session that already has a note gets a follow-up note for the later work only (`part`, `continues`); outcomes logged to `auto-save.jsonl`
 - Update **obsidian-archive** to v1.1.0 — the main agent writes the summary (the `summarizer` subagent, which could not see the conversation, is removed); file name, frontmatter (`project` = git root, `session_id`, `branch`) and fixed headings come from `scripts/write-note.mjs`; settings move to the plugin data directory; breaking: `filename_format` and `auto_save_interval_minutes` removed, default folder `Summaries`; the never-working auto-save hooks are removed and `validate --strict` passes
 
