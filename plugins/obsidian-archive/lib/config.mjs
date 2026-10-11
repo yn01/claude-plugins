@@ -13,6 +13,8 @@ export const DEFAULTS = Object.freeze({
   folder: 'Summaries',
   include_git_diff: true,
   tags: ['claude-code', 'session-summary'],
+  auto_save: true,
+  auto_save_model: 'sonnet',
 });
 
 const LEGACY_DIR = join(homedir(), '.claude', 'obsidian-archive');

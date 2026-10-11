@@ -144,11 +144,11 @@ Drill down from server → tool → schema to inspect parameter names, types, an
 /plugin install mcpx
 ```
 
-### [obsidian-archive](./plugins/obsidian-archive) `v1.1.0`
+### [obsidian-archive](./plugins/obsidian-archive) `v1.2.0`
 
-Summarizes a Claude Code session and saves it to an Obsidian vault.
+Summarizes Claude Code sessions into an Obsidian vault — on demand, and automatically when a session ends.
 
-Run `/obsidian-archive:archive` to capture what you built, decided, and carried over as a structured Markdown note. The agent writes the summary; a script fixes the file name, frontmatter and section headings so notes stay machine-readable.
+Each note captures what you built, decided, and carried over. Run `/obsidian-archive:archive` any time; at session end a background summarizer saves the rest. Code fixes the file name, frontmatter and section headings so notes stay machine-readable.
 
 ```
 /plugin install obsidian-archive
@@ -188,6 +188,7 @@ Version is declared in each plugin's `.claude-plugin/plugin.json`. If omitted, C
 ## Changelog
 
 ### 2026-10-12
+- Update **obsidian-archive** to v1.2.0 — auto-save at session end, on by default (`auto_save`, `auto_save_model` = `sonnet`): a `SessionEnd` hook starts a detached `claude -p` (no tools, MCP, hooks or saved session) on a cut-down transcript; headless runs are skipped; a session that already has a note gets a follow-up note for the later work only (`part`, `continues`); outcomes logged to `auto-save.jsonl`
 - Update **obsidian-archive** to v1.1.0 — the main agent writes the summary (the `summarizer` subagent, which could not see the conversation, is removed); file name, frontmatter (`project` = git root, `session_id`, `branch`) and fixed headings come from `scripts/write-note.mjs`; settings move to the plugin data directory; breaking: `filename_format` and `auto_save_interval_minutes` removed, default folder `Summaries`; the never-working auto-save hooks are removed and `validate --strict` passes
 
 ### 2026-10-07

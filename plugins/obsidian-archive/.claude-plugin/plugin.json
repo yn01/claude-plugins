@@ -1,7 +1,7 @@
 {
   "name": "obsidian-archive",
-  "version": "1.1.0",
-  "description": "Summarize a Claude Code session and save it to Obsidian as a structured note",
+  "version": "1.2.0",
+  "description": "Summarize Claude Code sessions into structured Obsidian notes, on demand or automatically at session end",
   "author": {"name": "Yohei Nakanishi"},
   "commands": "./commands"
 }
